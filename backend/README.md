@@ -46,8 +46,6 @@ src/main/java/com/contest/DriverGuard
 ├── configuration/ Swagger · Web MVC 설정
 └── property/      설정값 바인딩 (JWT)
 src/main/resources
-├── db/schema.sql          테이블 정의 (PostgreSQL)
-├── db/terms-sample.sql    약관 데이터 (개발용)
 └── mybatis/*Mapper.xml    SQL
 ```
 
@@ -94,7 +92,7 @@ src/main/resources
 
 ## 실행 방법
 
-1. PostgreSQL에 `DriverGuard` 데이터베이스를 만들고 `db/schema.sql`, `db/terms-sample.sql`을 차례로 실행합니다.
+1. PostgreSQL에 `DriverGuard` 데이터베이스를 만들고 테이블과 약관 데이터를 준비합니다. (DB 스크립트는 저장소에 포함하지 않고 별도로 전달합니다.)
 2. `src/main/resources/application.properties.sample`을 같은 폴더에 `application.properties`로 복사한 뒤 DB 접속 정보를 맞추고, 아래 값을 환경변수로 넣습니다. (`application.properties`는 비밀 값이 들어가므로 git에 올리지 않습니다.)
 
    | 환경변수 | 용도 |
@@ -126,7 +124,7 @@ src/main/resources
 | 시간대 집계 (`HourlyStatsCalculatorTest`) | 5 | 구간 분할, 자정 경계, 거리 배분 합계 |
 | 컨텍스트 로드 | 1 | |
 
-통합 테스트는 `schema.sql`과 `terms-sample.sql`이 적용된 로컬 DB가 필요합니다.
+통합 테스트는 테이블과 약관 데이터가 준비된 로컬 DB가 필요합니다.
 
 ## 데이터 출처
 - 졸음쉼터: 공공데이터포털 「전국졸음쉼터표준데이터」
