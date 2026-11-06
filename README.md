@@ -1,6 +1,6 @@
-# hawkeye_app
+# Hawkeye
 
-hawkeye_app 모노레포입니다.
+Hawkeye 팀 모노레포입니다.
 
 | 폴더 | 내용 |
 | --- | --- |
