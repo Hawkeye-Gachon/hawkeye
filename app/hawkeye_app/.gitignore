@@ -1,0 +1,17 @@
+# Gradle / build outputs
+.gradle/
+build/
+.kotlin/
+.externalNativeBuild/
+.cxx/
+captures/
+
+# IDE
+*.iml
+.idea/
+
+# Local configuration (SDK path etc.)
+local.properties
+
+# OS
+.DS_Store

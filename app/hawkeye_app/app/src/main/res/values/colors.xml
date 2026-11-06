@@ -1,0 +1,4 @@
+<resources>
+    <!-- 창 배경(실행 직후 Compose 가 그려지기 전). Palette.night1 과 같은 값 -->
+    <color name="canvas">#FF13223D</color>
+</resources>

@@ -1,0 +1,244 @@
+<resources>
+    <string name="app_name">DriverGuard</string>
+    <string name="home_tagline">운전 중 부주의를 줄이도록 돕습니다</string>
+    <string name="loading">불러오는 중…</string>
+    <string name="unknown">알 수 없음</string>
+    <string name="error_storage_body">기기 저장소에서 기록을 읽지 못했습니다. 다시 시도해 주세요.</string>
+
+    <!-- 공통 동작 -->
+    <string name="action_back">뒤로</string>
+    <string name="action_retry">다시 시도</string>
+    <string name="action_start_driving">주행 시작</string>
+    <string name="action_check_camera">카메라 위치 확인</string>
+    <string name="action_finish_driving">주행 종료</string>
+    <string name="action_keep_driving">계속 주행</string>
+    <string name="action_back_home">홈으로</string>
+    <string name="action_start_rest">휴식 시작</string>
+    <string name="action_end_rest">휴식 종료</string>
+    <string name="action_trips">여정 기록</string>
+    <string name="action_dev_settings">개발 화면</string>
+    <string name="action_allow">허용</string>
+    <string name="action_open_settings">설정 열기</string>
+    <string name="action_allow_camera">카메라 권한 허용</string>
+    <string name="action_allow_camera_in_settings">설정에서 카메라 허용</string>
+    <string name="action_search_rest_area">지도 앱에서 휴게소 찾기</string>
+    <string name="action_save">저장</string>
+    <string name="action_reset_defaults">기본값 복원</string>
+    <string name="action_show_camera">운전자 화면 보기</string>
+    <string name="action_hide_camera">운전자 화면 숨기기</string>
+
+    <!-- 홈 -->
+    <string name="mode_real_description">전면 카메라 · 얼굴 특징점으로 분석</string>
+    <string name="home_readiness">준비 상태</string>
+    <string name="permission_camera">카메라</string>
+    <string name="permission_camera_granted">허용됨</string>
+    <string name="permission_camera_denied">실제 분석에 필요</string>
+    <string name="permission_location">위치 (선택)</string>
+    <string name="permission_location_granted">허용됨 · 이벤트 위치와 이동 거리를 기록합니다</string>
+    <string name="permission_location_denied">없어도 분석·기록 가능</string>
+    <string name="readiness_model">얼굴 특징점 모델</string>
+    <string name="readiness_model_ready">MediaPipe Face Landmarker · 기기 안에서 실행</string>
+    <string name="readiness_calibration">카메라 위치·기준 자세</string>
+    <string name="readiness_calibration_body">주행마다 정차 상태에서 먼저 확인합니다</string>
+
+    <!-- 분석 방식 -->
+    <string name="mode_real">실제 분석</string>
+    <string name="mode_demo">시연</string>
+
+    <!-- 모델 -->
+    <string name="model_checking">모델 확인 중…</string>
+    <string name="model_missing">모델 파일(assets/models/face_landmarker.task)이 없습니다. README 의 모델 준비 방법을 확인하세요. 실제 분석을 시작할 수 없습니다.</string>
+
+    <!-- 캘리브레이션 -->
+    <string name="title_calibration">카메라 위치 확인</string>
+    <string name="calib_instruction">카메라 위치를 맞추고 평소 운전 자세로 앞을 바라봐 주세요.</string>
+    <string name="calib_stationary">정차 상태에서만 진행하세요.</string>
+    <string name="calib_preparing">분석기를 준비하고 있습니다</string>
+    <string name="calib_progress">기준 자세 측정 중 %1$d%%</string>
+    <string name="calib_issue">확인 필요: %1$s</string>
+    <string name="calib_done">기준값 측정 완료</string>
+    <string name="calib_done_body">이번 주행에만 사용합니다. 카메라 위치를 바꾸면 다시 측정하세요.</string>
+    <string name="calib_failed">기준값을 측정하지 못했습니다</string>
+    <string name="calib_error">분석기를 준비하지 못했습니다</string>
+    <string name="calib_retry">다시 측정</string>
+    <string name="calib_closed_eye">눈 감김 보정 (선택)</string>
+    <string name="calib_closed_eye_body">정차 중에만: 3초 동안 눈을 감고 계세요. 하지 않으면 눈 뜬 기준값만으로 임계값을 정하며, 이는 충분히 보정된 값이 아닙니다.</string>
+    <string name="calib_closed_eye_running">눈을 감고 계세요 %1$d%%</string>
+    <string name="calib_closed_eye_done">눈 감김 보정 적용됨</string>
+    <string name="calib_closed_eye_failed">눈 감김 보정 실패: %1$s (눈 뜬 기준값만 사용)</string>
+    <string name="calib_fail_samples">얼굴이 충분히 확인되지 않았습니다</string>
+    <string name="calib_fail_pose">자세가 흔들렸습니다. 앞을 보고 잠시 멈춰 주세요</string>
+    <string name="calib_fail_eyes_open">눈을 뜬 상태가 확인되지 않았습니다</string>
+    <string name="calib_fail_eyes_closed">눈 감김이 충분히 측정되지 않았습니다</string>
+
+    <!-- 주행 -->
+    <string name="camera_privacy_chip">영상은 저장·전송하지 않음</string>
+    <string name="driving_elapsed">주행 %1$s</string>
+    <string name="driving_starting">분석 준비 중</string>
+    <string name="driving_failed">분석을 시작하지 못했습니다</string>
+    <string name="driving_finishing">기록 저장 중</string>
+    <string name="driving_voice_off_short">경고음만</string>
+    <string name="driving_voice_off">음성 안내를 쓸 수 없어 경고음만 냅니다</string>
+    <string name="driving_support">보조 징후(입 벌림 반복) 함께 관찰됨</string>
+    <string name="finish_confirm_title">주행을 종료할까요?</string>
+    <string name="finish_confirm_message">지금까지의 기록을 저장하고 여정 리포트를 엽니다.</string>
+    <string name="rest_area_search_query">휴게소</string>
+
+    <!-- 상태 -->
+    <string name="state_preparing">관찰 준비 중</string>
+    <string name="state_observing">관찰 중</string>
+    <string name="state_caution_eyes">눈 감김 징후</string>
+    <string name="state_caution_head">시각적 부주의 의심</string>
+    <string name="state_rest">졸음 의심</string>
+    <string name="state_unavailable">분석 불가</string>
+    <string name="state_paused">휴식 중</string>
+    <string name="guidance_preparing">얼굴과 눈을 확인하고 있습니다</string>
+    <string name="guidance_observing">검출된 징후가 없습니다. 안전을 보장하지는 않습니다</string>
+    <string name="guidance_caution_eyes">눈 감김이 지속되어 감지되었습니다</string>
+    <string name="guidance_caution_head">고개 방향 이탈이 지속되고 있습니다. 전방을 주시하세요</string>
+    <string name="guidance_rest">가까운 안전한 장소에서 휴식을 권합니다</string>
+    <string name="guidance_unavailable">얼굴을 확인할 수 없습니다. 점검은 정차한 뒤에 해 주세요</string>
+    <string name="guidance_paused">다시 출발할 때 \'휴식 종료\'를 누르세요</string>
+
+    <!-- 관측 품질 -->
+    <string name="quality_valid">유효</string>
+    <string name="quality_face_not_found">얼굴이 보이지 않음</string>
+    <string name="quality_multiple_faces">여러 얼굴이 보여 운전자를 특정할 수 없음</string>
+    <string name="quality_face_too_small">얼굴이 너무 작거나 잘림</string>
+    <string name="quality_landmarks_invalid">특징점이 불안정함</string>
+    <string name="quality_excessive_rotation">고개 회전이 커서 눈·입 지표를 계산할 수 없음</string>
+    <string name="quality_low_light">조명이 어둡거나 대비가 낮음</string>
+    <string name="quality_frame_gap">카메라 영상이 끊김</string>
+    <string name="quality_calibration_required">캘리브레이션 필요</string>
+    <string name="quality_analysis_error">분석 오류</string>
+
+    <!-- 음성 경고 -->
+    <string name="alert_eye_caution">눈 감김이 지속되어 감지되었습니다.</string>
+    <string name="alert_head_caution">고개 방향 이탈이 지속되고 있습니다.</string>
+    <string name="alert_rest">가까운 안전한 장소에서 휴식을 권합니다.</string>
+    <string name="alert_unavailable">얼굴을 확인할 수 없어 분석이 일시 중단되었습니다. 점검은 정차한 뒤에 해 주세요.</string>
+
+    <!-- 이벤트 -->
+    <string name="event_eye_closure">지속적 눈 감김</string>
+    <string name="event_mouth_open">지속적 입 벌림(하품 의심)</string>
+    <string name="event_head_away">고개 방향 이탈</string>
+    <string name="event_head_nod">반복적 고개 숙임(실험)</string>
+    <string name="event_unavailable">분석 불가</string>
+    <string name="event_drowsiness">졸음 의심</string>
+    <string name="event_distraction">시각적 부주의 의심</string>
+    <string name="level_info">기록</string>
+    <string name="level_caution">주의</string>
+    <string name="level_rest">휴식 권고</string>
+    <string name="end_recovered">정상 복귀</string>
+    <string name="end_gap">관측 공백으로 끊김</string>
+    <string name="end_invalid">지표 계산 불가로 끊김</string>
+    <string name="end_hold_expired">근거 재발생 없음</string>
+    <string name="end_rest">휴식 시작</string>
+    <string name="end_app_paused">앱이 화면을 벗어남</string>
+    <string name="end_trip_ended">주행 종료</string>
+    <string name="end_abnormal">비정상 종료</string>
+    <string name="interruption_rest">휴식</string>
+    <string name="interruption_background">앱이 화면을 벗어나 분석 중단</string>
+    <string name="interruption_camera">카메라 오류로 분석 중단</string>
+    <string name="rule_eye_sustained">양쪽 눈 감김 지속</string>
+    <string name="rule_closed_ratio">눈 감김 비율 기준 이상</string>
+    <string name="rule_repeated_closure">지속 눈 감김 반복</string>
+    <string name="rule_yawn_with_closure">입 벌림 반복 + 눈 감김</string>
+    <string name="rule_support_yawn">보조: 입 벌림 반복</string>
+    <string name="rule_support_nod">보조: 고개 숙임 반복</string>
+    <string name="rule_head_away">기준 자세 대비 고개 방향 이탈 지속</string>
+    <string name="rule_mouth_sustained">입술 안쪽 벌림 지속</string>
+    <string name="rule_nod_repeated">고개 숙임·복귀 반복</string>
+    <string name="rule_unavailable">눈 지표 계산 불가 지속</string>
+    <string name="event_row_detail">%1$s · %2$s</string>
+    <string name="event_candidate">후보 시작 %1$s · 확인 %2$s</string>
+    <string name="event_rules">근거: %1$s</string>
+    <string name="event_metrics">지표: %1$s</string>
+    <string name="event_location">위치 %1$.5f, %2$.5f (±%3$s m, %4$s 측정)</string>
+    <string name="event_no_location">위치 기록 없음</string>
+    <string name="event_in_progress">종료 시각 없음</string>
+
+    <!-- 여정 -->
+    <string name="title_trips">여정 기록</string>
+    <string name="title_trip_detail">여정 리포트</string>
+    <string name="trips_empty_title">아직 기록된 여정이 없습니다</string>
+    <string name="trips_empty_body">홈에서 주행을 시작하면 여정과 이벤트가 여기에 쌓입니다.</string>
+    <string name="trips_error_title">여정 기록을 불러오지 못했습니다</string>
+    <string name="trip_error_title">여정 리포트를 불러오지 못했습니다</string>
+    <string name="trip_in_progress">진행 중</string>
+    <string name="trip_row_summary">%1$s · 이벤트 %2$d건</string>
+    <string name="trip_abnormal">비정상 종료</string>
+    <string name="trip_abnormal_detail">앱이 비정상 종료되어 다음 실행 때 정리된 여정입니다. 종료 시각은 마지막 기록 기준이며 관측 시간·이동 거리는 남지 않았습니다.</string>
+    <string name="trip_not_found">여정을 찾을 수 없습니다</string>
+    <string name="demo_banner_report">시연 기록 · 실제 분석 결과 아님</string>
+    <string name="detail_started">시작</string>
+    <string name="detail_ended">종료</string>
+    <string name="detail_duration">총 시간</string>
+    <string name="detail_valid_observation">유효 관측 시간</string>
+    <string name="detail_unavailable">분석 불가 시간</string>
+    <string name="detail_distance">이동 거리</string>
+    <string name="detail_distance_none">기록 없음</string>
+    <string name="detail_analyzer">분석 정보</string>
+    <string name="detail_analyzer_value">분석 정보: %1$s</string>
+    <string name="detail_config_version">설정 %1$s</string>
+    <string name="detail_judgments">판정</string>
+    <string name="detail_indicators">관측 이벤트</string>
+    <string name="detail_summary_value">%1$d회 · 합계 %2$s</string>
+    <string name="detail_summary_count">%1$d회</string>
+    <string name="detail_unknown_duration"> · 지속 시간 불명 %1$d건</string>
+    <string name="detail_no_events">검출된 이벤트가 없습니다. 이는 안전을 보장한다는 뜻이 아닙니다.</string>
+    <string name="detail_rests">휴식 기록</string>
+    <string name="detail_no_rests">직접 기록한 휴식이 없습니다.</string>
+    <string name="detail_rest_row">%1$s ~ %2$s (%3$s)</string>
+    <string name="detail_interruptions">분석 중단</string>
+    <string name="detail_events">이벤트 타임라인</string>
+    <string name="detail_located_events">위치가 있는 이벤트</string>
+    <string name="detail_no_located_events">위치가 기록된 이벤트가 없습니다.</string>
+
+    <!-- 개발 화면 -->
+    <string name="dev_tab_live">실시간</string>
+    <string name="dev_tab_thresholds">임계값</string>
+    <string name="dev_tab_info">모델·성능</string>
+    <string name="dev_live_note">정차·개발 환경 전용. 기록은 남지 않습니다. 영상은 저장하지 않습니다.</string>
+    <string name="dev_live_need_camera">카메라 권한이 필요합니다</string>
+    <string name="dev_live_failed">분석기를 준비하지 못했습니다</string>
+    <string name="dev_show_indices">랜드마크 인덱스 표시</string>
+    <string name="dev_recalibrate">기준값 측정</string>
+    <string name="dev_no_baseline">기준값이 없어 상대 지표(EAR 임계값·기준 대비 각도)를 계산하지 않습니다. \'기준값 측정\'을 누르세요.</string>
+    <string name="dev_log_start">수치 로그 시작</string>
+    <string name="dev_log_stop">수치 로그 중지</string>
+    <string name="dev_log_delete">로그 삭제 (%1$d)</string>
+    <string name="dev_log_saved">로그 저장: %1$s</string>
+    <string name="dev_logs_deleted">로그 %1$d개를 삭제했습니다</string>
+    <string name="dev_metrics">지표</string>
+    <string name="dev_metrics_footer">* 표시는 눈 감김 보정 없이 눈 뜬 기준값 비율로 만든 임계값입니다. 각도는 근사 카메라 파라미터 기준으로 절대 정확도를 보장하지 않습니다.</string>
+    <string name="dev_metric_waiting">관측 대기 중</string>
+    <string name="dev_metric_quality">관측 품질</string>
+    <string name="dev_thresholds_note">기본값은 동작 확인용 개발 시작값이며 검증된 안전 기준이 아닙니다. 저장한 값은 다음 분석부터 적용됩니다.</string>
+    <string name="dev_saved">저장했습니다. 다음 분석부터 적용됩니다.</string>
+    <string name="dev_reset_done">기본값으로 되돌렸습니다.</string>
+    <string name="dev_model">모델</string>
+    <string name="dev_model_footer">출처: MediaPipe 공식 배포(storage.googleapis.com/mediapipe-models), Apache 2.0. 추가적인 졸음 분류 모델 학습 없이 특징점 기하 계산과 시간 규칙으로 판정합니다.</string>
+    <string name="dev_model_hash_ok">README 에 기록한 해시와 일치</string>
+    <string name="dev_model_hash_diff">README 에 기록한 해시와 다름</string>
+    <string name="dev_config_version">설정 버전</string>
+    <string name="dev_performance">처리량·지연</string>
+    <string name="dev_performance_note">가장 최근 실시간 분석(주행·캘리브레이션·개발 화면)에서 측정한 값입니다.</string>
+    <string name="dev_camera_frames">카메라 프레임</string>
+    <string name="dev_throttled">제출 빈도 제한으로 건너뜀</string>
+    <string name="dev_dropped_busy">추론 중이라 버림</string>
+    <string name="dev_analyzed">분석 완료</string>
+    <string name="dev_throughput">처리량</string>
+    <string name="dev_inference_ms">추론 지연 (최근 / 평균)</string>
+    <string name="dev_post_ms">기하·자세·품질 계산</string>
+    <string name="dev_errors">오류</string>
+
+    <!-- 임계값 묶음 -->
+    <string name="group_eyes">눈 감김</string>
+    <string name="group_ratio">눈 감김 비율·반복</string>
+    <string name="group_mouth">입 벌림</string>
+    <string name="group_head">고개 방향·숙임</string>
+    <string name="group_frames">프레임·품질</string>
+    <string name="group_alerts">경고 반복 제한</string>
+    <string name="field_error_number">숫자를 입력하세요</string>
+</resources>
