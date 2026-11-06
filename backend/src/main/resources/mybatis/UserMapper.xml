@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.user.dao.UserDao">
+
+    <insert id="insertUser"
+            parameterType="com.contest.DriverGuard.user.dto.UserDto$User"
+            useGeneratedKeys="true"
+            keyProperty="userId"
+            keyColumn="user_id">
+        INSERT INTO users (email, name, status, age_confirmed_at)
+        VALUES (#{email}, #{name}, #{status}, #{ageConfirmedAt})
+    </insert>
+
+    <select id="findById"
+            resultType="com.contest.DriverGuard.user.dto.UserDto$User">
+        SELECT user_id, email, name, status, age_confirmed_at, created_at, updated_at, withdrawn_at
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="existsActiveByEmail" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM users
+            WHERE email  = #{email}
+              AND status = 'ACTIVE'
+        )
+    </select>
+
+    <update id="withdraw">
+        UPDATE users
+        SET status       = 'WITHDRAWN',
+            withdrawn_at = now()
+        WHERE user_id = #{userId}
+          AND status  = 'ACTIVE'
+    </update>
+
+</mapper>

@@ -1,0 +1,53 @@
+spring.application.name=DriverGuard
+server.port=8080
+spring.main.web-application-type=servlet
+spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+
+# MyBatis
+mybatis.mapper-locations=classpath:mybatis/*.xml
+mybatis.configuration.map-underscore-to-camel-case=true
+mybatis.configuration.call-setters-on-nulls=true
+
+# 에러 응답에 message 포함
+spring.web.error.include-message=always
+
+# 응답의 시각(OffsetDateTime)을 서울 시간대(+09:00)로 표시
+spring.jackson.time-zone=Asia/Seoul
+
+spring.mvc.log-request-details=true
+
+# DB
+spring.datasource.hikari.maximum-pool-size=4
+spring.datasource.url=jdbc:postgresql://localhost:5432/DriverGuard
+spring.datasource.username=postgres
+spring.datasource.password=your-db-password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JMX 사용 안 함
+spring.jmx.enabled=false
+
+# Scheduler
+spring.task.scheduling.pool.size=2
+
+spring.servlet.encoding.charset=UTF-8
+spring.servlet.encoding.force=true
+spring.servlet.encoding.enabled=true
+
+# JWT
+# 환경변수 JWT_SECRET (Base64, 256bit 이상)
+jwt.secret=${JWT_SECRET}
+jwt.access-token-validity=30m
+jwt.refresh-token-validity=14d
+
+# 휴게소 / 졸음쉼터 수집
+# true 면 아래 주기로 자동 수집 (+ 앱 시작 시 DB 가 비어 있으면 한 번 수집). false 면 수집 안 함
+driverguard.rest-place.sync-enabled=true
+# 수집 주기: 매주 월요일 04:00 (Asia/Seoul)
+driverguard.rest-place.sync-cron=0 0 4 * * MON
+# 한국도로공사 공공데이터 포털 키 (환경변수 EX_API_KEY)
+driverguard.ex.api-key=${EX_API_KEY}
+# 공공데이터포털(data.go.kr) 서비스키 - 졸음쉼터 표준데이터 API. "Decoding" 키를 넣을 것 (환경변수 DATA_GO_KR_SERVICE_KEY)
+driverguard.data-go-kr.service-key=${DATA_GO_KR_SERVICE_KEY}
+driverguard.kakao.rest-api-key=${KAKAO_REST_API_KEY}
+# 길찾기 한 건당 제한 시간
+driverguard.kakao.directions-timeout-ms=1500

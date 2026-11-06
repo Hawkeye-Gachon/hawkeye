@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.restplace.dao.RestPlaceDao">
+
+    <!-- 주변 조회용 (메모리 캐시): 활성 상태이고 좌표가 있는 곳만 -->
+    <select id="findAllActive" resultType="com.contest.DriverGuard.restplace.dto.RestPlaceDto$RestPlace">
+        SELECT place_id, place_type, name, route_name, direction,
+               latitude, longitude, parking_spaces
+          FROM rest_places
+         WHERE active = TRUE
+           AND latitude IS NOT NULL
+           AND longitude IS NOT NULL
+    </select>
+
+    <insert id="upsert">
+        INSERT INTO rest_places (
+            place_type, source_key, name, route_name, direction,
+            latitude, longitude, address, parking_spaces,
+            active, synced_at
+        ) VALUES (
+            #{row.placeType}, #{row.sourceKey}, #{row.name},
+            #{row.routeName,jdbcType=VARCHAR}, #{row.direction,jdbcType=VARCHAR},
+            #{row.latitude,jdbcType=DOUBLE}, #{row.longitude,jdbcType=DOUBLE},
+            #{row.address,jdbcType=VARCHAR}, #{row.parkingSpaces,jdbcType=INTEGER},
+            TRUE, #{syncedAt}
+        )
+        ON CONFLICT (place_type, source_key) DO UPDATE SET
+            name           = EXCLUDED.name,
+            route_name     = EXCLUDED.route_name,
+            direction      = EXCLUDED.direction,
+            latitude       = EXCLUDED.latitude,
+            longitude      = EXCLUDED.longitude,
+            address        = EXCLUDED.address,
+            parking_spaces = EXCLUDED.parking_spaces,
+            active         = TRUE,
+            synced_at      = EXCLUDED.synced_at
+    </insert>
+
+    <!-- 이번 수집에 없던 곳은 비활성화 -->
+    <update id="deactivateNotSynced">
+        UPDATE rest_places
+           SET active = FALSE
+         WHERE place_type = #{placeType}
+           AND active = TRUE
+           AND synced_at &lt; #{syncedAt}
+    </update>
+
+</mapper>

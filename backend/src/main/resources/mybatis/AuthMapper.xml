@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.auth.dao.AuthDao">
+
+    <insert id="insertAuth"
+            parameterType="com.contest.DriverGuard.auth.dto.AuthDto$Auth"
+            useGeneratedKeys="true"
+            keyProperty="authId"
+            keyColumn="auth_id">
+        INSERT INTO auths (user_id, provider, provider_user_id, password_hash)
+        VALUES (#{userId}, #{provider}, #{providerUserId}, #{passwordHash})
+    </insert>
+
+    <select id="findEmailAuthByEmail"
+            resultType="com.contest.DriverGuard.auth.dto.AuthDto$Auth">
+        SELECT a.auth_id, a.user_id, a.provider, a.password_hash, a.last_login_at
+        FROM auths a
+        JOIN users u ON u.user_id = a.user_id
+        WHERE u.email    = #{email}
+          AND u.status   = 'ACTIVE'
+          AND a.provider = 'EMAIL'
+    </select>
+
+    <update id="updateLastLoginAt">
+        UPDATE auths
+        SET last_login_at = now()
+        WHERE auth_id = #{authId}
+    </update>
+
+    <select id="findEmailAuthByUserId"
+            resultType="com.contest.DriverGuard.auth.dto.AuthDto$Auth">
+        SELECT auth_id, user_id, provider, password_hash, last_login_at
+        FROM auths
+        WHERE user_id  = #{userId}
+          AND provider = 'EMAIL'
+    </select>
+
+    <delete id="deleteByUserId">
+        DELETE FROM auths
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

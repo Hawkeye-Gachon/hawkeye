@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.terms.dao.TermsDao">
+
+    <!--
+        현재 시행 중인 약관: code 별로 시행 시각이 지난 것 중 가장 높은 version.
+        TermsAgreementMapper 에서도 이 정의를 그대로 씀 (include refid="com.contest.DriverGuard.terms.dao.TermsDao.currentTerms")
+    -->
+    <sql id="currentTerms">
+        SELECT DISTINCT ON (code)
+               terms_id, code, version, title, is_required, display_order, effective_at, created_at
+        FROM terms
+        WHERE effective_at &lt;= now()
+        ORDER BY code, version DESC
+    </sql>
+
+    <select id="findCurrent"
+            resultType="com.contest.DriverGuard.terms.dto.TermsDto$Terms">
+        SELECT terms_id, code, version, title, is_required AS required, display_order, effective_at, created_at
+        FROM (<include refid="currentTerms"/>) t
+        ORDER BY display_order, terms_id
+    </select>
+
+    <select id="findById"
+            resultType="com.contest.DriverGuard.terms.dto.TermsDto$Terms">
+        SELECT terms_id, code, version, title, content, is_required AS required,
+               display_order, effective_at, created_at
+        FROM terms
+        WHERE terms_id = #{termsId}
+    </select>
+
+</mapper>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.drive.dao.DriveDao">
+
+    <sql id="driveColumns">
+        drive_id, user_id, client_drive_id::text AS client_drive_id, status, started_at, ended_at,
+        observed_seconds, distance_meters, inattention_count, drowsiness_count,
+        route_simplified::text AS route_json, created_at, updated_at
+    </sql>
+
+    <select id="lockUser" resultType="long">
+        SELECT user_id
+        FROM users
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
+
+    <select id="findByClientDriveId"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Drive">
+        SELECT <include refid="driveColumns"/>
+        FROM drives
+        WHERE user_id         = #{userId}
+          AND client_drive_id = #{clientDriveId}::uuid
+    </select>
+
+    <select id="findInProgress"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Drive">
+        SELECT <include refid="driveColumns"/>
+        FROM drives
+        WHERE user_id = #{userId}
+          AND status  = 'IN_PROGRESS'
+    </select>
+
+    <select id="findById"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Drive">
+        SELECT <include refid="driveColumns"/>
+        FROM drives
+        WHERE drive_id = #{driveId}
+          AND user_id  = #{userId}
+    </select>
+
+    <select id="findByIdForUpdate"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Drive">
+        SELECT <include refid="driveColumns"/>
+        FROM drives
+        WHERE drive_id = #{driveId}
+          AND user_id  = #{userId}
+        FOR UPDATE
+    </select>
+
+    <!-- ix_drives_user_ended_started 사용. 같은 시작 시각이면 drive_id 로 순서 고정 -->
+    <select id="findEndedPage"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Drive">
+        SELECT <include refid="driveColumns"/>
+        FROM drives
+        WHERE user_id = #{userId}
+          AND status  = 'ENDED'
+        <if test="cursorStartedAt != null">
+          AND (started_at, drive_id) &lt; (#{cursorStartedAt}, #{cursorDriveId})
+        </if>
+        ORDER BY started_at DESC, drive_id DESC
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insertDrive"
+            parameterType="com.contest.DriverGuard.drive.dto.DriveDto$Drive"
+            useGeneratedKeys="true"
+            keyProperty="driveId"
+            keyColumn="drive_id">
+        INSERT INTO drives (user_id, client_drive_id, status, started_at)
+        VALUES (#{userId}, #{clientDriveId}::uuid, #{status}, #{startedAt})
+    </insert>
+
+    <update id="abandon">
+        UPDATE drives
+        SET status = 'ABANDONED'
+        WHERE drive_id = #{driveId}
+          AND status   = 'IN_PROGRESS'
+    </update>
+
+    <update id="endDrive"
+            parameterType="com.contest.DriverGuard.drive.dto.DriveDto$Drive">
+        UPDATE drives
+        SET status            = 'ENDED',
+            ended_at          = #{endedAt},
+            observed_seconds  = #{observedSeconds},
+            distance_meters   = #{distanceMeters},
+            inattention_count = #{inattentionCount},
+            drowsiness_count  = #{drowsinessCount},
+            route_simplified  = #{routeJson}::jsonb
+        WHERE drive_id = #{driveId}
+    </update>
+
+    <delete id="deleteByUserId">
+        DELETE FROM drives
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- ================= 하위 기록 ================= -->
+
+    <insert id="insertEvents">
+        INSERT INTO drive_events (drive_id, event_type, detected_at, latitude, longitude)
+        VALUES
+        <foreach collection="events" item="e" separator=",">
+            (#{driveId}, #{e.eventType}, #{e.detectedAt}, #{e.latitude}, #{e.longitude})
+        </foreach>
+        ON CONFLICT (drive_id, event_type, detected_at) DO NOTHING
+    </insert>
+
+    <insert id="insertWaypoint"
+            parameterType="com.contest.DriverGuard.drive.dto.DriveDto$Waypoint">
+        INSERT INTO drive_waypoints (drive_id, place_id, place_name, place_type, latitude, longitude,
+                                     nav_mode, trigger_type, added_at, visited, visited_at)
+        SELECT #{driveId}, p.place_id, p.name, p.place_type, p.latitude, p.longitude,
+               #{navMode}, #{triggerType}, #{addedAt}, #{visited}, #{visitedAt}
+        FROM rest_places p
+        WHERE p.place_id = #{placeId}
+          AND p.latitude IS NOT NULL
+    </insert>
+
+    <insert id="insertHourlyStats">
+        INSERT INTO drive_hourly_stats (drive_id, user_id, hour_start, observed_seconds,
+                                        inattention_count, drowsiness_count, distance_meters)
+        VALUES
+        <foreach collection="stats" item="s" separator=",">
+            (#{s.driveId}, #{s.userId}, #{s.hourStart}, #{s.observedSeconds},
+             #{s.inattentionCount}, #{s.drowsinessCount}, #{s.distanceMeters})
+        </foreach>
+    </insert>
+
+    <select id="findEvents"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Event">
+        SELECT event_id, drive_id, event_type, detected_at, latitude, longitude
+        FROM drive_events
+        WHERE drive_id = #{driveId}
+        ORDER BY detected_at, event_id
+    </select>
+
+    <select id="findWaypoints"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$Waypoint">
+        SELECT waypoint_id, drive_id, place_id, place_name, place_type, latitude, longitude,
+               nav_mode, trigger_type, added_at, visited, visited_at
+        FROM drive_waypoints
+        WHERE drive_id = #{driveId}
+        ORDER BY added_at, waypoint_id
+    </select>
+
+</mapper>

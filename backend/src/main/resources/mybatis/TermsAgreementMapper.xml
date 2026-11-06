@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.terms.dao.TermsAgreementDao">
+
+    <select id="findMyAgreements"
+            resultType="com.contest.DriverGuard.terms.dto.TermsDto$AgreementItem">
+        SELECT t.terms_id, t.code, t.title, t.version, t.is_required AS required,
+               COALESCE(a.agreed, FALSE) AS agreed, a.agreed_at
+        FROM (<include refid="com.contest.DriverGuard.terms.dao.TermsDao.currentTerms"/>) t
+        LEFT JOIN user_terms_agreements a
+               ON a.terms_id = t.terms_id
+              AND a.user_id  = #{userId}
+        ORDER BY t.display_order, t.terms_id
+    </select>
+
+    <select id="existsMissingRequired" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM (<include refid="com.contest.DriverGuard.terms.dao.TermsDao.currentTerms"/>) t
+            WHERE t.is_required
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM user_terms_agreements a
+                  WHERE a.user_id  = #{userId}
+                    AND a.terms_id = t.terms_id
+                    AND a.agreed
+              )
+        )
+    </select>
+
+    <insert id="upsert">
+        INSERT INTO user_terms_agreements (user_id, terms_id, agreed, agreed_at)
+        VALUES (#{userId}, #{termsId}, #{agreed}, CASE WHEN #{agreed} THEN now() END)
+        ON CONFLICT (user_id, terms_id) DO UPDATE
+        SET agreed    = EXCLUDED.agreed,
+            agreed_at = CASE
+                            WHEN NOT EXCLUDED.agreed       THEN NULL
+                            WHEN user_terms_agreements.agreed THEN user_terms_agreements.agreed_at
+                            ELSE now()
+                        END
+    </insert>
+
+    <delete id="deleteByUserId">
+        DELETE FROM user_terms_agreements
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

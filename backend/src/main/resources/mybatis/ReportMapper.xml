@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.contest.DriverGuard.report.dao.ReportDao">
+
+    <!-- ix_drive_hourly_stats_user_hour 사용 -->
+    <select id="findStats"
+            resultType="com.contest.DriverGuard.report.dto.ReportDto$StatRow">
+        SELECT drive_id, hour_start, observed_seconds, inattention_count, drowsiness_count, distance_meters
+        FROM drive_hourly_stats
+        WHERE user_id    = #{userId}
+          AND hour_start &gt;= #{from}
+          AND hour_start &lt;  #{to}
+    </select>
+
+    <select id="findDrives"
+            resultType="com.contest.DriverGuard.drive.dto.DriveDto$ListItem">
+        SELECT d.drive_id, d.started_at, d.ended_at, d.observed_seconds, d.distance_meters,
+               d.inattention_count, d.drowsiness_count
+        FROM drives d
+        WHERE d.drive_id IN (
+            SELECT s.drive_id
+            FROM drive_hourly_stats s
+            WHERE s.user_id    = #{userId}
+              AND s.hour_start &gt;= #{from}
+              AND s.hour_start &lt;  #{to}
+              AND s.observed_seconds &gt; 0
+        )
+        ORDER BY d.started_at DESC, d.drive_id DESC
+    </select>
+
+    <!-- ix_drives_user_ended_started 사용 -->
+    <select id="findLatestStartedAt" resultType="java.time.OffsetDateTime">
+        SELECT MAX(started_at)
+        FROM drives
+        WHERE user_id = #{userId}
+          AND status  = 'ENDED'
+    </select>
+
+</mapper>

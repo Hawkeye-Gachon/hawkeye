@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DriverGuard API 명세서</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --text: #1f2328; --muted: #656d76; --line: #d8dee4;
+    --accent: #0b5cad; --code-bg: #f1f3f5; --th-bg: #f6f8fa; --hover: #e9edf1;
+    --get: #1a7f37; --post: #0b5cad; --delete: #b42318; --ok: #1a7f37; --err: #b42318;
+    --note-bg: #ddf4ff; --warn-bg: #fff8c5; --warn-line: #d4a72c; --warn-text: #7d4e00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117; --card: #161b22; --text: #e6edf3; --muted: #9198a1; --line: #30363d;
+      --accent: #4493f8; --code-bg: #262c36; --th-bg: #1c2129; --hover: #21262d;
+      --get: #238636; --post: #1f6feb; --delete: #da3633; --ok: #3fb950; --err: #f85149;
+      --note-bg: #121d2f; --warn-bg: #272115; --warn-line: #9e6a03; --warn-text: #e3b341;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+         background: var(--bg); color: var(--text); line-height: 1.6; font-size: 15px; }
+  a { color: var(--accent); }
+  .layout { display: flex; max-width: 1240px; margin: 0 auto; }
+  nav { position: sticky; top: 0; align-self: flex-start; width: 270px; height: 100vh; overflow-y: auto;
+        padding: 28px 16px; border-right: 1px solid var(--line); }
+  nav h2 { font-size: 13px; color: var(--muted); margin: 18px 0 6px; letter-spacing: .02em; }
+  nav a { display: block; color: var(--text); text-decoration: none; padding: 3px 6px; border-radius: 4px; font-size: 13.5px; }
+  nav a:hover { background: var(--hover); }
+  main { flex: 1; padding: 28px 36px 80px; min-width: 0; }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  h2.section { font-size: 21px; margin: 44px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--line); }
+  h3.sub-section { font-size: 17px; margin: 28px 0 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; margin: 16px 0 24px; }
+  .endpoint { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .method { font-weight: 700; font-size: 13px; color: #fff; padding: 2px 10px; border-radius: 4px; }
+  .GET { background: var(--get); } .POST { background: var(--post); } .DELETE { background: var(--delete); }
+  .path { font-family: Consolas, "D2Coding", monospace; font-size: 16px; font-weight: 600; word-break: break-all; }
+  .auth { font-size: 12px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+  .auth.need { border-color: var(--warn-line); color: var(--warn-text); background: var(--warn-bg); }
+  .card h3 { font-size: 17px; margin: 0 0 4px; }
+  .card h4 { font-size: 14px; margin: 20px 0 6px; color: var(--muted); }
+  .tbl { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--th-bg); font-weight: 600; white-space: nowrap; }
+  td code, p code, li code, th code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  pre { background: #161b22; color: #e6edf3; padding: 14px 16px; border-radius: 6px; overflow-x: auto;
+        font-family: Consolas, "D2Coding", monospace; font-size: 13px; line-height: 1.5; margin: 6px 0; border: 1px solid var(--line); }
+  .s2 { color: var(--ok); font-weight: 700; font-family: Consolas, monospace; }
+  .s4 { color: var(--err); font-weight: 700; font-family: Consolas, monospace; }
+  .note { background: var(--note-bg); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 4px; margin: 12px 0; font-size: 14px; }
+  .warn { background: var(--warn-bg); border-left: 4px solid var(--warn-line); padding: 10px 14px; border-radius: 4px; margin: 12px 0; font-size: 14px; }
+  .req { color: var(--err); font-weight: 700; }
+  .api { font-family: Consolas, "D2Coding", monospace; font-size: 13px; white-space: nowrap; }
+  ul { padding-left: 22px; } li { margin: 3px 0; }
+  @media (max-width: 860px) { nav { display: none; } main { padding: 20px; } .api { white-space: normal; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <h2>개요</h2>
+  <a href="#overview">개요 · API 목록</a>
+  <a href="#common">공통 규칙</a>
+  <a href="#errors">에러 응답 · 코드</a>
+  <h2>Auth · User</h2>
+  <a href="#signup">POST /api/auth/signup</a>
+  <a href="#login">POST /api/auth/login</a>
+  <a href="#refresh">POST /api/auth/refresh</a>
+  <a href="#logout">POST /api/auth/logout</a>
+  <a href="#me">GET /api/users/me</a>
+  <a href="#withdraw">DELETE /api/users/me</a>
+  <h2>Terms</h2>
+  <a href="#terms-list">GET /api/terms</a>
+  <a href="#terms-detail">GET /api/terms/{termsId}</a>
+  <a href="#agreements-get">GET /api/users/me/terms-agreements</a>
+  <a href="#agreements-post">POST /api/users/me/terms-agreements</a>
+  <h2>RestPlace</h2>
+  <a href="#nearby">POST /api/rest-places/nearby</a>
+  <h2>Drive</h2>
+  <a href="#drive-start">POST /api/drives</a>
+  <a href="#drive-end">POST /api/drives/{driveId}/end</a>
+  <a href="#drive-get">GET /api/drives/{driveId}</a>
+  <a href="#drive-list">GET /api/drives</a>
+  <h2>Report</h2>
+  <a href="#report-rules">집계 규칙</a>
+  <a href="#calendar">GET /api/reports/calendar</a>
+  <a href="#daily">GET /api/reports/daily</a>
+  <a href="#weekly">GET /api/reports/weekly</a>
+  <h2>참고</h2>
+  <a href="#scenarios">화면별 호출 순서</a>
+  <a href="#db">DB 테이블</a>
+  <a href="#changes">프로토타입과 달라진 점</a>
+</nav>
+
+<main>
+<h1>DriverGuard API 명세서</h1>
+<p class="sub">기준: 2026-11-06 소스 · Spring Boot 4.0.9 · 테스트 120개 통과 · 예시는 로컬 서버 실제 호출 결과 (<code>docs/api-test-run.md</code>) · Swagger UI <code>/swagger-ui.html</code></p>
+
+<!-- ============================================================ 개요 -->
+<h2 class="section" id="overview">개요</h2>
+<p>졸음·부주의 판정, 정면 방향 설정, 경고 표시, 차량 내비(NaviHelper) 연동은 <b>앱에서 처리</b>하고, 서버는 <b>회원·약관 관리, 쉼터 찾기, 주행 기록 저장과 리포트 집계</b>를 맡습니다. 관찰 중 서버 호출은 졸음·부주의 3회 누적 시 <b>쉼터 찾기 한 번뿐</b>이고, 감지·경로·경유지 기록은 관찰을 마칠 때 한 번에 올립니다.</p>
+
+<div class="tbl"><table>
+<tr><th>구분</th><th>API</th><th>용도</th><th>인증</th></tr>
+<tr><td rowspan="4">Auth</td><td class="api">POST /api/auth/signup</td><td>회원가입 (가입 즉시 토큰 발급)</td><td>불필요</td></tr>
+<tr><td class="api">POST /api/auth/login</td><td>로그인</td><td>불필요</td></tr>
+<tr><td class="api">POST /api/auth/refresh</td><td>토큰 재발급</td><td>불필요</td></tr>
+<tr><td class="api">POST /api/auth/logout</td><td>로그아웃</td><td>불필요</td></tr>
+<tr><td rowspan="2">User</td><td class="api">GET /api/users/me</td><td>내 정보</td><td>Bearer</td></tr>
+<tr><td class="api">DELETE /api/users/me</td><td>회원 탈퇴</td><td>Bearer</td></tr>
+<tr><td rowspan="4">Terms</td><td class="api">GET /api/terms</td><td>약관 목록</td><td>불필요</td></tr>
+<tr><td class="api">GET /api/terms/{termsId}</td><td>약관 전문</td><td>불필요</td></tr>
+<tr><td class="api">GET /api/users/me/terms-agreements</td><td>내 동의 현황</td><td>Bearer</td></tr>
+<tr><td class="api">POST /api/users/me/terms-agreements</td><td>동의 저장 (동의하고 시작하기)</td><td>Bearer</td></tr>
+<tr><td>RestPlace</td><td class="api">POST /api/rest-places/nearby</td><td>졸음 감지 시 가장 가까운 쉴 곳 1곳</td><td>Bearer + 약관</td></tr>
+<tr><td rowspan="4">Drive</td><td class="api">POST /api/drives</td><td>관찰 시작 (주행 등록)</td><td>Bearer + 약관</td></tr>
+<tr><td class="api">POST /api/drives/{driveId}/end</td><td>관찰 종료 · 기록 업로드 · 리포트</td><td>Bearer + 약관</td></tr>
+<tr><td class="api">GET /api/drives/{driveId}</td><td>주행 리포트</td><td>Bearer + 약관</td></tr>
+<tr><td class="api">GET /api/drives</td><td>주행 목록</td><td>Bearer + 약관</td></tr>
+<tr><td rowspan="3">Report</td><td class="api">GET /api/reports/calendar</td><td>달력의 주행일</td><td>Bearer + 약관</td></tr>
+<tr><td class="api">GET /api/reports/daily</td><td>일간 리포트</td><td>Bearer + 약관</td></tr>
+<tr><td class="api">GET /api/reports/weekly</td><td>주간 통계</td><td>Bearer + 약관</td></tr>
+</table></div>
+<p>"Bearer + 약관": 필수 약관에 모두 동의한 사용자만 호출할 수 있습니다. 동의 전에는 <code>403 TERMS_AGREEMENT_REQUIRED</code>.</p>
+
+<!-- ============================================================ 공통 -->
+<h2 class="section" id="common">공통 규칙</h2>
+<div class="tbl"><table>
+<tr><th>항목</th><th>내용</th></tr>
+<tr><td>Base URL</td><td>로컬 <code>http://localhost:8080</code></td></tr>
+<tr><td>형식</td><td>요청·응답 모두 <code>application/json</code>, UTF-8</td></tr>
+<tr><td>인증</td><td>헤더 <code>Authorization: Bearer {accessToken}</code>. accessToken 30분, refreshToken 14일 (재발급하면 refreshToken 도 새로 바뀜)</td></tr>
+<tr><td>탈퇴 후 남은 토큰</td><td>accessToken 은 만료 전이라도 내 정보·약관·기능 API 에서 <code>404 USER_NOT_FOUND</code></td></tr>
+<tr><td>요청 시각</td><td>오프셋을 포함한 ISO-8601 (예: <code>2026-11-06T14:40:00+09:00</code>, <code>…Z</code>). 시간대가 없으면 400. 기기 시계 오차로 현재 +5분까지 허용</td></tr>
+<tr><td>응답 시각</td><td>서울 시간대 <code>+09:00</code> 로 표시 (에러 응답의 <code>timestamp</code> 만 UTC <code>Z</code>)</td></tr>
+<tr><td>날짜·집계</td><td>모두 Asia/Seoul 기준. 날짜 파라미터 <code>yyyy-MM-dd</code>, 월 <code>yyyy-MM</code></td></tr>
+<tr><td>단위</td><td>거리 m (정수), 시간 길이 초 (정수), 속도 m/s, 좌표 위도·경도 (도)</td></tr>
+<tr><td>재전송 안전</td><td>관찰 시작은 앱이 만든 UUID <code>clientDriveId</code> 로, 관찰 종료는 주행 상태로 중복을 막음. 응답을 못 받아 같은 요청을 다시 보내도 한 번만 저장</td></tr>
+</table></div>
+
+<!-- ============================================================ 에러 -->
+<h2 class="section" id="errors">에러 응답</h2>
+<p>모든 에러가 같은 형식입니다. 앱은 <code>code</code> 로 분기하고, <code>fieldErrors</code> 가 있으면 <code>field</code> 이름의 입력란 아래에 <code>message</code> 를 표시합니다. <code>fieldErrors</code> 는 입력값 오류일 때만 있습니다.</p>
+<pre>{
+  "timestamp": "2026-11-06T11:43:17.913901200Z",
+  "status": 400,
+  "error": "Bad Request",
+  "code": "VALIDATION_FAILED",
+  "message": "입력값을 확인해 주세요.",
+  "path": "/api/auth/signup",
+  "fieldErrors": [
+    { "field": "ageConfirmed", "message": "만 14세 이상만 가입할 수 있습니다." },
+    { "field": "email", "message": "이메일 형식이 아닙니다. 예: name@mail.com" },
+    { "field": "name", "message": "이름을 입력해 주세요." },
+    { "field": "password", "message": "비밀번호는 영문과 숫자를 섞어 8~64자로 입력해 주세요." }
+  ]
+}</pre>
+<p>JSON 값 형식이 틀리면(없는 enum 값, 시간대 없는 시각 등) <code>field</code> 에 위치가 들어갑니다. 예: <code>{"field": "events[0].type", "message": "값의 형식이 올바르지 않습니다."}</code>. JSON 문법 자체가 틀리면 <code>fieldErrors</code> 없이 400.</p>
+
+<h3 class="sub-section">에러 코드</h3>
+<div class="tbl"><table>
+<tr><th>상태</th><th>code</th><th>상황</th></tr>
+<tr><td>400</td><td><code>VALIDATION_FAILED</code></td><td>입력값 형식·범위 오류 (<code>fieldErrors</code> 포함)</td></tr>
+<tr><td>400</td><td><code>PASSWORD_MISMATCH</code></td><td>탈퇴 시 비밀번호 불일치</td></tr>
+<tr><td>400</td><td><code>TERMS_REQUIRED_NOT_AGREED</code></td><td>필수 약관 누락 또는 false</td></tr>
+<tr><td>400</td><td><code>TERMS_NOT_CURRENT</code></td><td>시행 중이 아닌(예전) 약관 버전에 동의 요청</td></tr>
+<tr><td>400</td><td><code>INVALID_WEEK_START</code></td><td>주간 통계 <code>weekStart</code> 가 월요일이 아님</td></tr>
+<tr><td>401</td><td><code>UNAUTHORIZED</code></td><td>토큰 없음 · 잘못됨 · 만료</td></tr>
+<tr><td>401</td><td><code>LOGIN_FAILED</code></td><td>이메일 또는 비밀번호 불일치 (계정 존재 여부는 구분하지 않음)</td></tr>
+<tr><td>401</td><td><code>INVALID_REFRESH_TOKEN</code></td><td>만료 · 폐기 · 이미 사용한 refreshToken, 탈퇴한 사용자</td></tr>
+<tr><td>403</td><td><code>TERMS_AGREEMENT_REQUIRED</code></td><td>필수 약관 동의 전 기능 API 호출</td></tr>
+<tr><td>404</td><td><code>USER_NOT_FOUND</code></td><td>사용자 없음 · 탈퇴</td></tr>
+<tr><td>404</td><td><code>TERMS_NOT_FOUND</code></td><td>없는 약관 ID</td></tr>
+<tr><td>404</td><td><code>DRIVE_NOT_FOUND</code></td><td>없는 주행 또는 다른 사용자의 주행 (존재 여부를 숨기려고 403 대신 404)</td></tr>
+<tr><td>409</td><td><code>DRIVE_NOT_ENDED</code></td><td>종료 업로드 전 주행의 리포트 조회</td></tr>
+<tr><td>409</td><td><code>EMAIL_DUPLICATED</code></td><td>이미 사용 중인 이메일</td></tr>
+<tr><td>404 / 405</td><td><code>NOT_FOUND</code> / <code>METHOD_NOT_ALLOWED</code></td><td>없는 경로 / 지원하지 않는 메서드</td></tr>
+<tr><td>500</td><td><code>INTERNAL_ERROR</code></td><td>서버 오류</td></tr>
+</table></div>
+<p class="note">탈퇴 시 비밀번호 불일치를 401 이 아닌 400 으로 둔 이유: 앱의 HTTP 클라이언트는 보통 401 을 받으면 토큰 재발급을 시도하므로, 401 은 토큰 문제에만 씁니다.</p>
+
+<!-- ============================================================ Auth -->
+<h2 class="section">Auth · User</h2>
+
+<div class="card" id="signup">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/auth/signup</span><span class="auth">인증 불필요</span></div>
+  <h3>회원가입 (가입 즉시 로그인)</h3>
+  <p>가입과 동시에 토큰을 발급해, 로그인을 다시 거치지 않고 약관 동의 화면으로 넘어갑니다. 가입 직후에는 약관 동의 전이므로 <code>termsAgreementRequired</code> 는 <code>true</code> 입니다.</p>
+  <h4>Request Body</h4>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>email</code></td><td>string</td><td class="req">O</td><td>이메일 형식(도메인에 점 필요), 최대 254자. 소문자로 저장</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td class="req">O</td><td>최대 50자. 앞뒤 공백 제거</td></tr>
+    <tr><td><code>password</code></td><td>string</td><td class="req">O</td><td>8~64자, 영문과 숫자를 각각 1자 이상 (특수문자 허용)</td></tr>
+    <tr><td><code>ageConfirmed</code></td><td>boolean</td><td class="req">O</td><td><code>true</code> 여야 함 (만 14세 이상 확인 체크박스)</td></tr>
+  </table></div>
+  <pre>{ "email": "driver1@example.com", "name": "김하늘", "password": "Test1234!", "ageConfirmed": true }</pre>
+  <h4>Response <span class="s2">201 Created</span></h4>
+  <pre>{
+  "userId": 1,
+  "email": "driver1@example.com",
+  "name": "김하늘",
+  "grantType": "Bearer",
+  "accessToken": "eyJ…",
+  "accessTokenExpiresIn": 1800,
+  "refreshToken": "…",
+  "termsAgreementRequired": true
+}</pre>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — <code>fieldErrors</code> 로 입력란별 이유 (위 에러 응답 예시)</td></tr>
+    <tr><td class="s4">409</td><td><code>EMAIL_DUPLICATED</code> — 이메일 입력란 아래에 표시</td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="login">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/auth/login</span><span class="auth">인증 불필요</span></div>
+  <h3>로그인</h3>
+  <h4>Request Body</h4>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>email</code></td><td>string</td><td class="req">O</td><td>이메일 (로그인은 이메일로만 가능)</td></tr>
+    <tr><td><code>password</code></td><td>string</td><td class="req">O</td><td>비밀번호</td></tr>
+  </table></div>
+  <pre>{ "email": "driver1@example.com", "password": "Test1234!" }</pre>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "grantType": "Bearer",
+  "accessToken": "eyJ…",
+  "accessTokenExpiresIn": 1800,
+  "refreshToken": "…",
+  "termsAgreementRequired": false
+}</pre>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>설명</th></tr>
+    <tr><td><code>accessTokenExpiresIn</code></td><td>accessToken 유효 시간 (초)</td></tr>
+    <tr><td><code>termsAgreementRequired</code></td><td><code>true</code> 면 현재 시행 중인 필수 약관 중 동의하지 않은 것이 있음 (가입 미완료 또는 약관 개정) → 앱은 약관 동의 화면으로. <code>false</code> 면 홈으로</td></tr>
+  </table></div>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — 빈 값, 이메일 형식</td></tr>
+    <tr><td class="s4">401</td><td><code>LOGIN_FAILED</code> — "이메일 또는 비밀번호가 올바르지 않습니다." (입력란 가까이에 표시)</td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="refresh">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/auth/refresh</span><span class="auth">인증 불필요</span></div>
+  <h3>토큰 재발급</h3>
+  <p>새 accessToken 과 refreshToken 을 발급합니다. 사용한 refreshToken 은 <b>즉시 폐기</b>되므로 응답의 새 refreshToken 으로 바꿔 저장해야 합니다. 응답은 로그인과 같은 형식입니다.</p>
+  <pre>{ "refreshToken": "…" }</pre>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">401</td><td><code>INVALID_REFRESH_TOKEN</code> — 만료 · 폐기 · 이미 한 번 사용한 토큰, 탈퇴한 사용자 → 로그인 화면으로</td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="logout">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/auth/logout</span><span class="auth">인증 불필요</span></div>
+  <h3>로그아웃</h3>
+  <p>해당 refreshToken 을 서버에서 삭제합니다. accessToken 은 만료될 때까지 유효하므로 <b>앱에서도 두 토큰을 삭제</b>합니다.</p>
+  <pre>{ "refreshToken": "…" }</pre>
+  <h4>Response <span class="s2">204 No Content</span></h4>
+  <p>이미 없는 토큰이어도 204.</p>
+</div>
+
+<div class="card" id="me">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/users/me</span><span class="auth need">Bearer 필요</span></div>
+  <h3>내 정보</h3>
+  <p>약관 동의 전에도 호출할 수 있습니다.</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "userId": 1,
+  "email": "driver1@example.com",
+  "name": "김하늘",
+  "status": "ACTIVE",
+  "createdAt": "2026-11-06T20:43:03.249219+09:00",
+  "termsAgreementRequired": false
+}</pre>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">401</td><td><code>UNAUTHORIZED</code></td></tr>
+    <tr><td class="s4">404</td><td><code>USER_NOT_FOUND</code> — 탈퇴한 사용자</td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="withdraw">
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="path">/api/users/me</span><span class="auth need">Bearer 필요</span></div>
+  <h3>회원 탈퇴</h3>
+  <p>비밀번호로 본인을 확인한 뒤 탈퇴합니다. 구글 플레이 정책상 계정을 만들 수 있는 앱은 계정 삭제 기능이 필요합니다.</p>
+  <pre>{ "password": "Test1234!" }</pre>
+  <p class="note">Retrofit 은 DELETE 에 본문을 붙이려면 <code>@HTTP(method = "DELETE", path = "api/users/me", hasBody = true)</code> 로 선언합니다.</p>
+  <h4>Response <span class="s2">204 No Content</span></h4>
+  <h4>서버 처리</h4>
+  <ul>
+    <li><code>users.status</code> 를 <code>WITHDRAWN</code> 으로 바꾸고 <code>withdrawn_at</code> 기록. 같은 이메일로 다시 가입할 수 있음</li>
+    <li>로그인 정보(비밀번호 해시) · 모든 기기의 refreshToken · 주행 기록(감지 · 경유지 · 통계 포함) · 약관 동의 기록 삭제</li>
+    <li>남은 accessToken 으로 호출하면 <code>404 USER_NOT_FOUND</code>, refreshToken · 로그인은 401</li>
+  </ul>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>PASSWORD_MISMATCH</code> — 비밀번호 입력란 아래에 표시 · <code>VALIDATION_FAILED</code> — 빈 비밀번호</td></tr>
+    <tr><td class="s4">404</td><td><code>USER_NOT_FOUND</code> — 이미 탈퇴</td></tr>
+  </table></div>
+</div>
+
+<!-- ============================================================ Terms -->
+<h2 class="section">Terms</h2>
+<p>약관 목록 · 버전 · 전문 · 동의 기록은 모두 서버가 관리합니다. 약관을 개정하면 DB 에 새 버전 행만 추가하면 되고(앱 배포 불필요), 기존 사용자는 다음 로그인·API 호출 때 재동의 화면으로 이동합니다.</p>
+
+<div class="card" id="terms-list">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/terms</span><span class="auth">인증 불필요</span></div>
+  <h3>약관 목록</h3>
+  <p>현재 시행 중인 약관을 화면 표시 순서대로 돌려줍니다 (전문 제외).</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "terms": [
+    { "termsId": 1, "code": "SERVICE",   "title": "서비스 이용약관",          "version": 1, "required": true,  "effectiveAt": "2026-11-01T00:00:00+09:00" },
+    { "termsId": 2, "code": "PRIVACY",   "title": "개인정보 수집 · 이용",     "version": 1, "required": true,  "effectiveAt": "2026-11-01T00:00:00+09:00" },
+    { "termsId": 3, "code": "CAMERA",    "title": "운전자 카메라 영상 처리",  "version": 1, "required": true,  "effectiveAt": "2026-11-01T00:00:00+09:00" },
+    { "termsId": 4, "code": "LOCATION",  "title": "위치정보 이용",            "version": 1, "required": true,  "effectiveAt": "2026-11-01T00:00:00+09:00" },
+    { "termsId": 5, "code": "MARKETING", "title": "이벤트 · 혜택 알림 수신",  "version": 1, "required": false, "effectiveAt": "2026-11-01T00:00:00+09:00" }
+  ]
+}</pre>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>설명</th></tr>
+    <tr><td><code>termsId</code></td><td>약관 <b>버전별</b> ID. 동의 요청에 사용</td></tr>
+    <tr><td><code>code</code></td><td>약관 종류. 버전이 바뀌어도 그대로</td></tr>
+    <tr><td><code>required</code></td><td><code>true</code> 필수 · <code>false</code> 선택</td></tr>
+  </table></div>
+  <p class="warn">약관 문구는 개발용 예시입니다 (<code>db/terms-sample.sql</code>, 서비스 이용약관 제1~3조는 디자인 S05A 문구). 실제 문구는 기획·법무 확인 후 교체합니다.</p>
+</div>
+
+<div class="card" id="terms-detail">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/terms/{termsId}</span><span class="auth">인증 불필요</span></div>
+  <h3>약관 전문</h3>
+  <p>"전문 보기" 화면용. <code>content</code> 는 마크다운이며, <code># 제목</code> 줄로 왼쪽 목차를 만들 수 있습니다. 예전 버전 ID 도 조회됩니다.</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "termsId": 1,
+  "code": "SERVICE",
+  "title": "서비스 이용약관",
+  "version": 1,
+  "required": true,
+  "effectiveAt": "2026-11-01T00:00:00+09:00",
+  "content": "# 제1조 (목적)\n이 약관은 Hawkeye(이하 “서비스”)가 제공하는 … \n\n# 제2조 (정의)\n…\n\n# 부칙\n이 약관은 2026년 11월 1일부터 시행합니다."
+}</pre>
+  <h4>에러</h4>
+  <div class="tbl"><table><tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">404</td><td><code>TERMS_NOT_FOUND</code></td></tr></table></div>
+</div>
+
+<div class="card" id="agreements-get">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/users/me/terms-agreements</span><span class="auth need">Bearer 필요</span></div>
+  <h3>내 약관 동의 현황</h3>
+  <p>현재 시행 중인 약관마다 내 동의 여부. 약관이 개정돼 재동의가 필요할 때 이전 선택을 미리 채우는 데 씁니다. 아래 예시는 서비스 이용약관이 v1 → v2 로 개정돼 다시 동의해야 하는 상태입니다.</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "termsAgreementRequired": true,
+  "agreements": [
+    { "termsId": 8, "code": "SERVICE",   "title": "서비스 이용약관",         "version": 2, "required": true,  "agreed": false, "agreedAt": null },
+    { "termsId": 2, "code": "PRIVACY",   "title": "개인정보 수집 · 이용",    "version": 1, "required": true,  "agreed": true,  "agreedAt": "2026-11-06T20:43:04.321411+09:00" },
+    { "termsId": 3, "code": "CAMERA",    "title": "운전자 카메라 영상 처리", "version": 1, "required": true,  "agreed": true,  "agreedAt": "2026-11-06T20:43:04.321411+09:00" },
+    { "termsId": 4, "code": "LOCATION",  "title": "위치정보 이용",           "version": 1, "required": true,  "agreed": true,  "agreedAt": "2026-11-06T20:43:04.321411+09:00" },
+    { "termsId": 5, "code": "MARKETING", "title": "이벤트 · 혜택 알림 수신", "version": 1, "required": false, "agreed": false, "agreedAt": null }
+  ]
+}</pre>
+</div>
+
+<div class="card" id="agreements-post">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/users/me/terms-agreements</span><span class="auth need">Bearer 필요</span></div>
+  <h3>약관 동의 저장 (동의하고 시작하기)</h3>
+  <p>저장 후 현재 필수 약관이 모두 동의 상태여야 합니다. <b>보내지 않은 약관은 기존 상태를 유지</b>하므로, 나중에 선택 약관만 바꿀 때도 같은 API 를 씁니다. 이미 동의한 약관에 다시 동의하면 처음 동의 시각을 유지합니다.</p>
+  <h4>Request Body</h4>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>agreements</code></td><td>array</td><td class="req">O</td><td>1개 이상</td></tr>
+    <tr><td><code>agreements[].termsId</code></td><td>number</td><td class="req">O</td><td><code>GET /api/terms</code> 의 termsId</td></tr>
+    <tr><td><code>agreements[].agreed</code></td><td>boolean</td><td class="req">O</td><td>동의 여부</td></tr>
+  </table></div>
+  <pre>{
+  "agreements": [
+    { "termsId": 1, "agreed": true }, { "termsId": 2, "agreed": true },
+    { "termsId": 3, "agreed": true }, { "termsId": 4, "agreed": true },
+    { "termsId": 5, "agreed": false }
+  ]
+}</pre>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <p><code>GET /api/users/me/terms-agreements</code> 와 같은 형식 (<code>termsAgreementRequired: false</code>).</p>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>TERMS_REQUIRED_NOT_AGREED</code> — 필수 약관을 빠뜨렸거나 false</td></tr>
+    <tr><td class="s4">400</td><td><code>TERMS_NOT_CURRENT</code> — 예전 버전 termsId. 앱은 약관 목록을 다시 받아 화면을 갱신</td></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — 빈 배열, 값 누락</td></tr>
+    <tr><td class="s4">404</td><td><code>TERMS_NOT_FOUND</code></td></tr>
+  </table></div>
+</div>
+
+<!-- ============================================================ RestPlace -->
+<h2 class="section">RestPlace</h2>
+
+<div class="card" id="nearby">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/rest-places/nearby</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>가장 가까운 휴게소 · 졸음쉼터 1곳</h3>
+  <p>졸음 감지 즉시(부주의 3회 누적이면 정면 주시 확인 후) 호출합니다. 현재 위치·진행 방향 기준으로 <b>지금 차선에서 바로 들어갈 수 있는 곳(반대 차선 제외)</b> 중 카카오 길찾기 기준 실제 도로 거리가 가장 가까운 1곳을 돌려줍니다. 앱은 <code>place</code> 의 좌표를 NaviHelper 경유지(목적지가 없으면 목적지)로 추가하고, 제안 화면에 <code>type</code> 과 <code>roadDistanceMeters</code> 를 "졸음쉼터 · 전방 10.3km" 처럼 표시합니다.</p>
+  <h4>Request Body</h4>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>lat</code></td><td>number</td><td class="req">O</td><td>현재 위도 (-90 ~ 90)</td></tr>
+    <tr><td><code>lng</code></td><td>number</td><td class="req">O</td><td>현재 경도 (-180 ~ 180)</td></tr>
+    <tr><td><code>heading</code></td><td>number</td><td></td><td>진행 방향 (북 0°, 시계 방향, 0 ~ 360). <code>Location.getBearing()</code></td></tr>
+    <tr><td><code>speed</code></td><td>number</td><td></td><td>m/s. <code>speed &gt;= 2.8</code>(약 10km/h)일 때만 heading 을 반영</td></tr>
+    <tr><td><code>type</code></td><td>string</td><td></td><td><code>REST_AREA</code> / <code>DROWSY_SHELTER</code>. 생략하면 둘 다</td></tr>
+  </table></div>
+  <pre>{ "lat": 37.073253, "lng": 127.132555, "heading": 340, "speed": 27 }</pre>
+  <h4>Response <span class="s2">200 OK</span> (경부고속도로 북행 오산 부근 실제 호출)</h4>
+  <pre>{
+  "directionApplied": true,
+  "onHighway": true,
+  "distanceSource": "ROAD",
+  "place": {
+    "placeId": 1211,
+    "type": "DROWSY_SHELTER",
+    "name": "오산",
+    "latitude": 37.1542659,
+    "longitude": 127.0861027,
+    "roadDistanceMeters": 10313,
+    "durationSeconds": 550
+  }
+}</pre>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>설명</th></tr>
+    <tr><td><code>directionApplied</code></td><td>진행 방향을 반영했는지 (속도가 낮거나 heading 이 없으면 false)</td></tr>
+    <tr><td><code>onHighway</code></td><td><code>true</code> 고속도로 위 · <code>false</code> 일반도로 (place=null, 앱은 "안전한 곳에 정차해 휴식하세요" 같은 일반 안내) · <code>null</code> 확인 못함</td></tr>
+    <tr><td><code>distanceSource</code></td><td><code>ROAD</code> 실제 도로 거리 기준 · <code>UNAVAILABLE</code> 길찾기 실패로 확인 불가 (place=null)</td></tr>
+    <tr><td><code>place</code></td><td>없으면 <code>null</code> → 앱은 일반 안내</td></tr>
+  </table></div>
+  <h4>판정 방식 (틀린 곳을 안내하지 않는 것이 원칙)</h4>
+  <ul>
+    <li><b>휴게소</b>: 카카오 길찾기를 진행 방향으로 출발시켜 경로 모양을 봅니다. 휴게소를 지나쳤다가 되돌아와 도착하면 반대 차선으로 제외합니다.</li>
+    <li><b>졸음쉼터</b>: 카카오 지도에 진입로가 없어, 내 방향으로 확인된 휴게소까지의 경로 위(60m 이내)에 있고 방향 표기가 같은 쉼터만 인정합니다.</li>
+    <li><b>서울외곽순환</b>: 같은 "일산 방향"이라도 원의 위치에 따라 회전이 바뀌어, 차의 회전(시계·반시계)과 장소의 회전을 좌표로 비교합니다. 방향을 알 수 없는 장소는 제외합니다.</li>
+    <li>확인되지 않으면 결과를 비웁니다. 검증: 고속도로 12개 방향(15km 간격)과 서울외곽순환 양방향 실주행 시나리오에서 반대 차선 0건, 오프라인 회귀 테스트 78개.</li>
+  </ul>
+  <p class="note">한 번 호출에 카카오 길찾기가 8~24회 나가며 응답까지 보통 1~3초 걸립니다. 경고음·빨간 화면은 이 응답을 기다리지 말고 즉시 표시합니다.</p>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — 좌표 범위 (예: <code>{"field": "lat", "message": "lat 은 -90 ~ 90 이어야 합니다."}</code>)</td></tr>
+    <tr><td class="s4">403</td><td><code>TERMS_AGREEMENT_REQUIRED</code></td></tr>
+  </table></div>
+</div>
+
+<!-- ============================================================ Drive -->
+<h2 class="section">Drive</h2>
+<p><b>기록 방식</b>: 관찰을 시작할 때 주행을 등록하고, 관찰 중에는 서버와 통신하지 않습니다(쉼터 찾기 제외). 감지 기록·경로·이동 거리·경유지 기록은 앱이 로컬(Room 등)에 저장했다가 종료할 때 한 번에 올리고, <b>200 을 받은 뒤에만 로컬 기록을 지웁니다</b>. 업로드가 실패하거나 앱이 꺼졌다면 다음 실행 때 다시 올립니다.</p>
+<p><b>주행 상태</b>: <code>IN_PROGRESS</code> 관찰 중 · <code>ENDED</code> 종료 업로드 완료 · <code>ABANDONED</code> 종료 업로드 없이 다음 관찰이 시작됨 (나중에 업로드하면 <code>ENDED</code>). 사용자당 <code>IN_PROGRESS</code> 주행은 1개입니다.</p>
+
+<div class="card" id="drive-start">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/drives</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>관찰 시작 (주행 등록)</h3>
+  <p>보는 방향 설정 화면에서 <b>관찰 시작</b>을 누르면 호출합니다. 정면 방향 설정값은 앱에서만 씁니다. 관찰은 응답을 기다리지 않고 바로 시작하고, 실패하면 같은 <code>clientDriveId</code> 로 재시도합니다.</p>
+  <h4>Request Body</h4>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>clientDriveId</code></td><td>string</td><td class="req">O</td><td>앱이 만든 UUID. 같은 값으로 다시 보내면 새로 만들지 않고 기존 주행을 200 으로 반환</td></tr>
+    <tr><td><code>startedAt</code></td><td>string</td><td class="req">O</td><td>관찰 시작 시각. 현재 −7일 ~ +5분 (시작 요청이 실패했던 주행을 나중에 등록할 수 있음)</td></tr>
+  </table></div>
+  <pre>{ "clientDriveId": "3f1c0b7e-61a2-4b0d-a3c1-0001b2c3d4e5", "startedAt": "2026-11-06T19:58:09+09:00" }</pre>
+  <h4>Response <span class="s2">201 Created</span> (같은 clientDriveId 재전송이면 <span class="s2">200 OK</span>)</h4>
+  <pre>{ "driveId": 1, "status": "IN_PROGRESS", "startedAt": "2026-11-06T19:58:09+09:00", "abandonedDriveId": null }</pre>
+  <h4>진행 중인 주행이 이미 있을 때</h4>
+  <div class="tbl"><table>
+    <tr><th>상황</th><th>처리</th><th>예시 응답</th></tr>
+    <tr><td>새 startedAt 이 진행 중 주행보다 늦음 (일반적)</td><td>기존 주행을 <code>ABANDONED</code> 로, 새 주행을 <code>IN_PROGRESS</code> 로</td><td><code>{"driveId": 5, "status": "IN_PROGRESS", …, "abandonedDriveId": 4}</code></td></tr>
+    <tr><td>새 startedAt 이 진행 중 주행보다 이름 (실패했던 예전 주행을 나중에 등록)</td><td>기존 주행은 그대로, 새 주행을 처음부터 <code>ABANDONED</code> 로. 앱은 이어서 종료 API 로 기록을 올림</td><td><code>{"status": "ABANDONED", "abandonedDriveId": null}</code></td></tr>
+  </table></div>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — UUID 형식, startedAt 범위 ("startedAt 은 현재로부터 7일 전 ~ 5분 후 사이여야 합니다."), 시간대 없는 시각</td></tr>
+    <tr><td class="s4">403</td><td><code>TERMS_AGREEMENT_REQUIRED</code></td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="drive-end">
+  <div class="endpoint"><span class="method POST">POST</span><span class="path">/api/drives/{driveId}/end</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>관찰 종료 · 주행 기록 업로드</h3>
+  <p>관찰 종료 확인창에서 <b>종료하고 리포트 보기</b>를 누르면 호출합니다. 서버는 기록을 저장하고 시간대 통계를 계산한 뒤 <b>리포트를 바로 돌려줍니다</b>. 경로 단순화와 이동 거리 계산, 쉼터 방문 판정은 앱에서 합니다.</p>
+  <h4>Request Body</h4>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>endedAt</code></td><td>string</td><td class="req">O</td><td>종료 시각. 시작 이후 ~ 현재 +5분, 관찰 시간 최대 24시간. 앱이 비정상 종료된 주행이면 로컬에 남은 마지막 기록 시각</td></tr>
+    <tr><td><code>distanceMeters</code></td><td>number</td><td class="req">O</td><td>앱이 원본 위치로 계산한 이동 거리 (m). 위치 기록이 없으면 0. 관찰 시간 × 70m/s 를 넘으면 400</td></tr>
+    <tr><td><code>events</code></td><td>array</td><td class="req">O</td><td>감지 기록 0~2,000건. 없으면 빈 배열</td></tr>
+    <tr><td><code>events[].type</code></td><td>string</td><td class="req">O</td><td><code>INATTENTION</code> 전방 주시 이탈 · <code>DROWSINESS</code> 졸음</td></tr>
+    <tr><td><code>events[].detectedAt</code></td><td>string</td><td class="req">O</td><td>실제 감지 시각 (시간대별 차트의 기준)</td></tr>
+    <tr><td><code>events[].latitude</code>, <code>longitude</code></td><td>number</td><td></td><td>감지 위치. 한쪽만 있으면 위치 없음으로 저장</td></tr>
+    <tr><td><code>route</code></td><td>array</td><td class="req">O</td><td>앱에서 단순화한 경로 <code>[[위도, 경도], …]</code>, 최대 2,000점 (예: Google Maps Utils <code>PolyUtil.simplify</code>). 없으면 빈 배열</td></tr>
+    <tr><td><code>waypoints</code></td><td>array</td><td class="req">O</td><td>NaviHelper 성공 콜백을 받은 경유지만, 0~20건. 없으면 빈 배열</td></tr>
+    <tr><td><code>waypoints[].placeId</code></td><td>number</td><td class="req">O</td><td>nearby 응답의 <code>place.placeId</code></td></tr>
+    <tr><td><code>waypoints[].mode</code></td><td>string</td><td class="req">O</td><td><code>WAYPOINT</code> 기존 경로에 경유지 추가 · <code>DESTINATION</code> 목적지가 없어 쉼터로 길 안내</td></tr>
+    <tr><td><code>waypoints[].trigger</code></td><td>string</td><td class="req">O</td><td><code>DROWSINESS</code> 졸음 · <code>INATTENTION_REPEATED</code> 부주의 3회 누적</td></tr>
+    <tr><td><code>waypoints[].addedAt</code></td><td>string</td><td class="req">O</td><td>성공 콜백을 받은 시각</td></tr>
+    <tr><td><code>waypoints[].visitedAt</code></td><td>string</td><td></td><td>앱이 쉼터 방문을 확인한 시각 (예: 쉼터 반경 안에 일정 시간 머묾). 방문하지 않았으면 생략 또는 null</td></tr>
+  </table></div>
+  <pre>{
+  "endedAt": "2026-11-06T20:40:10+09:00",
+  "distanceMeters": 28400,
+  "events": [
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:08:10+09:00", "latitude": 37.0951, "longitude": 127.1228 },
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:15:11+09:00", "latitude": 37.1102, "longitude": 127.115 },
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:15:11+09:00", "latitude": 37.1102, "longitude": 127.115 },
+    { "type": "DROWSINESS",  "detectedAt": "2026-11-06T20:21:11+09:00", "latitude": 37.1301, "longitude": 127.1002 },
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:31:11+09:00", "latitude": 37.161,  "longitude": 127.085 }
+  ],
+  "route": [[37.073253, 127.132555], [37.1102, 127.115], [37.1542659, 127.0861027], [37.2351, 127.1052]],
+  "waypoints": [
+    { "placeId": 1211, "mode": "WAYPOINT", "trigger": "DROWSINESS",
+      "addedAt": "2026-11-06T20:22:11+09:00", "visitedAt": "2026-11-06T20:28:11+09:00" }
+  ]
+}</pre>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <p><a href="#drive-get">주행 리포트</a> 형식에 <code>skipped</code> 를 더한 응답. 위 요청의 세 번째 감지는 두 번째와 같은 시각이라 건너뛰었습니다.</p>
+  <pre>{
+  "driveId": 1,
+  "status": "ENDED",
+  "startedAt": "2026-11-06T19:58:09+09:00",
+  "endedAt": "2026-11-06T20:40:10+09:00",
+  "observedSeconds": 2521,
+  "distanceMeters": 28400,
+  "inattentionCount": 3,
+  "drowsinessCount": 1,
+  "route": {
+    "start": { "latitude": 37.073253, "longitude": 127.132555 },
+    "end": { "latitude": 37.2351, "longitude": 127.1052 },
+    "points": [[37.073253, 127.132555], [37.1102, 127.115], [37.1542659, 127.0861027], [37.2351, 127.1052]]
+  },
+  "events": [
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:08:10+09:00", "latitude": 37.0951, "longitude": 127.1228 },
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:15:11+09:00", "latitude": 37.1102, "longitude": 127.115 },
+    { "type": "DROWSINESS",  "detectedAt": "2026-11-06T20:21:11+09:00", "latitude": 37.1301, "longitude": 127.1002 },
+    { "type": "INATTENTION", "detectedAt": "2026-11-06T20:31:11+09:00", "latitude": 37.161,  "longitude": 127.085 }
+  ],
+  "waypoints": [
+    { "waypointId": 1, "placeId": 1211, "placeName": "오산", "placeType": "DROWSY_SHELTER",
+      "mode": "WAYPOINT", "trigger": "DROWSINESS",
+      "addedAt": "2026-11-06T20:22:11+09:00", "visited": true, "visitedAt": "2026-11-06T20:28:11+09:00" }
+  ],
+  "skipped": { "events": 1, "waypoints": 0 }
+}</pre>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>설명</th></tr>
+    <tr><td><code>skipped</code></td><td>저장하지 않은 항목 수. 주행 기간(시작 ~ 종료) 밖이거나 같은 종류·같은 시각 중복인 감지, 기간 밖·중복이거나 없는 장소인 경유지. 몇 개 때문에 주행 전체가 거부되지 않도록 400 대신 건너뜀</td></tr>
+  </table></div>
+  <h4>서버 처리</h4>
+  <ul>
+    <li>주행 행을 잠그고 한 트랜잭션에서 감지·경유지 저장, 시간대 통계 계산, <code>ENDED</code> 로 변경</li>
+    <li><code>IN_PROGRESS</code> 와 <code>ABANDONED</code> 주행 모두 받음. 시간이 지난 뒤의 업로드도 그대로 처리</li>
+    <li>이미 <code>ENDED</code> 면 본문을 무시하고 기존 리포트를 반환 (재전송해도 두 번 저장되지 않음, <code>skipped</code> 없음)</li>
+    <li>감지 횟수는 앱이 센 값이 아니라 <code>events</code> 로 서버가 셈</li>
+    <li>경유지의 장소명·종류·좌표는 저장 시점의 값을 복사 (나중에 휴게소 데이터가 바뀌어도 리포트 유지). <code>visitedAt</code> 이 추가 시각 ~ 종료 시각 밖이면 방문 기록만 무시</li>
+  </ul>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — endedAt 범위, 거리 상한, 배열 개수 초과, 좌표 범위, type·mode·trigger 값 오류 (예: <code>{"field": "events[0].type", …}</code>)</td></tr>
+    <tr><td class="s4">404</td><td><code>DRIVE_NOT_FOUND</code> — 없거나 다른 사용자의 주행</td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="drive-get">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/drives/{driveId}</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>주행 리포트</h3>
+  <p>이전 기록에서 주행을 눌렀을 때의 상세 리포트. 관찰 직후 리포트는 종료 API 응답을 그대로 씁니다. 응답은 종료 API 와 같고 <code>skipped</code> 만 없습니다.</p>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>화면</th></tr>
+    <tr><td><code>startedAt</code> / <code>endedAt</code></td><td>"11월 6일(금) · 오후 7:58 ~ 8:40"</td></tr>
+    <tr><td><code>observedSeconds</code></td><td>총 관찰 시간 (2521 → "42분 1초")</td></tr>
+    <tr><td><code>distanceMeters</code></td><td>이동 거리 (28400 → "28.4km")</td></tr>
+    <tr><td><code>route.points</code></td><td>이동 경로 선. 기록이 없으면 빈 배열이고 <code>start</code>·<code>end</code> 는 null → "이동 경로 기록 없음"</td></tr>
+    <tr><td><code>route.start</code> / <code>end</code></td><td>출발·도착 마커 (경로의 첫·마지막 점)</td></tr>
+    <tr><td><code>events</code></td><td>지도의 부주의(주황) · 졸음(빨강) 감지 위치 핀</td></tr>
+    <tr><td><code>waypoints</code></td><td>"쉼터 경유지 추가 기록" ("오후 8시 22분 · 오산 졸음쉼터 경유지 추가"). <code>visited</code> 가 true 일 때만 방문 표시</td></tr>
+  </table></div>
+  <h4>에러</h4>
+  <div class="tbl"><table>
+    <tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">404</td><td><code>DRIVE_NOT_FOUND</code></td></tr>
+    <tr><td class="s4">409</td><td><code>DRIVE_NOT_ENDED</code> — 아직 종료 업로드가 없는 주행 (<code>IN_PROGRESS</code>, <code>ABANDONED</code>)</td></tr>
+  </table></div>
+</div>
+
+<div class="card" id="drive-list">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/drives</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>주행 목록</h3>
+  <p>종료된 주행(<code>ENDED</code>)을 최근 시작순으로 돌려줍니다. 홈의 "최근 주행" 카드는 <code>size=1</code> 로 호출합니다.</p>
+  <h4>Query</h4>
+  <div class="tbl"><table>
+    <tr><th>파라미터</th><th>타입</th><th>필수</th><th>설명</th></tr>
+    <tr><td><code>size</code></td><td>number</td><td></td><td>1~50, 기본 20</td></tr>
+    <tr><td><code>cursor</code></td><td>string</td><td></td><td>이전 응답의 <code>nextCursor</code></td></tr>
+  </table></div>
+  <h4>Response <span class="s2">200 OK</span> (<code>?size=2</code>)</h4>
+  <pre>{
+  "drives": [
+    { "driveId": 5, "startedAt": "2026-11-06T20:42:13+09:00", "endedAt": "2026-11-06T20:43:04+09:00",
+      "observedSeconds": 51, "distanceMeters": 700, "inattentionCount": 1, "drowsinessCount": 0 },
+    { "driveId": 4, "startedAt": "2026-11-06T20:41:13+09:00", "endedAt": "2026-11-06T20:41:43+09:00",
+      "observedSeconds": 30, "distanceMeters": 400, "inattentionCount": 0, "drowsinessCount": 0 }
+  ],
+  "nextCursor": "MjAyNi0xMS0wNlQxMTo0MToxM1p8NA"
+}</pre>
+  <p>기록이 없으면 <code>{"drives": [], "nextCursor": null}</code> → 홈의 이전 기록 미리보기를 숨깁니다. 마지막 페이지면 <code>nextCursor</code> 는 null.</p>
+  <h4>에러</h4>
+  <div class="tbl"><table><tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — size 범위, 잘못된 cursor</td></tr></table></div>
+</div>
+
+<!-- ============================================================ Report -->
+<h2 class="section">Report</h2>
+
+<h3 class="sub-section" id="report-rules">집계 규칙</h3>
+<div class="tbl"><table>
+<tr><th>항목</th><th>규칙</th></tr>
+<tr><td>집계 대상</td><td>종료 업로드가 끝난 주행(<code>ENDED</code>)만. 늦게 업로드된 주행은 업로드되는 순간 해당 날짜에 반영</td></tr>
+<tr><td>시간 구간</td><td>서울 기준 1시간 단위. 종료 업로드 때 주행을 구간별로 나눠 저장해 두고 리포트는 그 값만 합산</td></tr>
+<tr><td>감지 횟수</td><td>실제 감지 시각이 속한 구간 (여러 번 주행한 날도 동일)</td></tr>
+<tr><td>관찰 시간 · 이동 거리</td><td>관찰 시간은 구간별로 나누고, 이동 거리는 구간별 관찰 시간 비율로 나눔 (합계는 총 거리와 정확히 같음). 예: 14:40 ~ 15:20 → 14시대 20분, 15시대 20분, 거리 반씩</td></tr>
+<tr><td>자정 · 주 경계를 넘는 주행</td><td>요약 수치는 그 기간에 해당하는 부분만 합산. 주행 횟수와 주행 목록에는 겹치는 모든 기간에 포함. 예: 23:30 ~ 00:30 주행은 이틀 모두에 나오고 주간 주행 횟수에는 한 번만</td></tr>
+<tr><td>"0회" vs "관찰 기록 없음"</td><td>구간의 <code>observedSeconds</code> 가 0 이면 관찰 기록 없음(빈칸), 0 보다 크고 횟수가 0 이면 0회(회색 짧은 선)</td></tr>
+<tr><td>빈 상태 문구</td><td><code>summary.driveCount = 0</code> → "해당 기간에 주행 기록이 없습니다". 주행은 있는데 선택한 항목 횟수가 0 → "이 기간에는 졸음이 감지되지 않았습니다"</td></tr>
+<tr><td>집중 시간대 (<code>peak</code>)</td><td>가장 많이 감지된 시간대. 같은 횟수면 여러 개(<code>hours</code> 배열). 감지가 없으면 <code>{"hours": [], "count": 0}</code></td></tr>
+</table></div>
+
+<div class="card" id="calendar">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/reports/calendar?month=2026-11</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>달력의 주행일</h3>
+  <p>주행 기록이 있는 날짜에 점을 표시합니다. <code>month</code>(<code>yyyy-MM</code>)는 필수입니다.</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{ "month": "2026-11", "driveDates": ["2026-11-04", "2026-11-05", "2026-11-06"] }</pre>
+  <p>11월 5일은 5일 23:30 ~ 6일 00:30 주행의 앞부분만 있는 날입니다.</p>
+</div>
+
+<div class="card" id="daily">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/reports/daily?date=2026-11-06</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>일간 리포트</h3>
+  <p><code>date</code>(<code>yyyy-MM-dd</code>)를 생략하면 가장 최근 주행일(주행 기록이 전혀 없으면 오늘)입니다. 이전 기록 화면 첫 진입에 생략하고 응답의 <code>date</code> 를 화면 날짜로 씁니다.</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "date": "2026-11-06",
+  "summary": { "driveCount": 4, "observedSeconds": 4402, "distanceMeters": 60000, "inattentionCount": 4, "drowsinessCount": 2 },
+  "hourly": [
+    { "hour": 0, "observedSeconds": 1800, "inattentionCount": 0, "drowsinessCount": 1 },
+    { "hour": 1, "observedSeconds": 0, "inattentionCount": 0, "drowsinessCount": 0 },
+    …
+    { "hour": 23, "observedSeconds": 0, "inattentionCount": 0, "drowsinessCount": 0 }
+  ],
+  "peak": {
+    "inattention": { "hours": [20], "count": 4 },
+    "drowsiness": { "hours": [0, 20], "count": 1 }
+  },
+  "drives": [
+    { "driveId": 5, "startedAt": "2026-11-06T20:42:13+09:00", "endedAt": "2026-11-06T20:43:04+09:00", "observedSeconds": 51, "distanceMeters": 700, "inattentionCount": 1, "drowsinessCount": 0 },
+    { "driveId": 4, "startedAt": "2026-11-06T20:41:13+09:00", "endedAt": "2026-11-06T20:41:43+09:00", "observedSeconds": 30, "distanceMeters": 400, "inattentionCount": 0, "drowsinessCount": 0 },
+    { "driveId": 1, "startedAt": "2026-11-06T19:58:09+09:00", "endedAt": "2026-11-06T20:40:10+09:00", "observedSeconds": 2521, "distanceMeters": 28400, "inattentionCount": 3, "drowsinessCount": 1 },
+    { "driveId": 3, "startedAt": "2026-11-05T23:30:00+09:00", "endedAt": "2026-11-06T00:30:00+09:00", "observedSeconds": 3600, "distanceMeters": 61000, "inattentionCount": 1, "drowsinessCount": 1 }
+  ]
+}</pre>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>화면</th></tr>
+    <tr><td><code>summary</code></td><td>하루 요약 5칸 (주행, 총 관찰 시간, 총 이동 거리, 부주의, 졸음 감지). 자정 넘긴 주행은 이날 부분만 (위 예시의 3번 주행은 30분·30.5km 만 합산)</td></tr>
+    <tr><td><code>hourly</code></td><td>시간대별 막대 차트. 항상 0~23시 24개. 막대를 누르면 "오후 8~9시 · 부주의 4회 · 이 시간대 관찰 41분" (hourly[20].observedSeconds = 2491)</td></tr>
+    <tr><td><code>peak</code></td><td>"이날은 오후 8~9시에 부주의가 가장 많이 감지됐습니다 · 4회"</td></tr>
+    <tr><td><code>drives</code></td><td>주행별 기록, 최신순, <b>주행 전체 값</b>. 누르면 <code>GET /api/drives/{driveId}</code></td></tr>
+  </table></div>
+  <h4>에러</h4>
+  <div class="tbl"><table><tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>VALIDATION_FAILED</code> — 날짜 형식 (<code>{"field": "date", "message": "date 는 yyyy-MM-dd 형식이어야 합니다."}</code>)</td></tr></table></div>
+</div>
+
+<div class="card" id="weekly">
+  <div class="endpoint"><span class="method GET">GET</span><span class="path">/api/reports/weekly?weekStart=2026-11-02</span><span class="auth need">Bearer + 약관</span></div>
+  <h3>주간 통계</h3>
+  <p><code>weekStart</code> 는 그 주의 월요일. 생략하면 가장 최근 주행일이 속한 주(기록이 없으면 이번 주)입니다. 홈의 "이번 주 관찰 3회 · 총 2시간 10분"은 이번 주 월요일을 넘겨 <code>summary</code> 를 씁니다. 주차 이동은 앱이 ±7일을 계산합니다.</p>
+  <h4>Response <span class="s2">200 OK</span></h4>
+  <pre>{
+  "weekStart": "2026-11-02",
+  "weekEnd": "2026-11-08",
+  "summary": { "driveCount": 5, "observedSeconds": 9064, "distanceMeters": 123300, "inattentionCount": 8, "drowsinessCount": 2 },
+  "daily": [
+    { "date": "2026-11-02", "dayOfWeek": "MONDAY",    "driveCount": 0, "observedSeconds": 0,    "inattentionCount": 0, "drowsinessCount": 0 },
+    { "date": "2026-11-03", "dayOfWeek": "TUESDAY",   "driveCount": 0, "observedSeconds": 0,    "inattentionCount": 0, "drowsinessCount": 0 },
+    { "date": "2026-11-04", "dayOfWeek": "WEDNESDAY", "driveCount": 1, "observedSeconds": 2862, "inattentionCount": 3, "drowsinessCount": 0 },
+    { "date": "2026-11-05", "dayOfWeek": "THURSDAY",  "driveCount": 1, "observedSeconds": 1800, "inattentionCount": 1, "drowsinessCount": 0 },
+    { "date": "2026-11-06", "dayOfWeek": "FRIDAY",    "driveCount": 4, "observedSeconds": 4402, "inattentionCount": 4, "drowsinessCount": 2 },
+    { "date": "2026-11-07", "dayOfWeek": "SATURDAY",  "driveCount": 0, "observedSeconds": 0,    "inattentionCount": 0, "drowsinessCount": 0 },
+    { "date": "2026-11-08", "dayOfWeek": "SUNDAY",    "driveCount": 0, "observedSeconds": 0,    "inattentionCount": 0, "drowsinessCount": 0 }
+  ],
+  "hourly": [ { "hour": 0, "observedSeconds": 1800, "inattentionCount": 0, "drowsinessCount": 1 }, … ],
+  "peak": { "inattention": { "hours": [20], "count": 4 }, "drowsiness": { "hours": [0, 20], "count": 1 } }
+}</pre>
+  <div class="tbl"><table>
+    <tr><th>필드</th><th>화면</th></tr>
+    <tr><td><code>weekStart</code> / <code>weekEnd</code></td><td>"11월 2일(월) ~ 11월 8일(일)"</td></tr>
+    <tr><td><code>summary.driveCount</code></td><td>5 = 자정 넘긴 주행(5일·6일에 걸침)을 한 번만 센 값</td></tr>
+    <tr><td><code>daily</code></td><td>요일별 막대 차트. 항상 월~일 7개. 요일을 누르면 <code>daily[].date</code> 로 일간 리포트 호출</td></tr>
+    <tr><td><code>hourly</code></td><td>한 주 동안 같은 시간대를 합산한 24개. 막대를 누르면 "오후 6~7시 · 부주의 5회 · 주간 누적 관찰 2시간 10분"</td></tr>
+    <tr><td><code>peak</code></td><td>"이번 주에는 오후 8~9시에 부주의가 가장 많이 감지됐습니다 · 4회"</td></tr>
+  </table></div>
+  <h4>에러</h4>
+  <div class="tbl"><table><tr><th>상태</th><th>상황</th></tr>
+    <tr><td class="s4">400</td><td><code>INVALID_WEEK_START</code> — 월요일이 아님 · <code>VALIDATION_FAILED</code> — 날짜 형식</td></tr></table></div>
+</div>
+
+<!-- ============================================================ 시나리오 -->
+<h2 class="section" id="scenarios">화면별 호출 순서</h2>
+<p>페이지별 가이드의 화면 흐름마다 호출하는 API 입니다. 각 단계의 실제 요청·응답은 <code>docs/api-test-run.md</code> 에 있습니다.</p>
+<div class="tbl"><table>
+<tr><th>상황</th><th>순서</th></tr>
+<tr><td>1. 처음 가입</td><td><span class="api">POST /api/auth/signup</span> (토큰 저장) → <span class="api">GET /api/terms</span> → 전문 보기 <span class="api">GET /api/terms/{id}</span> → 동의하고 시작하기 <span class="api">POST /api/users/me/terms-agreements</span> → 홈 <span class="api">GET /api/drives?size=1</span>, <span class="api">GET /api/reports/weekly?weekStart=이번 주 월요일</span></td></tr>
+<tr><td>2. 로그인</td><td><span class="api">POST /api/auth/login</span> → <code>termsAgreementRequired</code> true 면 약관 화면(<span class="api">GET /api/users/me/terms-agreements</span> 로 이전 선택 채움), false 면 홈. 사용 중 <code>403 TERMS_AGREEMENT_REQUIRED</code> 를 받아도 약관 화면. 401 이면 <span class="api">POST /api/auth/refresh</span> 후 재시도</td></tr>
+<tr><td>3. 관찰 시작</td><td>정면 방향 설정은 앱 처리 → <span class="api">POST /api/drives</span> (clientDriveId·시작 시각을 먼저 로컬 저장, 실패해도 관찰은 시작하고 재시도) → 관찰 중 경과 시간·횟수는 앱이 셈</td></tr>
+<tr><td>4. 전방 주시 이탈</td><td>앱 처리 (경고 표시, 감지 시각·위치 로컬 저장)</td></tr>
+<tr><td>5. 졸음 감지</td><td>경고음·빨간 화면 즉시 → 동시에 <span class="api">POST /api/rest-places/nearby</span> → place 있으면 경유지 추가 제안, 없으면 일반 정차 안내 → NaviHelper 성공 콜백이면 경유지 기록 로컬 저장</td></tr>
+<tr><td>6. 부주의 3회 누적</td><td>정면 주시 확인 후 <span class="api">POST /api/rest-places/nearby</span> → 이후 5와 같음 (<code>trigger=INATTENTION_REPEATED</code>)</td></tr>
+<tr><td>7. 관찰 종료</td><td><span class="api">POST /api/drives/{id}/end</span> → 응답으로 바로 리포트 표시, 200 후 로컬 기록 삭제 → 홈으로 <span class="api">GET /api/drives?size=1</span></td></tr>
+<tr><td>8. 업로드 못 한 주행</td><td>앱 실행 시 로컬에 남은 주행 확인 → driveId 가 없으면 <span class="api">POST /api/drives</span> (저장해 둔 clientDriveId·시작 시각) → <span class="api">POST /api/drives/{id}/end</span> (종료 시각이 없으면 마지막 기록 시각)</td></tr>
+<tr><td>9. 지난 기록</td><td><span class="api">GET /api/reports/daily</span> (date 생략) → 달력 <span class="api">GET /api/reports/calendar?month=</span> → 날짜 이동 <span class="api">daily?date=</span> → 주행 항목 <span class="api">GET /api/drives/{id}</span> → 주간 탭 <span class="api">GET /api/reports/weekly</span> → 요일 막대 <span class="api">daily?date=</span></td></tr>
+<tr><td>10. 회원 탈퇴</td><td><span class="api">DELETE /api/users/me</span> → 204 면 앱의 토큰·로컬 데이터 삭제 후 로그인 화면</td></tr>
+</table></div>
+
+<!-- ============================================================ DB -->
+<h2 class="section" id="db">DB 테이블</h2>
+<p>PostgreSQL. 전체 정의는 <code>src/main/resources/db/schema.sql</code>. 테이블은 복수형, PK 는 <code>테이블_id</code>, 시각은 <code>TIMESTAMPTZ</code>, 제약조건은 <code>pk_/fk_/uq_/ck_/ix_</code> 접두어, 상태값은 CHECK 제약을 씁니다.</p>
+<div class="tbl"><table>
+<tr><th>테이블</th><th>용도</th><th>주요 제약</th></tr>
+<tr><td><code>users</code></td><td>사용자 (이메일, 이름, 상태, 만 14세 확인 시각, 탈퇴 시각)</td><td>이메일 유니크는 ACTIVE 사용자에게만 (탈퇴 후 재가입 가능)</td></tr>
+<tr><td><code>auths</code></td><td>인증 수단 (EMAIL: 비밀번호 해시). 소셜 로그인 확장 가능</td><td>(user_id, provider) 유니크</td></tr>
+<tr><td><code>refresh_tokens</code></td><td>로그인(기기) 1건당 1행, SHA-256 해시만 저장</td><td>token_hash 유니크</td></tr>
+<tr><td><code>terms</code></td><td>약관 버전별 1행 (전문 마크다운, 필수 여부, 표시 순서, 시행 시각)</td><td>(code, version) 유니크</td></tr>
+<tr><td><code>user_terms_agreements</code></td><td>사용자 × 약관 버전별 동의 기록</td><td>(user_id, terms_id) 유니크, 동의면 동의 시각 필수</td></tr>
+<tr><td><code>rest_places</code></td><td>휴게소 + 졸음쉼터 (주 1회 공공데이터 수집, 없어진 곳은 비활성)</td><td>(place_type, source_key) 유니크</td></tr>
+<tr><td><code>drives</code></td><td>관찰 1회 + 종료 때 계산한 요약값 + 단순화 경로(JSONB)</td><td>(user_id, client_drive_id) 유니크, 사용자당 IN_PROGRESS 1개(부분 유니크 인덱스)</td></tr>
+<tr><td><code>drive_events</code></td><td>부주의·졸음 감지 1건</td><td>(drive_id, event_type, detected_at) 유니크</td></tr>
+<tr><td><code>drive_waypoints</code></td><td>쉼터 경유지 추가 기록 (장소 정보 스냅샷, 방문 여부)</td><td>방문이면 방문 시각 필수</td></tr>
+<tr><td><code>drive_hourly_stats</code></td><td>주행 × 서울 기준 1시간 구간 집계 (리포트 전용)</td><td>(drive_id, hour_start) 유니크</td></tr>
+</table></div>
+<p>주행 하위 테이블은 모두 <code>ON DELETE CASCADE</code> 라, 탈퇴 때 주행만 지우면 감지·경유지·통계가 함께 지워집니다.</p>
+
+<!-- ============================================================ 변경 -->
+<h2 class="section" id="changes">프로토타입과 달라진 점</h2>
+<p>프로토타입 명세서(<code>driverguard-api-spec-additional.html</code>)에서 구현하며 바뀐 부분입니다.</p>
+<div class="tbl"><table>
+<tr><th>항목</th><th>프로토타입</th><th>최종</th><th>이유</th></tr>
+<tr><td>경로 · 이동 거리</td><td>앱이 원본 위치(최대 20,000점)를 올리고 서버가 단순화·거리 계산</td><td>앱이 단순화한 <code>route</code>(최대 2,000점)와 <code>distanceMeters</code> 를 올림. <code>drive_locations</code> 테이블 없음</td><td>앱에 원본이 다 있어 계산이 쉽고, 업로드 크기가 수백 KB → 수십 KB</td></tr>
+<tr><td>쉼터 방문 판정</td><td>서버가 위치 기록으로 판정 (반경 300m · 3분)</td><td>앱이 판정해 <code>waypoints[].visitedAt</code> 으로 보냄</td><td>원본 위치는 앱에만 있음. 주행 중 서버 호출 없이 종료 때 함께 올림</td></tr>
+<tr><td>시간대별 거리</td><td>위치 기록 시각으로 나눔</td><td>구간별 관찰 시간 비율로 나눔</td><td>서버가 원본 위치를 받지 않음</td></tr>
+<tr><td>리포트 경로</td><td><code>start</code>·<code>end</code> 에 기록 시각, <code>simplified</code> 표시</td><td>좌표만, <code>simplified</code> 없음</td><td>경로는 앱이 단순화해서 보냄</td></tr>
+<tr><td><code>skipped</code></td><td>events · route · waypoints</td><td>events · waypoints</td><td>경로는 거르지 않음 (형식이 틀리면 400)</td></tr>
+<tr><td>회원가입</td><td>email · password · ageConfirmed</td><td><code>name</code> 추가, 비밀번호 영문+숫자, 이메일 도메인에 점 필요</td><td>피그마 S04 회원가입 화면</td></tr>
+<tr><td>약관 항목</td><td>서비스 · 개인정보 · 위치정보 · 마케팅</td><td>서비스 · 개인정보 · <b>운전자 카메라 영상 처리</b> · 위치정보 · 이벤트·혜택 알림(선택)</td><td>피그마 S05 약관 동의 화면</td></tr>
+<tr><td>일간 리포트 <code>drives[]</code></td><td>(예시상) 그날 부분 값</td><td>주행 전체 값</td><td>주행 항목을 누르면 나오는 상세 리포트와 같은 숫자</td></tr>
+<tr><td>탈퇴 시 약관 동의 기록</td><td>정하지 않음</td><td>삭제</td><td>결정 사항</td></tr>
+<tr><td>탈퇴 후 남은 accessToken</td><td>정하지 않음</td><td>내 정보 · 약관 · 기능 API 에서 404 <code>USER_NOT_FOUND</code></td><td>탈퇴한 계정으로 기록이 생기지 않도록</td></tr>
+<tr><td>JSON 값 형식 오류</td><td>400 (fieldErrors 없음)</td><td>400 + <code>fieldErrors</code> 에 위치 (<code>events[0].type</code>)</td><td>앱이 어느 값이 틀렸는지 알 수 있게</td></tr>
+<tr><td>응답 시각</td><td>+09:00</td><td>+09:00 (에러 <code>timestamp</code> 만 UTC)</td><td>프로토타입과 같음</td></tr>
+</table></div>
+
+<div class="warn"><b>앱·디자인 쪽 확인 사항</b>
+<ul>
+  <li>회원가입 화면에 <b>만 14세 이상 확인 체크박스</b> 추가 필요 (<code>ageConfirmed: true</code> 필수)</li>
+  <li>로그인 화면 안내가 "아이디 또는 이메일"이지만 로그인은 <b>이메일만</b> 가능</li>
+  <li>회원 탈퇴 화면이 디자인에 없음 (API 는 준비됨)</li>
+  <li>약관 문구는 개발용 예시 — 실제 문구는 기획·법무 확인 후 <code>terms</code> 에 새 버전으로 추가</li>
+</ul></div>
+
+</main>
+</div>
+</body>
+</html>
