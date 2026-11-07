@@ -15,3 +15,8 @@ local.properties
 
 # OS
 .DS_Store
+
+# Signing keys (release APK 서명). APK 자체(apk/팀명_앱이름_release.apk)는 공모전 제출용이라 무시하지 않는다.
+*.jks
+*.keystore
+keystore.properties
