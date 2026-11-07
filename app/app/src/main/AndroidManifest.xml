@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Pleos NaviHelper: 안내 상태·목적지·경유지 조회(NAVI_ROUTE), 경유지 추가·길 안내 요청(NAVI_ROUTE_SEARCH) -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+
     <!-- 분석·경고·저장은 모두 온디바이스로 동작한다. 라이브러리가 네트워크 권한을 끌어와도 제거해 외부 전송 경로를 막는다. -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />

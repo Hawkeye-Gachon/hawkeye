@@ -18,6 +18,7 @@ androidxTestRunner = "1.6.2"
 androidxTestExtJunit = "1.2.1"
 junit = "4.13.2"
 haze = "1.6.10"
+pleosNaviHelper = "3.0.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +51,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 haze = { group = "dev.chrisbanes.haze", name = "haze", version.ref = "haze" }
+pleos-navihelper = { group = "ai.pleos.playground", name = "NaviHelper", version.ref = "pleosNaviHelper" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

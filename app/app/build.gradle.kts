@@ -77,5 +77,7 @@ dependencies {
     implementation(libs.haze)
     // CameraX 의 ProcessCameraProvider.getInstance 가 돌려주는 ListenableFuture
     implementation(libs.guava)
+    // Pleos Connect: 졸음 감지 후 차량 기본 내비에 쉼터 경유지 추가
+    implementation(libs.pleos.navihelper)
 
 }

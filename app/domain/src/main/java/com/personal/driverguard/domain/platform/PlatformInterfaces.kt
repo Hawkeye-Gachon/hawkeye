@@ -44,3 +44,63 @@ interface IRestAreaGuide {
     /** 외부 앱으로 검색을 열었으면 true */
     fun openRestAreaSearch(): Boolean
 }
+
+/** 휴식 장소(졸음쉼터·휴게소). 지금은 앱에 둔 예시 값이고, 백엔드가 현재 위치·진행 방향으로 골라 줄 예정이다. */
+data class RestStop(
+    val name: String,
+    /** 예: "졸음쉼터", "휴게소" */
+    val kind: String,
+    val latitude: Double,
+    val longitude: Double,
+    val address: String? = null,
+)
+
+/** 차량 내비의 현재 안내 상태 */
+data class NaviRouteState(
+    /** 목적지 안내 중인지 */
+    val routing: Boolean,
+    val destinationName: String?,
+    /** 이미 들어 있는 경유지 이름(순서대로) */
+    val waypointNames: List<String>,
+) {
+    val waypointsFull: Boolean get() = waypointNames.size >= MAX_WAYPOINTS
+
+    companion object {
+        /** 차량 내비가 받는 경유지 최대 개수(Pleos NaviHelper 기준) */
+        const val MAX_WAYPOINTS = 2
+    }
+}
+
+/** 쉼터 추가 요청 결과. 시안의 경유지 제안 화면 상태와 1:1 로 대응한다. */
+sealed interface NaviResult {
+    /** 차량 내비가 반영을 확인함 */
+    data object Added : NaviResult
+
+    /** 안내 중인 목적지가 없음 → '쉼터로 길 안내'를 제안한다 */
+    data object NoDestination : NaviResult
+
+    /** 경유지가 이미 가득 참 */
+    data object Full : NaviResult
+
+    data class Failed(val reason: String) : NaviResult
+}
+
+/**
+ * 차량 기본 내비 연동(NavigationController). 앱은 들를 쉼터를 정해 전달만 하고, 지도와 길 안내는 차량 내비가 맡는다.
+ * 구현: Pleos Connect NaviHelper. Pleos 차량·에뮬레이터가 아니면 [connect] 가 false 를 돌려준다.
+ */
+interface IVehicleNavigation {
+    /** 차량 내비 서비스에 연결한다. 이미 연결됐으면 바로 true. */
+    suspend fun connect(): Boolean
+
+    /** 현재 안내 상태. 연결되지 않았거나 응답이 없으면 null. */
+    suspend fun routeState(): NaviRouteState?
+
+    /** 안내 중인 경로에 쉼터를 경유지로 넣는다. 기존 경유지가 있으면 쉼터를 먼저 들르도록 넣는다. */
+    suspend fun addRestStop(stop: RestStop): NaviResult
+
+    /** 안내 중인 목적지가 없을 때 쉼터를 목적지로 길 안내를 시작한다. */
+    suspend fun routeToRestStop(stop: RestStop): NaviResult
+
+    fun release()
+}
