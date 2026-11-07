@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    개발 단계: 로컬·사내 백엔드가 HTTPS 없이 떠 있어 평문 HTTP 를 허용한다.
+    실제 배포(공모전 제출본 포함) 전에는 백엔드를 HTTPS 로 올리고 cleartextTrafficPermitted 를 false 로 바꾼다.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

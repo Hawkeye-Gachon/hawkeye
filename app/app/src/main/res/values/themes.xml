@@ -1,6 +1,9 @@
 <resources>
-    <!-- 화면은 모두 Compose 로 그린다. 창 배경만 앱 바탕(밤하늘)으로 맞춘다. -->
+    <!-- 화면은 모두 Compose 로 그린다. 창 배경과 시스템 바를 보드 바탕(canvas)에 맞춘다. -->
     <style name="Theme.DriverGuard" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/canvas</item>
+        <item name="android:statusBarColor">@color/canvas</item>
+        <item name="android:navigationBarColor">@color/canvas</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

@@ -1,8 +1,11 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -15,6 +18,16 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.2.0"
+
+        // 백엔드 주소. local.properties(또는 -P)에 hawkeye.apiBaseUrl=http://<서버주소>:8080/ 으로 바꾼다.
+        // 기본값 10.0.2.2 는 안드로이드 에뮬레이터에서 본 '이 컴퓨터'(localhost)다.
+        val localProps = Properties().apply {
+            rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+        }
+        val apiBaseUrl = (project.findProperty("hawkeye.apiBaseUrl") as String?)
+            ?: localProps.getProperty("hawkeye.apiBaseUrl")
+            ?: "http://10.0.2.2:8080/"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
 
         ndk {
             // MediaPipe·OpenCV 네이티브 라이브러리 ABI. 실기기(arm64)와 에뮬레이터(x86_64, arm64)만 포함해 APK 크기를 줄인다.
@@ -35,6 +48,17 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    testOptions {
+        unitTests {
+            // 화면 스냅숏(Robolectric + Roborazzi): ./gradlew :app:recordRoborazziDebug → app/build/screens/
+            isIncludeAndroidResources = true
+            all {
+                it.systemProperty("robolectric.graphicsMode", "NATIVE")
+                it.maxHeapSize = "3g"
+            }
+        }
     }
     androidResources {
         // MediaPipe 가 assets 의 .task 모델을 메모리 매핑으로 읽으려면 압축하지 않아야 한다
@@ -79,5 +103,13 @@ dependencies {
     implementation(libs.guava)
     // Pleos Connect: 졸음 감지 후 차량 기본 내비에 쉼터 경유지 추가
     implementation(libs.pleos.navihelper)
+
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
 
 }
