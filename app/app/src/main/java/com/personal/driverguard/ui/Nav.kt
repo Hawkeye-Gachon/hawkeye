@@ -49,6 +49,12 @@ class AppState(preview: Boolean) {
     var preview by mutableStateOf(preview)
 }
 
+/** 관찰 중에 보이는 화면(카메라 카드가 있는 화면) */
+private val OBSERVING_SCREENS = setOf(
+    Screen.Observe, Screen.ObserveLook, Screen.ObserveDrowsy, Screen.Suggest, Screen.SuggestRepeat, Screen.SuggestExisting,
+    Screen.SuggestNoDest, Screen.SuggestFull, Screen.SuggestFail, Screen.SuggestAdded, Screen.SuggestNoPlace,
+)
+
 /** 화면에서 쓰는 앱 상태(백엔드·차량 내비 호출) */
 val LocalHawkeye = staticCompositionLocalOf<HawkeyeViewModel> { error("HawkeyeViewModel 이 없습니다") }
 
@@ -65,7 +71,7 @@ class Navigator(start: Screen) {
 @Composable
 fun HawkeyeApp(start: Screen = Screen.Splash) {
     val nav = remember { Navigator(start) }
-    val state = remember { AppState(preview = start != Screen.Splash) }
+    val state = remember { AppState(preview = start != Screen.Splash || com.personal.driverguard.ui.state.DebugFlags.CLICK_THROUGH) }
     val vm: HawkeyeViewModel = viewModel()
     BackHandler(enabled = nav.stack.size > 1) { nav.back() }
     // 로그인 만료 → 로그인 화면, 약관 미동의 → 약관 동의 화면
@@ -76,6 +82,13 @@ fun HawkeyeApp(start: Screen = Screen.Splash) {
                 SessionEvent.LOGGED_OUT -> nav.reset(Screen.Login)
                 SessionEvent.TERMS_REQUIRED -> if (nav.current != Screen.Terms) nav.go(Screen.Terms)
             }
+        }
+    }
+    // 테스트용 자동 경고: 관찰 화면에 있을 때만 해당 경고 화면으로 바꾼다(종료 확인 등 다른 화면이면 건너뜀)
+    LaunchedEffect(vm) {
+        vm.demoCues.collect { cue ->
+            if (nav.current !in OBSERVING_SCREENS) return@collect
+            nav.replace(if (cue == com.personal.driverguard.ui.state.DemoCue.DROWSY) Screen.ObserveDrowsy else Screen.Suggest)
         }
     }
     CompositionLocalProvider(LocalHawkeye provides vm) { DesignBoard {

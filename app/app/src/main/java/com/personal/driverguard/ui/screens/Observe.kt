@@ -231,7 +231,7 @@ fun SetupScreen(nav: Navigator, state: AppState, setup: SetupState) {
                     SetupState.Done -> {
                         Btn("관찰 시작", Modifier.fillMaxWidth()) {
                             // 주행을 등록하고 위치 기록을 시작한다(시안 확인 모드는 이동만)
-                            if (!state.preview) vm.startDrive()
+                            if (!state.preview) vm.startDrive() else vm.startDemoCues()
                             nav.go(Screen.Observe)
                         }
                         Btn("다시 설정", Modifier.fillMaxWidth(), Kind.Ghost) { nav.replace(Screen.Setup) }

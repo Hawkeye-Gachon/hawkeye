@@ -29,6 +29,8 @@ import com.personal.driverguard.domain.platform.NaviRouteState
 import com.personal.driverguard.domain.platform.RestStop
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -104,6 +106,9 @@ data class WeeklyUi(val loading: Boolean = false, val data: WeeklyReport? = null
 
 data class CalendarUi(val month: YearMonth = YearMonth.now(SEOUL), val data: CalendarResponse? = null, val loading: Boolean = false)
 
+/** 테스트용 자동 경고 종류 */
+enum class DemoCue { DROWSY, SUGGEST }
+
 /** 다음에 열 화면(내비게이션은 화면 쪽이 한다) */
 enum class Next { LOGIN, TERMS, HOME }
 
@@ -150,6 +155,11 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     private var recorder: DriveRecorder? = null
     private var locationJob: Job? = null
+    private var demoJob: Job? = null
+
+    /** 테스트용 자동 경고([DebugFlags.AUTO_WARNINGS]) — 화면 쪽이 받아 해당 경고 화면으로 이동한다. */
+    private val _demoCues = MutableSharedFlow<DemoCue>(extraBufferCapacity = 2)
+    val demoCues: SharedFlow<DemoCue> = _demoCues
 
     // ════════════════════════ 시작 · 인증 ════════════════════════
 
@@ -271,14 +281,14 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         _home.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val me = async { api.me() }
-            val last = async { api.drives(size = 1) }
-            val week = async { api.weekly(null) }
+            val last = async { if (DebugFlags.FAKE_HISTORY) null else api.drives(size = 1) }
+            val week = async { if (DebugFlags.FAKE_HISTORY) null else api.weekly(null) }
             val meR = me.await()
             _home.value = HomeUi(
                 loading = false,
                 me = meR.getOrNull(),
-                lastDrive = last.await().getOrNull()?.drives?.firstOrNull(),
-                weekly = week.await().getOrNull(),
+                lastDrive = if (DebugFlags.FAKE_HISTORY) FakeHistory.latestDrive() else last.await()?.getOrNull()?.drives?.firstOrNull(),
+                weekly = if (DebugFlags.FAKE_HISTORY) FakeHistory.weekly(null) else week.await()?.getOrNull(),
                 error = (meR as? ApiResult.Failure)?.message,
             )
         }
@@ -291,12 +301,26 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         if (recorder != null) return
         val rec = DriveRecorder(startedMonotonicMs = SystemClock.elapsedRealtime())
         recorder = rec
-        _observe.value = ObserveUi(active = true, startedMonotonicMs = rec.startedMonotonicMs, locationEnabled = location.hasPermission())
+        _observe.value = ObserveUi(active = true, startedMonotonicMs = rec.startedMonotonicMs, locationEnabled = DebugFlags.DUMMY_ROUTE || location.hasPermission())
         _report.value = ReportUi()
         _end.value = EndUi()
-        locationJob = viewModelScope.launch { location.updates().collect { rec.onLocation(it) } }
+        // 테스트용: debug 빌드는 실제 GPS 대신 경부고속도로 모의 주행 위치를 1초마다 찍는다(DummyRoute.drive)
+        // 쉼터를 추가하면 모의 주행이 그 쉼터에 들러 잠시 멈췄다가(도착 감지 확인용) 경로로 돌아온다
+        val fixes = if (DebugFlags.DUMMY_ROUTE) DummyRoute.drive(restStop = { rec.pendingStop() }) else location.updates()
+        locationJob = viewModelScope.launch { fixes.collect { rec.onLocation(it) } }
         // 등록에 실패해도 관찰은 계속한다. 종료할 때 다시 등록한다.
         viewModelScope.launch { api.startDrive(rec.clientDriveId, rec.startedAt).getOrNull()?.let { rec.driveId = it.driveId } }
+        if (DebugFlags.AUTO_WARNINGS) {
+            // 테스트용: 3초 뒤 졸음 경고(실제 감지처럼 주행 기록에도 남는다), 다시 3초 뒤 쉼터 경유지 추천 화면
+            demoJob = viewModelScope.launch {
+                delay(AUTO_WARNING_DELAY_MS)
+                signal(EventType.DROWSINESS)
+                openSuggestion(TriggerType.DROWSINESS)
+                _demoCues.emit(DemoCue.DROWSY)
+                delay(AUTO_WARNING_DELAY_MS)
+                _demoCues.emit(DemoCue.SUGGEST)
+            }
+        }
     }
 
     /**
@@ -320,7 +344,8 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     fun openSuggestion(trigger: String) {
         _suggestion.value = SuggestionUi(loading = true, trigger = trigger)
         viewModelScope.launch {
-            val fix = recorder?.lastFix
+            // 테스트용: 실내라 위치가 없으면 경부고속도로 위 더미 위치로 묻는다(DebugFlags.DUMMY_REST_PLACE)
+            val fix = recorder?.lastFix ?: if (DebugFlags.DUMMY_REST_PLACE) DummyRoute.fix() else null
             val navi = async { navigation.routeState() }
             if (fix == null) {
                 _suggestion.update { it.copy(loading = false, noPlaceReason = "현재 위치를 확인할 수 없어 쉼터를 찾지 못했습니다.", navi = navi.await()) }
@@ -333,7 +358,9 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
                 r.getOrNull()?.onHighway == false -> "고속도로가 아닌 곳에서는 쉼터를 안내하지 않습니다. 안전한 곳에 정차해 주세요."
                 else -> "진행 방향에서 바로 들어갈 수 있는 쉼터를 확인하지 못했습니다. 안전한 곳에 정차해 주세요."
             }
-            _suggestion.update { it.copy(loading = false, place = r.getOrNull()?.place, noPlaceReason = reason, navi = navi.await()) }
+            // 테스트용: 서버가 쉼터를 못 찾아도 추천 화면을 볼 수 있게 더미 쉼터를 쓴다
+            val place = r.getOrNull()?.place ?: if (DebugFlags.DUMMY_REST_PLACE) DummyRoute.restPlace() else null
+            _suggestion.update { it.copy(loading = false, place = place, noPlaceReason = reason.takeIf { place == null }, navi = navi.await()) }
         }
     }
 
@@ -343,16 +370,19 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
      */
     suspend fun addRestStop(destination: Boolean): NaviResult? {
         val place = _suggestion.value.place ?: return NaviResult.Failed("쉼터 정보가 없습니다")
-        if (!navigation.connect()) return null
+        fun record() = recorder?.recordWaypoint(
+            place.placeId, if (destination) NavMode.DESTINATION else NavMode.WAYPOINT, _suggestion.value.trigger,
+            latitude = place.latitude, longitude = place.longitude,
+        )
+        if (!navigation.connect()) {
+            // 테스트용: Pleos 내비가 없는 탭에서도 경유지 추가·쉼터 도착(방문) 기록을 시험할 수 있게 기록만 남긴다
+            if (DebugFlags.DUMMY_REST_PLACE) record()
+            return null
+        }
         _suggestion.update { it.copy(busy = true, failure = null) }
         val stop = RestStop(place.name, placeTypeLabel(place.type), place.latitude, place.longitude)
         val result = if (destination) navigation.routeToRestStop(stop) else navigation.addRestStop(stop)
-        if (result == NaviResult.Added) {
-            recorder?.recordWaypoint(
-                place.placeId, if (destination) NavMode.DESTINATION else NavMode.WAYPOINT, _suggestion.value.trigger,
-                latitude = place.latitude, longitude = place.longitude,
-            )
-        }
+        if (result == NaviResult.Added) record()
         _suggestion.update { it.copy(busy = false, failure = (result as? NaviResult.Failed)?.reason) }
         return result
     }
@@ -381,6 +411,7 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     /** 주행 목록·일간 리포트에서 연 리포트 */
     fun openReport(driveId: Long) {
+        if (DebugFlags.FAKE_HISTORY) FakeHistory.report(driveId)?.let { _report.value = ReportUi(report = it); return }
         _report.value = ReportUi(loading = true)
         viewModelScope.launch {
             val r = api.driveReport(driveId)
@@ -388,7 +419,21 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** 시안 확인 모드용 자동 경고: 주행 기록 없이 3초 뒤 졸음 경고, 다시 3초 뒤 쉼터 경유지 추천 화면만 띄운다. */
+    fun startDemoCues() {
+        if (!DebugFlags.AUTO_WARNINGS) return
+        demoJob?.cancel()
+        demoJob = viewModelScope.launch {
+            delay(AUTO_WARNING_DELAY_MS)
+            _demoCues.emit(DemoCue.DROWSY)
+            delay(AUTO_WARNING_DELAY_MS)
+            _demoCues.emit(DemoCue.SUGGEST)
+        }
+    }
+
     private fun stopDriveLocally() {
+        demoJob?.cancel()
+        demoJob = null
         locationJob?.cancel()
         locationJob = null
         recorder = null
@@ -399,6 +444,7 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     /** [date] 가 null 이면 가장 최근 주행일 */
     fun loadDaily(date: LocalDate?) {
+        if (DebugFlags.FAKE_HISTORY) { _daily.value = DailyUi(data = FakeHistory.daily(date)); return }
         _daily.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val r = api.daily(date?.toString())
@@ -408,6 +454,7 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     /** [weekStart] 는 월요일. null 이면 가장 최근 주행일이 속한 주 */
     fun loadWeekly(weekStart: LocalDate?) {
+        if (DebugFlags.FAKE_HISTORY) { _weekly.value = WeeklyUi(data = FakeHistory.weekly(weekStart)); return }
         _weekly.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val r = api.weekly(weekStart?.toString())
@@ -416,6 +463,7 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun loadCalendar(month: YearMonth) {
+        if (DebugFlags.FAKE_HISTORY) { _calendar.value = CalendarUi(month = month, data = FakeHistory.calendar(month)); return }
         _calendar.value = CalendarUi(month = month, loading = true)
         viewModelScope.launch {
             _calendar.value = CalendarUi(month = month, data = api.calendar(month.toString()).getOrNull())
@@ -452,6 +500,8 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     companion object {
         /** 전방 주시 이탈이 이 횟수만큼 쌓일 때마다 쉼터를 제안한다 */
         const val INATTENTION_SUGGEST_EVERY = 3
+        /** 테스트용 자동 경고 간격 */
+        const val AUTO_WARNING_DELAY_MS = 3_000L
         private const val KEY_PENDING = "pending"
 
         fun placeTypeLabel(type: String?) = when (type) {
