@@ -348,7 +348,10 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         val stop = RestStop(place.name, placeTypeLabel(place.type), place.latitude, place.longitude)
         val result = if (destination) navigation.routeToRestStop(stop) else navigation.addRestStop(stop)
         if (result == NaviResult.Added) {
-            recorder?.recordWaypoint(place.placeId, if (destination) NavMode.DESTINATION else NavMode.WAYPOINT, _suggestion.value.trigger)
+            recorder?.recordWaypoint(
+                place.placeId, if (destination) NavMode.DESTINATION else NavMode.WAYPOINT, _suggestion.value.trigger,
+                latitude = place.latitude, longitude = place.longitude,
+            )
         }
         _suggestion.update { it.copy(busy = false, failure = (result as? NaviResult.Failed)?.reason) }
         return result

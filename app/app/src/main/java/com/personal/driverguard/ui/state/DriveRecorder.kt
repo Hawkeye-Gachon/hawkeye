@@ -33,7 +33,9 @@ class DriveRecorder(
     var driveId: Long? = null
 
     private val events = mutableListOf<EventRequest>()
-    private val waypoints = mutableListOf<WaypointRequest>()
+    /** 추가한 쉼터. 위치가 쉼터 가까이에서 멈추면 [visitedAt] 을 채운다. */
+    private class Waypoint(val request: WaypointRequest, val latitude: Double?, val longitude: Double?, var visitedAt: String? = null)
+    private val waypoints = mutableListOf<Waypoint>()
     private val route = mutableListOf<List<Double>>()
     private val distance = DistanceAccumulator()
 
@@ -43,8 +45,10 @@ class DriveRecorder(
     val inattentionCount: Int get() = events.count { it.type == EventType.INATTENTION }
     val drowsinessCount: Int get() = events.count { it.type == EventType.DROWSINESS }
 
-    fun onLocation(fix: GeoFix) {
+    fun onLocation(fix: GeoFix, at: String = nowIso()) {
+        val previous = lastFix
         lastFix = fix
+        checkArrival(fix, previous, at)
         distance.add(LocationFix(fix.latitude, fix.longitude, fix.accuracyMeters, fix.monotonicMs))
         val accurate = fix.accuracyMeters?.let { it <= MAX_ROUTE_ACCURACY_M } ?: false
         if (!accurate) return
@@ -60,9 +64,26 @@ class DriveRecorder(
         events += EventRequest(type, at, fix?.latitude, fix?.longitude)
     }
 
-    /** 차량 내비가 쉼터 추가를 확인했을 때 */
-    fun recordWaypoint(placeId: Long, mode: String, trigger: String, at: String = nowIso()) {
-        waypoints += WaypointRequest(placeId, mode, trigger, at)
+    /** 차량 내비가 쉼터 추가를 확인했을 때. 쉼터 좌표가 있으면 도착(정차)을 감지해 방문 시각을 남긴다. */
+    fun recordWaypoint(placeId: Long, mode: String, trigger: String, at: String = nowIso(), latitude: Double? = null, longitude: Double? = null) {
+        waypoints += Waypoint(WaypointRequest(placeId, mode, trigger, at), latitude, longitude)
+    }
+
+    /** 아직 들르지 않은 쉼터 중 가장 먼저 추가한 곳(모의 주행이 찾아갈 곳) */
+    fun pendingStop(): Pair<Double, Double>? =
+        waypoints.firstOrNull { it.visitedAt == null && it.latitude != null && it.longitude != null }?.let { it.latitude!! to it.longitude!! }
+
+    /** 쉼터 [ARRIVAL_RADIUS_M] 안에서 거의 멈췄으면(속도 [STOPPED_MPS] 이하) 그 쉼터를 방문으로 기록한다. */
+    private fun checkArrival(fix: GeoFix, previous: GeoFix?, at: String) {
+        if (waypoints.none { it.visitedAt == null }) return
+        val speed = fix.speedMps?.toDouble() ?: previous?.let {
+            val sec = (fix.monotonicMs - it.monotonicMs) / 1000.0
+            if (sec > 0) DistanceAccumulator.haversineMeters(it.latitude, it.longitude, fix.latitude, fix.longitude) / sec else null
+        } ?: return
+        if (speed > STOPPED_MPS) return
+        waypoints.filter { it.visitedAt == null && it.latitude != null && it.longitude != null }
+            .filter { DistanceAccumulator.haversineMeters(it.latitude!!, it.longitude!!, fix.latitude, fix.longitude) <= ARRIVAL_RADIUS_M }
+            .forEach { it.visitedAt = at }
     }
 
     fun toEndRequest(endedAt: String = nowIso()): EndDriveRequest = EndDriveRequest(
@@ -70,12 +91,18 @@ class DriveRecorder(
         distanceMeters = distance.distanceOrNull()?.toInt() ?: 0,
         events = events.takeLast(MAX_ITEMS).toList(),
         route = thin(route, MAX_ITEMS),
-        waypoints = waypoints.takeLast(MAX_WAYPOINTS).toList(),
+        waypoints = waypoints.takeLast(MAX_WAYPOINTS).map { it.request.copy(visitedAt = it.visitedAt) },
     )
 
     companion object {
         /** 경로 점 사이 최소 간격 */
         const val ROUTE_STEP_M = 25.0
+
+        /** 쉼터 도착으로 보는 거리 */
+        const val ARRIVAL_RADIUS_M = 300.0
+
+        /** 정차로 보는 속도(약 시속 7km) */
+        const val STOPPED_MPS = 2.0
 
         /** 경로에 넣을 위치의 최대 오차 */
         const val MAX_ROUTE_ACCURACY_M = 50f

@@ -63,6 +63,32 @@ class DriveRecorderTest {
     }
 
     @Test
+    fun waypointIsVisitedWhenStoppedNearby() {
+        val rec = DriveRecorder(startedMonotonicMs = 0)
+        rec.recordWaypoint(41, NavMode.WAYPOINT, TriggerType.DROWSINESS, "2026-11-07T10:05:00+09:00", 37.3290, 127.1050)
+        // 가까이 지나가기만 하면(시속 72km) 방문이 아니다
+        rec.onLocation(GeoFix(37.3292, 127.1050, 5f, 180f, 20f, 1_000), "2026-11-07T10:10:00+09:00")
+        assertNull(rec.toEndRequest().waypoints.single().visitedAt)
+        // 멀리서 멈춘 것도 방문이 아니다(약 1.1km)
+        rec.onLocation(GeoFix(37.3390, 127.1050, 5f, null, 0f, 2_000), "2026-11-07T10:11:00+09:00")
+        assertNull(rec.toEndRequest().waypoints.single().visitedAt)
+        // 쉼터 300m 안에서 멈추면 방문, 시각은 처음 멈춘 때
+        rec.onLocation(GeoFix(37.3295, 127.1050, 5f, null, 0.3f, 3_000), "2026-11-07T10:20:00+09:00")
+        rec.onLocation(GeoFix(37.3295, 127.1050, 5f, null, 0f, 4_000), "2026-11-07T10:21:00+09:00")
+        assertEquals("2026-11-07T10:20:00+09:00", rec.toEndRequest().waypoints.single().visitedAt)
+        assertNull(rec.pendingStop())
+    }
+
+    @Test
+    fun stoppedIsDerivedFromMovementWhenSpeedIsMissing() {
+        val rec = DriveRecorder(startedMonotonicMs = 0)
+        rec.recordWaypoint(41, NavMode.WAYPOINT, TriggerType.DROWSINESS, "2026-11-07T10:05:00+09:00", 37.3290, 127.1050)
+        rec.onLocation(GeoFix(37.3291, 127.1050, 5f, null, null, 0), "2026-11-07T10:20:00+09:00")
+        rec.onLocation(GeoFix(37.32911, 127.1050, 5f, null, null, 5_000), "2026-11-07T10:20:05+09:00")
+        assertEquals("2026-11-07T10:20:05+09:00", rec.toEndRequest().waypoints.single().visitedAt)
+    }
+
+    @Test
     fun thinKeepsEndpointsAndLimit() {
         val pts = List(5_000) { listOf(it.toDouble(), 0.0) }
         val out = DriveRecorder.thin(pts, 2_000)

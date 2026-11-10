@@ -110,7 +110,7 @@ private fun eventLabel(type: String) = if (type == EventType.DROWSINESS) "졸음
 private fun ReportTimeline(r: DriveReport) {
     data class Row3(val at: String, val color: Color, val text: String, val sub: String)
     val rows = (r.events.map { Row3(it.detectedAt, eventColor(it.type), eventLabel(it.type), "") } +
-        r.waypoints.map { Row3(it.addedAt, NColor.indigo, "${it.placeName ?: "쉼터"} ${if (it.mode == "DESTINATION") "길 안내" else "경유지 추가"}", if (it.visited) "방문" else "") })
+        r.waypoints.map { Row3(it.addedAt, NColor.indigo, "${it.placeName ?: "쉼터"} ${if (it.mode == "DESTINATION") "길 안내" else "경유지 추가"}", if (it.visited) "휴식함" else "") })
         .sortedBy { it.at }
     Column(Modifier.padding(top = 10.dp)) {
         HLine()
