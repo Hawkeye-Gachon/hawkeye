@@ -129,10 +129,22 @@ fun Ic(@DrawableRes id: Int, color: Color, size: Dp = 24.dp, modifier: Modifier 
     Icon(painterResource(id), contentDescription = null, tint = color, modifier = modifier.size(size))
 
 @Composable
-fun Mark(size: Dp = 34.dp, textStyle: TextStyle = S.t(26, 30, 600, tracking = -.03), gap: Dp = 12.dp) {
+fun Mark(size: Dp = 34.dp, textStyle: TextStyle = S.t(26, 30, 700, tracking = -.02).copy(fontFamily = PretendardBold), gap: Dp = 10.dp) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(gap)) {
-        Image(painterResource(R.drawable.ic_mark), null, Modifier.size(size))
-        T("앱이름", textStyle)
+        Image(painterResource(R.drawable.hawkeye_mark), "Hawkeye", Modifier.size(size))
+        T("Hawkeye", textStyle)
+    }
+}
+
+/** 시안의 굵은 영문 제목(Hawkeye, Hello,)용. Asta Sans 는 SemiBold 까지만 있어 Pretendard Bold 를 쓴다. */
+val PretendardBold = androidx.compose.ui.text.font.FontFamily(
+    androidx.compose.ui.text.font.Font(R.font.pretendard_bold, FontWeight.Bold),
+)
+
+/** 문장 일부를 강조색 굵은 글씨로(시안: "출발 전에 **정면 방향**을"). [parts] 의 true 부분이 강조. */
+fun accent(vararg parts: Pair<String, Boolean>, color: Color = NColor.indigo) = androidx.compose.ui.text.buildAnnotatedString {
+    parts.forEach { (s, on) ->
+        if (on) { pushStyle(androidx.compose.ui.text.SpanStyle(color = color, fontWeight = FontWeight(700))); append(s); pop() } else append(s)
     }
 }
 
@@ -147,7 +159,7 @@ fun BoxScope.SceneCard(modifier: Modifier = Modifier, content: @Composable BoxSc
 fun BoxScope.Sheet(color: Color = NColor.frost, content: @Composable ColumnScope.() -> Unit) =
     Column(
         Modifier.at(736.dp, 24.dp, 520.dp, 752.dp)
-            .shadow(36.dp, CardShape, ambientColor = Color.Black.copy(alpha = .5f), spotColor = Color.Black.copy(alpha = .7f))
+            .shadow(28.dp, CardShape, ambientColor = Color.Black.copy(alpha = .12f), spotColor = Color.Black.copy(alpha = .18f))
             .clip(CardShape).background(color),
         content = content,
     )
@@ -189,7 +201,7 @@ fun Modifier.graphicsLayerScale(s: Float, ox: Float, oy: Float): Modifier =
     this.graphicsLayer { scaleX = s; scaleY = s; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(ox, oy) }
 
 // ------------------------------------------------------------------ buttons
-enum class Kind { Primary, Ghost, OnImage, OnDark }
+enum class Kind { Primary, Navy, Ghost, OnImage, OnDark }
 
 @Composable
 fun Btn(
@@ -201,7 +213,8 @@ fun Btn(
     val pressed by src.collectIsPressedAsState()
     val (bg, fg) = when {
         !enabled -> NColor.fill to NColor.ink4
-        kind == Kind.Primary -> (if (pressed) Color(0xFF4D39F0) else NColor.indigo) to Color.White
+        kind == Kind.Primary -> (if (pressed) NColor.navyPressed else NColor.indigo) to Color.White
+        kind == Kind.Navy -> (if (pressed) NColor.navyPressed else NColor.navy) to Color.White
         kind == Kind.Ghost -> (if (pressed) NColor.fill2 else NColor.fill) to NColor.ink
         kind == Kind.OnImage -> Color.White.copy(alpha = .72f) to NColor.ink
         else -> Color.White.copy(alpha = if (pressed) .26f else .16f) to Color.White
@@ -256,11 +269,11 @@ fun Field(
 }
 
 @Composable
-fun CheckBox(checked: Boolean) {
+fun CheckBox(checked: Boolean, color: Color = NColor.indigo) {
     Box(
         Modifier.size(30.dp).clip(RoundedCornerShape(10.dp))
-            .background(if (checked) NColor.indigo else Color.Transparent)
-            .border(2.dp, if (checked) NColor.indigo else NColor.line2, RoundedCornerShape(10.dp)),
+            .background(if (checked) color else Color.Transparent)
+            .border(2.dp, if (checked) color else NColor.line2, RoundedCornerShape(10.dp)),
         contentAlignment = Alignment.Center,
     ) { if (checked) Ic(R.drawable.ic_check, Color.White, 20.dp) }
 }
@@ -350,7 +363,16 @@ fun StateLine(text: String, color: Color = NColor.indigo) {
 @Composable
 fun Counts(items: List<Pair<String, String>>, gap: Dp = 40.dp, valueStyle: TextStyle = S.count) {
     Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
-        items.forEach { (v, l) -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { T(v, valueStyle); T(l, S.label) } }
+        items.forEach { (v, l) -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) { T(numberWithUnit(v), valueStyle); T(l, S.label) } }
+    }
+}
+
+/** "3회", "28.4km" → 숫자는 굵게, 단위는 가늘게(시안의 요약 숫자 표기). 숫자로 시작하지 않으면 그대로. */
+fun numberWithUnit(v: String): androidx.compose.ui.text.AnnotatedString {
+    val m = Regex("^([0-9][0-9.,:]*)(.*)$").find(v) ?: return androidx.compose.ui.text.AnnotatedString(v)
+    return androidx.compose.ui.text.buildAnnotatedString {
+        pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight(600))); append(m.groupValues[1]); pop()
+        append(m.groupValues[2])
     }
 }
 

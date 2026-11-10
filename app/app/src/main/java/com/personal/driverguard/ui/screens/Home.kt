@@ -104,7 +104,7 @@ fun HomeScreen(nav: Navigator, state: AppState) {
             }
             Column(Modifier.align(Alignment.BottomStart).padding(44.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
                 Column(Modifier.widthIn(max = 500.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    T("출발 전에 정면 방향을 설정해 주세요", S.h1)
+                    T(accent("출발 전에 " to false, "정면 방향" to true, "을\n설정해 주세요" to false), S.h1)
                     T("평소 운전 자세로 앞유리 너머를 바라본 방향이 관찰 기준이 됩니다.", S.body)
                 }
                 Btn("관찰 시작", Modifier.fillMaxWidth(), height = 88.dp, radius = 28.dp, style = S.button.copy(fontSize = 26.sp, lineHeight = 32.sp)) { nav.go(Screen.Setup) }

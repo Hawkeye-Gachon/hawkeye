@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -49,54 +50,67 @@ fun Navigator.goNext(next: Next) = when (next) {
     Next.LOGIN -> reset(Screen.Login)
 }
 
-// ------------------------------------------------------------------ splash
+// ------------------------------------------------------------------ splash (시안: 01 스플래시)
+/** 스플래시를 최소한 이만큼은 보여 준다(그동안 저장된 로그인을 확인한다). */
+private const val SPLASH_MIN_MS = 1_600L
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SplashScreen(nav: Navigator, state: AppState) {
     val vm = LocalHawkeye.current
-    var progress by remember { mutableFloatStateOf(.38f) }
     LaunchedEffect(Unit) {
-        val start = System.currentTimeMillis()
-        // 진행 막대가 차는 동안 저장된 로그인을 확인한다
         val next = if (state.preview) null else async { vm.bootstrap() }
-        while (progress < 1f) { delay(16); progress = (.38f + (System.currentTimeMillis() - start) / 2200f).coerceAtMost(1f) }
-        delay(250)
+        delay(SPLASH_MIN_MS)
         if (nav.current != Screen.Splash) return@LaunchedEffect
         if (next == null) nav.replace(Screen.Login) else nav.goNext(next.await())
     }
-    Box(Modifier.fillMaxSize()) { FullCard(Modifier.glassBg().combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onLongClick = { state.preview = true; nav.go(Screen.Gallery) }, onClick = {})) {
-        Image(painterResource(R.drawable.head_hero), null, Modifier.at(396.dp, 12.dp, 440.dp, 481.dp))
-        Column(Modifier.at(0.dp, 512.dp, 1232.dp, 140.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Mark(size = 72.dp, textStyle = S.t(64, 72, 300, tracking = -.05), gap = 18.dp)
-            T("졸음과 전방 주시 이탈을 살피고, 쉬어갈 곳을 안내합니다", S.body.copy(fontSize = androidx.compose.ui.unit.TextUnit(21f, androidx.compose.ui.unit.TextUnitType.Sp)))
-        }
-        Box(Modifier.at(496.dp, 693.dp, 240.dp, 3.dp).clip(RoundedCornerShape(2.dp)).background(NColor.fill2)) {
-            Box(Modifier.fillMaxHeight().fillMaxWidth(progress).background(NColor.indigo))
+    // 전체 화면. 길게 누르면 화면 목록(시안 확인용)
+    Box(Modifier.fillMaxSize().combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onLongClick = { state.preview = true; nav.go(Screen.Gallery) }, onClick = {})) {
+        HawkeyeLogo(x = 554, y = 301, size = 171)
+        Box(Modifier.at(0.dp, 494.dp, 1280.dp, 84.dp), contentAlignment = Alignment.Center) {
+            T("Hawkeye", S.t(58, 70, 700, tracking = -.01).copy(fontFamily = PretendardBold))
         }
     }
 }
-}
 
-// ------------------------------------------------------------------ login / signup: one centred card
-@Composable
-private fun BoxScope.AuthCard(width: Int, picHeight: Int, markWidth: Int, markTop: Int, overlay: @Composable BoxScope.() -> Unit = {}, content: @Composable ColumnScope.() -> Unit) {
-    FullCard {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Box(Modifier.width(width.dp).height(picHeight.dp).clipToBounds()) {
-                Image(painterResource(R.drawable.obj_mark), null, Modifier.at(((width - markWidth) / 2).dp, markTop.dp, markWidth.dp, (markWidth * 1640 / 1500).dp))
-            }
-            Column(Modifier.width(width.dp), verticalArrangement = Arrangement.spacedBy(18.dp), content = content)
-        }
-        overlay()
-    }
-}
-
+// ------------------------------------------------------------------ login / signup (시안: 02 로그인, 05 회원가입)
 @Composable
 private fun ColumnScope.AuthActions(content: @Composable ColumnScope.() -> Unit) =
     Column(Modifier.fillMaxWidth().padding(top = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
 
 /** 입력란 오류 표시: 오류가 있으면 빨간 테두리와 사유 */
 private fun fieldState(error: String?) = if (error != null) FieldState.Error else FieldState.Normal
+
+/**
+ * Hawkeye 로고(hawkeye_logo.png). 이미지에 투명 여백과 그림자가 들어 있어(311px 중 아이콘 본체 77~248px),
+ * 본체가 [x],[y] 에서 [size] 크기로 보이도록 이미지를 키워 배치한다.
+ */
+@Composable
+private fun BoxScope.HawkeyeLogo(x: Int, y: Int, size: Int) {
+    val k = size / 171f
+    Image(
+        painterResource(R.drawable.hawkeye_logo), "Hawkeye",
+        Modifier.at((x - 77 * k).dp, (y - 61 * k).dp, (311 * k).dp, (311 * k).dp),
+    )
+}
+
+/** 로그인 오른쪽 배경: 도시 블록 렌더를 옅은 보라로 물들이고, 왼쪽으로 갈수록 바탕색으로 사라지게 한다. */
+@Composable
+private fun BoxScope.LoginBackdrop() {
+    Image(
+        painterResource(R.drawable.scene_rest), null,
+        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+        alignment = androidx.compose.ui.BiasAlignment(.2f, 0f),
+        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Color(0xFFE1E2F8), BlendMode.Multiply),
+        modifier = Modifier.at(384.dp, 0.dp, 896.dp, 800.dp),
+    )
+    // 시안처럼 밝고 옅게 — 흰색을 한 겹 덮는다
+    Box(Modifier.at(384.dp, 0.dp, 896.dp, 800.dp).background(Color.White.copy(alpha = .28f)))
+    Box(
+        Modifier.at(384.dp, 0.dp, 360.dp, 800.dp)
+            .background(Brush.horizontalGradient(listOf(NColor.canvas, NColor.canvas.copy(alpha = 0f)))),
+    )
+}
 
 @Composable
 fun LoginScreen(nav: Navigator, state: AppState, error: Boolean) {
@@ -107,22 +121,38 @@ fun LoginScreen(nav: Navigator, state: AppState, error: Boolean) {
     var id by remember { mutableStateOf(if (state.preview) "haneul.kim@mail.com" else "") }
     var pw by remember { mutableStateOf(if (!state.preview) "" else if (error) "123456" else "drive1234") }
     val pwError = if (state.preview) "비밀번호가 맞지 않습니다. 대소문자를 확인하고 다시 입력해 주세요.".takeIf { error } else form.fieldErrors["password"] ?: form.message
+    val idError = if (state.preview) null else form.fieldErrors["email"]
     Box(Modifier.fillMaxSize()) {
-        AuthCard(520, 230, 290, -36) {
-            Column(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                T("앱이름", S.t(30, 36, 600, tracking = -.03))
-                T("계정으로 로그인하면 지난 주행 기록이 이어집니다", S.small)
+        run {
+            LoginBackdrop()
+            // 왼쪽: 로고와 인사
+            HawkeyeLogo(x = 116, y = 225, size = 112)
+            Column(Modifier.at(116.dp, 354.dp, 470.dp, 260.dp)) {
+                T("Hello,", S.t(60, 70, 700, tracking = -.02).copy(fontFamily = PretendardBold))
+                Gap(18.dp)
+                T("Hawkeye에 로그인하고\n안전한 주행을 시작하세요.", S.t(26, 38, 400, NColor.ink2, -.01))
+                Gap(34.dp)
+                T("계정으로 로그인하면 지난 주행 기록이 이어집니다", S.t(15, 20, color = NColor.ink3))
             }
-            val idError = if (state.preview) null else form.fieldErrors["email"]
-            Field("계정", id, { id = it }, placeholder = "name@mail.com", state = fieldState(idError), message = idError)
-            Field("비밀번호", pw, { pw = it }, password = true, forceFocus = state.preview && !error,
-                state = fieldState(pwError), message = pwError)
-            AuthActions {
-                Btn(if (form.busy) "로그인 중" else "로그인", Modifier.fillMaxWidth(), enabled = !form.busy) {
-                    if (state.preview) nav.go(Screen.Home)
-                    else scope.launch { vm.login(id, pw)?.let { nav.goNext(it) } }
+            // 오른쪽: 입력 카드
+            Column(
+                Modifier.at(631.dp, 135.dp, 531.dp, 530.dp)
+                    .shadow(36.dp, CardShape, ambientColor = Color.Black.copy(alpha = .18f), spotColor = Color.Black.copy(alpha = .22f))
+                    .clip(CardShape).background(NColor.frost)
+                    .padding(start = 31.dp, end = 31.dp, top = 48.dp, bottom = 44.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Field("계정", id, { id = it }, placeholder = "name@mail.com", state = fieldState(idError), message = idError)
+                Field("비밀번호", pw, { pw = it }, password = true, forceFocus = state.preview && !error,
+                    state = fieldState(pwError), message = pwError)
+                Spacer(Modifier.weight(1f))
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Btn(if (form.busy) "로그인 중" else "로그인", Modifier.fillMaxWidth(), Kind.Navy, enabled = !form.busy) {
+                        if (state.preview) nav.go(Screen.Home)
+                        else scope.launch { vm.login(id, pw)?.let { nav.goNext(it) } }
+                    }
+                    Btn("회원가입", Modifier.fillMaxWidth(), Kind.Ghost) { vm.clearForms(); nav.go(Screen.Signup) }
                 }
-                Btn("회원가입", Modifier.fillMaxWidth(), Kind.Ghost) { vm.clearForms(); nav.go(Screen.Signup) }
             }
         }
     }
@@ -145,36 +175,41 @@ fun SignupScreen(nav: Navigator, state: AppState, empty: Boolean) {
         else mapOf("passwordConfirm" to "비밀번호가 일치하지 않습니다.")
     } else form.fieldErrors
     Box(Modifier.fillMaxSize()) {
-        AuthCard(720, 170, 210, -30, overlay = { BackBtn("로그인으로", Modifier.at(32.dp, 32.dp, 154.dp, 52.dp)) { nav.back() } }) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                T("회원가입", S.h1.copy(fontSize = 36.sp, lineHeight = 46.sp))
-                T("가입 후 약관에 동의하면 관찰을 시작할 수 있습니다", S.small)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Box(Modifier.weight(1f)) { Field("이름", name, { name = it }, placeholder = "이름", state = fieldState(errors["name"]), message = errors["name"]) }
-                Box(Modifier.weight(1f)) { Field("이메일", mail, { mail = it }, placeholder = "name@mail.com", state = fieldState(errors["email"]), message = errors["email"]) }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Box(Modifier.weight(1f)) { Field("비밀번호", pw, { pw = it }, password = true, state = fieldState(errors["password"]), message = errors["password"] ?: "영문과 숫자를 섞어 8자 이상") }
-                Box(Modifier.weight(1f)) { Field("비밀번호 확인", pw2, { pw2 = it }, password = true, state = fieldState(errors["passwordConfirm"]), message = errors["passwordConfirm"]) }
-            }
-            // 백엔드 가입 조건(만 14세 이상 확인). 시안에는 없는 항목이라 입력란 아래에 한 줄로 둔다.
-            Row(
-                Modifier.clip(RoundedCornerShape(12.dp)).clickable { age = !age }.padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                CheckBox(age)
-                T("만 14세 이상입니다", S.t(17, 22, 500, NColor.ink2))
-                T("필수", S.t(14, 20, 600, NColor.indigo))
-                errors["ageConfirmed"]?.let { T(it, S.t(15, 20, color = NColor.dangerInk)) }
-            }
-            form.message?.takeIf { !p }?.let { T(it, S.t(15, 20, color = NColor.dangerInk)) }
-            AuthActions {
-                Btn(if (form.busy) "가입 중" else "회원가입", Modifier.fillMaxWidth(), enabled = !form.busy) {
-                    if (p) nav.go(Screen.Terms)
-                    else scope.launch { vm.signup(name, mail, pw, pw2, age)?.let { nav.goNext(it) } }
+        run {
+            Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                Column(Modifier.width(720.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(bottom = 14.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        T("회원가입", S.h1.copy(fontSize = 36.sp, lineHeight = 46.sp, fontWeight = androidx.compose.ui.text.font.FontWeight(700)))
+                        T("가입 후 약관에 동의하면 관찰을 시작할 수 있습니다", S.small)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Box(Modifier.weight(1f)) { Field("이름", name, { name = it }, placeholder = "이름", state = fieldState(errors["name"]), message = errors["name"]) }
+                        Box(Modifier.weight(1f)) { Field("이메일", mail, { mail = it }, placeholder = "name@mail.com", state = fieldState(errors["email"]), message = errors["email"]) }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Box(Modifier.weight(1f)) { Field("비밀번호", pw, { pw = it }, password = true, state = fieldState(errors["password"]), message = errors["password"] ?: "영문과 숫자를 섞어 8자 이상") }
+                        Box(Modifier.weight(1f)) { Field("비밀번호 확인", pw2, { pw2 = it }, password = true, state = fieldState(errors["passwordConfirm"]), message = errors["passwordConfirm"]) }
+                    }
+                    // 백엔드 가입 조건(만 14세 이상 확인). 시안에는 없지만 서버가 필수로 받으므로 입력란 아래에 한 줄로 둔다.
+                    Row(
+                        Modifier.clip(RoundedCornerShape(12.dp)).clickable { age = !age }.padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        CheckBox(age, color = NColor.navy)
+                        T("만 14세 이상입니다", S.t(17, 22, 500, NColor.ink2))
+                        T("필수", S.t(14, 20, 600, NColor.navy))
+                        errors["ageConfirmed"]?.let { T(it, S.t(15, 20, color = NColor.dangerInk)) }
+                    }
+                    form.message?.takeIf { !p }?.let { T(it, S.t(15, 20, color = NColor.dangerInk)) }
+                    AuthActions {
+                        Btn(if (form.busy) "가입 중" else "회원가입", Modifier.fillMaxWidth(), Kind.Navy, enabled = !form.busy) {
+                            if (p) nav.go(Screen.Terms)
+                            else scope.launch { vm.signup(name, mail, pw, pw2, age)?.let { nav.goNext(it) } }
+                        }
+                    }
                 }
             }
+            BackBtn("로그인으로", Modifier.at(56.dp, 56.dp, 154.dp, 52.dp)) { nav.back() }
         }
     }
 }
@@ -182,7 +217,7 @@ fun SignupScreen(nav: Navigator, state: AppState, empty: Boolean) {
 // ------------------------------------------------------------------ terms: text on the left, consent on the right
 private val termNames = listOf("서비스 이용약관" to true, "개인정보 수집·이용" to true, "위치정보 이용" to true, "얼굴 영상 분석" to true, "주행 리포트 알림" to false)
 private val termTexts: List<List<Pair<String?, String>>> = listOf(
-    listOf("제1조 목적" to "이 약관은 앱이름이 제공하는 운전자 상태 관찰, 경고, 쉼터 안내, 주행 리포트 서비스의 이용 조건을 정합니다.",
+    listOf("제1조 목적" to "이 약관은 Hawkeye가 제공하는 운전자 상태 관찰, 경고, 쉼터 안내, 주행 리포트 서비스의 이용 조건을 정합니다.",
         "제2조 서비스의 한계" to "경고와 안내는 운전을 돕는 보조 수단입니다. 안전 운전의 책임은 운전자에게 있으며, 운전 중에는 화면 조작을 최소화해야 합니다."),
     listOf("수집 항목" to "이름, 이메일, 주행 기록(관찰 시작·종료 시각, 이동 거리, 감지된 이벤트의 시각·유형·지속 시간)",
         "이용 목적과 보관" to "주행 리포트와 주간 통계를 만드는 데 씁니다. 탈퇴하면 바로 지웁니다."),

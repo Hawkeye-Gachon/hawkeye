@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Nungil design tokens. ARGB where alpha is used. -->
 <resources>
-    <color name="canvas">#0E0F12</color>
+    <color name="canvas">#FFFFFF</color>
     <color name="frost">#F6F6F9</color>
     <color name="frost_2">#ECEDF3</color>
     <color name="white">#FFFFFF</color>

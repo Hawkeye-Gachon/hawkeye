@@ -12,7 +12,8 @@ import com.personal.driverguard.R
 
 /** Generated from handoff/tokens.json. Do not edit by hand. */
 object NColor {
-    val canvas = Color(0xFF0E0F12)
+    /** 모든 화면의 바탕(보드 바깥 여백 포함). 2026-11 요청으로 검은색에서 흰색으로 바꿨다. */
+    val canvas = Color(0xFFFFFFFF)
     val frost = Color(0xFFF6F6F9)
     val frost2 = Color(0xFFECEDF3)
     val white = Color(0xFFFFFFFF)
@@ -27,8 +28,12 @@ object NColor {
     val onNight = Color(0xFFFFFFFF)
     val onNight2 = Color(0xD6FFFFFF)
     val onNight3 = Color(0xA3FFFFFF)
-    val indigo = Color(0xFF5A46FA)
-    val indigoHi = Color(0xFF7B6BFF)
+    /** 주 강조색. 2026-11 Hawkeye 시안에 맞춰 보라(#5A46FA)에서 로고 남색으로 바꿨다(이름은 코드 호환을 위해 유지). */
+    val indigo = Color(0xFF0B2A5C)
+    val indigoHi = Color(0xFF3D7EF5)
+    /** Hawkeye 로고 남색. 로그인·회원가입의 주 버튼에 쓴다(시안 02 로그인, 05 회원가입). */
+    val navy = Color(0xFF0B2A5C)
+    val navyPressed = Color(0xFF08204A)
     val alert = Color(0xFFFF8A00)
     val danger = Color(0xFFF62E24)
     val dangerInk = Color(0xFFD9190F)

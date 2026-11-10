@@ -39,16 +39,7 @@ fun DesignBoard(content: @Composable BoxScope.() -> Unit) {
             Box(
                 Modifier
                     .size(BOARD_W.dp, BOARD_H.dp)
-                    .drawBehind {
-                        drawRect(NColor.canvas)
-                        drawRect(
-                            Brush.radialGradient(
-                                listOf(Color(0xFF16171C), NColor.canvas),
-                                center = Offset(size.width * .3f, 0f),
-                                radius = size.width * .72f,
-                            )
-                        )
-                    },
+                    .drawBehind { drawRect(NColor.canvas) },
                 content = content,
             )
         }
