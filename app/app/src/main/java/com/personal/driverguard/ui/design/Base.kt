@@ -40,8 +40,7 @@ fun DesignBoard(content: @Composable BoxScope.() -> Unit) {
                 Modifier
                     .size(BOARD_W.dp, BOARD_H.dp)
                     .drawBehind { drawRect(NColor.canvas) },
-                content = content,
-            )
+            ) { ImeLift(content = content) }
         }
     }
 }

@@ -37,6 +37,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -244,12 +247,18 @@ fun Field(
 ) {
     val src = remember { MutableInteractionSource() }
     val focused by src.collectIsFocusedAsState()
+    // 키보드에 가리지 않도록 포커스된 입력란 위치를 화면 올리기([ImeLift])에 알린다
+    val ime = LocalImeFocus.current
+    val key = remember { Any() }
+    var coords by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
+    androidx.compose.runtime.LaunchedEffect(focused, coords) { val c = coords; if (focused && c != null) ime?.focus(key, c) else if (!focused) ime?.blur(key) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { ime?.blur(key) } }
     val border = when {
         state == FieldState.Error -> BorderStroke(2.dp, NColor.danger)
         focused || forceFocus -> BorderStroke(2.dp, NColor.ink)
         else -> BorderStroke(1.dp, NColor.line2)
     }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.onGloballyPositioned { coords = it }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         T(label, S.t(16, 22, 500, NColor.ink2))
         BasicTextField(
             value = value, onValueChange = onChange, singleLine = true, interactionSource = src,
