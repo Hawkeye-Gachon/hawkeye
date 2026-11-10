@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Hawkeye 런처 아이콘: 흰 H(앞) + 로고와 같은 남색 그라데이션(뒤) -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/frost" />
-    <foreground android:drawable="@drawable/ic_launcher_fg" />
+    <background android:drawable="@drawable/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>

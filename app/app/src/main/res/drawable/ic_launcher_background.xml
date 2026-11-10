@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 런처 아이콘 바탕: Hawkeye 로고와 같은 남색 그라데이션(왼쪽 위 → 오른쪽 아래) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient android:angle="315" android:startColor="#174689" android:endColor="#0C2043" android:type="linear" />
+</shape>
