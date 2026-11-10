@@ -52,46 +52,39 @@ import com.personal.driverguard.ui.design.*
 import com.personal.driverguard.ui.theme.NColor
 
 // ------------------------------------------------------------------ camera scenes
-private val CamPurple = Color(0xFF7B6BFF)
+/** 카메라 표시 색. 관찰 중·설정 완료는 시안의 파랑, 졸음은 빨강. */
+private val CamBlue = NColor.indigoHi
 private val CamRed = Color(0xFFFF5A50)
+
+/** 카메라 영상 위 글자는 어두운 막 없이 바로 올리므로, 밝은 화면에서도 읽히게 그림자를 준다. */
+private val onCamera = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = .65f), Offset(0f, 1.5f), 8f)
+private fun TextStyleOnCam(size: Int, line: Int, weight: Int = 400, color: Color = Color.White, tracking: Double = 0.0) =
+    S.t(size, line, weight, color, tracking).copy(shadow = onCamera)
 
 @Composable
 private fun CamLabel() = Row(Modifier.padding(start = 28.dp, top = 34.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-    Ic(R.drawable.ic_camera, NColor.onNight2, 20.dp); T("운전자 카메라, 적외선 30fps", S.t(16, 22, color = NColor.onNight2))
+    Ic(R.drawable.ic_camera, NColor.onNight2, 20.dp); T("운전자 카메라, 적외선 30fps", TextStyleOnCam(16, 22, color = NColor.onNight2))
 }
 
-/** Full-face framing used while setting the forward direction. */
+/** 보는 방향 설정: 카드 전체가 카메라 영상. 점선 안내는 쓰지 않는다. */
 @Composable
 private fun BoxScope.SetupCamera(state: SetupState) {
     SceneCard(Modifier.background(NColor.camBg)) {
-        // 실제 전면 카메라. 권한이 없거나 카메라가 없으면 시안의 예시 사진을 보여 준다.
-        DriverCamera(Modifier.fillMaxSize()) {
-            val img = painterResource(R.drawable.ir_driver)
-            if (state == SetupState.NoFace) {
-                Image(img, null, Modifier.fillMaxSize().graphicsLayer { translationX = 290.dp.toPx(); translationY = 130.dp.toPx(); scaleX = 1.15f; scaleY = 1.15f; alpha = .55f }.blur(1.5.dp), contentScale = ContentScale.Crop, alignment = androidx.compose.ui.BiasAlignment(0f, -.4f))
-            } else {
-                Image(img, null, Modifier.fillMaxSize().graphicsLayer { alpha = .9f }, contentScale = ContentScale.Crop, alignment = androidx.compose.ui.BiasAlignment(0f, -.4f))
-            }
-        }
-        Canvas(Modifier.fillMaxSize()) {
-            val c = Offset(346.dp.toPx(), 270.dp.toPx()); val sz = Size(244.dp.toPx(), 312.dp.toPx())
-            val tl = Offset(c.x - sz.width / 2, c.y - sz.height / 2)
-            when (state) {
-                SetupState.Before -> drawOval(Color.White.copy(alpha = .9f), tl, sz, style = Stroke(2.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 10.dp.toPx()))))
-                SetupState.NoFace -> drawOval(NColor.alert, tl, sz, style = Stroke(2.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10.dp.toPx(), 10.dp.toPx()))))
-                SetupState.Done -> {
-                    drawOval(CamPurple, tl, sz, style = Stroke(4.dp.toPx()))
-                    drawLine(CamPurple, c, Offset(c.x, 0f), 2.dp.toPx(), StrokeCap.Round, PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 8.dp.toPx())))
-                }
+        // 실제 전면 카메라. 권한이 없거나 카메라가 없으면 어두운 바탕만 보인다.
+        DriverCamera(Modifier.fillMaxSize()) {}
+        if (state == SetupState.Done) {
+            Canvas(Modifier.fillMaxSize()) {
+                val c = Offset(346.dp.toPx(), 270.dp.toPx()); val sz = Size(244.dp.toPx(), 312.dp.toPx())
+                drawOval(CamBlue, Offset(c.x - sz.width / 2, c.y - sz.height / 2), sz, style = Stroke(4.dp.toPx()))
             }
         }
         CamLabel()
         val (msg, col, w) = when (state) {
-            SetupState.Before -> Triple("얼굴이 점선 안에 들어왔습니다", NColor.onNight2, 400)
+            SetupState.Before -> Triple("얼굴이 화면 가운데 오도록 앉아 주세요", NColor.onNight2, 400)
             SetupState.Done -> Triple("기준 방향 등록됨, 좌우 2°, 상하 1° 이내", Color.White, 600)
             SetupState.NoFace -> Triple("얼굴이 화면 오른쪽 아래로 벗어났습니다", NColor.alert, 600)
         }
-        T(msg, S.t(18, 24, w, col), Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp), align = TextAlign.Center)
+        T(msg, TextStyleOnCam(18, 24, w, col), Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp), align = TextAlign.Center)
     }
 }
 
@@ -109,28 +102,19 @@ private fun rememberElapsedSeconds(startedMonotonicMs: Long): Long {
     return elapsed
 }
 
-/** Close framing on the eyes; the lower half is the read-out area. 관찰 종료 sits top-right on every observing screen. */
+/**
+ * 관찰 화면 카메라 카드: 카드 전체가 카메라 영상이고, 상태 문구와 수치를 영상 위에 바로 올린다(어두운 막 없음).
+ * 관찰 종료는 모든 관찰 화면에서 오른쪽 위에 있다.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMode = CamMode.Ok) {
     var demo by remember { mutableStateOf(false) }
     SceneCard(Modifier.background(NColor.camBg).combinedClickable(remember { MutableInteractionSource() }, null, onLongClick = { demo = true }, onClick = {})) {
-        // 실제 전면 카메라는 위쪽(아래 절반은 수치 영역이라 어둡게 덮인다)에만 그린다.
-        // 권한이 없거나 카메라가 없으면 시안의 예시 사진을 보여 준다.
-        DriverCamera(Modifier.at(0.dp, 0.dp, 688.dp, 395.dp)) {
-            val img = painterResource(if (mode == CamMode.Drowsy) R.drawable.ir_driver_closed else R.drawable.ir_driver)
-            Image(
-                img, null, contentScale = ContentScale.FillBounds,
-                colorFilter = if (mode == CamMode.Drowsy) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(.9f, .9f, .9f, 1f) }) else null,
-                modifier = Modifier.at((-351).dp, (-40).dp, 1406.dp, 937.dp).then(
-                    if (mode == CamMode.Look) Modifier.graphicsLayer { translationX = 150.dp.toPx(); rotationY = 28f; cameraDistance = 14f * density; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(.6f, .3f); alpha = .9f } else Modifier
-                ),
-            )
-        }
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-            0f to Color(0x8C0A0B0D), .14f to Color(0x000A0B0D), .44f to Color(0x000A0B0D), .525f to Color(0xFB0A0B0D), 1f to NColor.camBg,
-        )))
-        Canvas(Modifier.fillMaxSize()) {
+        // 실제 전면 카메라. 권한이 없거나 카메라가 없으면 어두운 바탕만 보인다.
+        DriverCamera(Modifier.fillMaxSize()) {}
+        // 눈 위치 표시·고개 방향 화살표는 AI 추론 결과로 그릴 자리다. 아직 실제 좌표가 없어 시안 확인 모드에서만 예시로 그린다.
+        if (state.preview) Canvas(Modifier.fillMaxSize()) {
             fun px(v: Int) = v.dp.toPx()
             when (mode) {
                 CamMode.Look -> {
@@ -140,7 +124,7 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
                     drawPath(h, NColor.alert, style = Stroke(px(3), cap = StrokeCap.Round, join = StrokeJoin.Round))
                 }
                 else -> {
-                    val c = if (mode == CamMode.Drowsy) CamRed else CamPurple
+                    val c = if (mode == CamMode.Drowsy) CamRed else CamBlue
                     val ry = if (mode == CamMode.Drowsy) 14 else 18
                     val cy = if (mode == CamMode.Drowsy) 293 else 291
                     listOf(272, 419).forEach { cx -> drawOval(c, Offset(px(cx - 40), px(cy - ry)), Size(px(80), px(ry * 2)), style = Stroke(if (mode == CamMode.Drowsy) 2.5.dp.toPx() else px(2))) }
@@ -155,12 +139,12 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
         CamLabel()
         Btn("관찰 종료", Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 20.dp), Kind.OnDark, height = 52.dp, radius = 16.dp, style = S.t(18, 24, 600), horizontal = 22.dp) { nav.go(Screen.EndConfirm) }
         val (head, headColor, dot) = when (mode) {
-            CamMode.Ok -> Triple("눈과 머리 방향을 추적하고 있습니다", NColor.onNight2, CamPurple)
+            CamMode.Ok -> Triple("눈과 머리 방향을 추적하고 있습니다", NColor.onNight2, CamBlue)
             CamMode.Look -> Triple("머리가 기준 방향에서 벗어났습니다", NColor.alert, NColor.alert)
             CamMode.Drowsy -> Triple("눈을 감은 상태가 이어지고 있습니다", Color(0xFFFF7A72), CamRed)
         }
-        Row(Modifier.align(Alignment.BottomStart).padding(start = 36.dp, bottom = 150.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Dot(dot, 8.dp); T(head, S.t(17, 24, color = headColor))
+        Row(Modifier.align(Alignment.BottomStart).padding(start = 36.dp, bottom = 130.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Dot(dot, 8.dp); T(head, TextStyleOnCam(17, 24, color = headColor))
         }
         // 눈 뜬 정도·머리 방향 같은 수치는 AI 추론 서버가 붙으면 채운다. 실제 앱에서는 그 전까지 '–' 로 둔다.
         val tele = when (mode) {
@@ -171,7 +155,7 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
         Row(Modifier.align(Alignment.BottomStart).padding(start = 36.dp, end = 36.dp, bottom = 36.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             tele.forEach { (v, l, c) ->
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    T(v, S.t(34, 40, 300, c, -.02).copy(fontFeatureSettings = "tnum")); T(l, S.t(15, 20, color = NColor.onNight3))
+                    T(v, TextStyleOnCam(34, 40, 300, c, -.02).copy(fontFeatureSettings = "tnum")); T(l, TextStyleOnCam(15, 20, color = NColor.onNight2))
                 }
             }
         }
@@ -227,7 +211,7 @@ fun SetupScreen(nav: Navigator, state: AppState, setup: SetupState) {
             SheetBody(content = {
                 when (setup) {
                     SetupState.Before -> {
-                        T("평소 운전 자세로 앉아 앞유리 너머 정면을 바라봐 주세요", S.h2)
+                        T(accent("평소 운전 자세로 앉아 앞유리 너머\n" to false, "정면을 바라봐 주세요" to true), S.h2)
                         T("화면을 보고 있으면 화면 쪽이 정면으로 등록됩니다. 차량 앞쪽을 바라본 채로 버튼을 눌러 주세요.", S.body)
                     }
                     SetupState.Done -> {
@@ -238,7 +222,7 @@ fun SetupScreen(nav: Navigator, state: AppState, setup: SetupState) {
                     SetupState.NoFace -> {
                         Ic(R.drawable.ic_alert, NColor.alert, 44.dp)
                         T("얼굴이 보이도록 카메라 위치를 조정해 주세요", S.h2)
-                        T("얼굴 전체가 점선 안에 들어오면 다시 설정할 수 있습니다. 모자나 마스크가 눈을 가리면 확인이 어렵습니다.", S.body)
+                        T("얼굴 전체가 화면 가운데에 들어오면 다시 설정할 수 있습니다. 모자나 마스크가 눈을 가리면 확인이 어렵습니다.", S.body)
                     }
                 }
             }, bottom = {
@@ -435,18 +419,18 @@ fun SuggestScreen(nav: Navigator, state: AppState, s: Screen) {
                         T("가까운 쉼터를 찾고 있습니다", S.h2)
                         T("지금 차선에서 바로 들어갈 수 있는 휴게소·졸음쉼터를 확인하고 있습니다.", S.body)
                     } else {
-                        T("${v.name}를 경유지로 추가할까요?", S.h2)
+                        T(accent(v.name to true, "를\n경유지로 추가할까요?" to false), S.h2)
                         if (s == Screen.SuggestRepeat) T("이번 주행에서 전방 주시 이탈이 ${if (live) vm.observe.value.inattentionCount else 3}번 감지됐습니다.", S.body)
                         Place(v.placeLine)
                         Seq(listOf(Stop.Here to "현재 위치", Stop.Rest to v.name, Stop.Dest to v.destination), Modifier.padding(top = if (s == Screen.Suggest) 18.dp else 12.dp))
                     }
                     Screen.SuggestExisting -> {
-                        T("${v.name}를 경유지로 추가할까요?", S.h2)
+                        T(accent(v.name to true, "를\n경유지로 추가할까요?" to false), S.h2)
                         T("기존 경유지 ${v.existing.firstOrNull() ?: ""}보다 먼저 들르도록 넣습니다.", S.body); Place(v.placeLine)
                         Seq(listOf(Stop.Here to "현재 위치", Stop.Rest to v.name) + stops + listOf(Stop.Dest to v.destination), Modifier.padding(top = 12.dp))
                     }
                     Screen.SuggestNoDest -> {
-                        T("${v.name}로 길 안내를 시작할까요?", S.h2); T("차량 내비에 안내 중인 목적지가 없어 쉼터를 목적지로 설정합니다.", S.body); Place(v.placeLine)
+                        T(accent(v.name to true, "로\n길 안내를 시작할까요?" to false), S.h2); T("차량 내비에 안내 중인 목적지가 없어 쉼터를 목적지로 설정합니다.", S.body); Place(v.placeLine)
                         Seq(listOf(Stop.Here to "현재 위치", Stop.Rest to v.name), Modifier.padding(top = 12.dp))
                     }
                     Screen.SuggestFull -> {
@@ -468,7 +452,7 @@ fun SuggestScreen(nav: Navigator, state: AppState, s: Screen) {
                     }
                     else -> {
                         Ic(R.drawable.ic_check, NColor.indigo, 40.dp)
-                        T("${v.name}를 경유지로 추가했습니다", S.h2)
+                        T(accent(v.name to true, "를\n경유지로 추가했습니다" to false), S.h2)
                         T("지도와 길 안내는 차량 내비에서 이어집니다. 휴식 후에는 ${v.destination}까지 안내합니다.", S.body)
                         Seq(listOf(Stop.Here to "현재 위치", Stop.Rest to v.name, Stop.Dest to v.destination), Modifier.padding(top = 12.dp))
                     }
