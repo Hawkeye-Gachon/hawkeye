@@ -115,10 +115,10 @@ Pleos 연동은 모두 인터페이스 뒤에 두었습니다. 연결에 실패�
 
 ### 1. APK 설치
 
-release APK는 저장소 루트의 `apk/` 폴더에 있습니다.
+release APK는 저장소 루트의 [`apk/`](../apk) 폴더에 있습니다. 실제 기기와 차량은 arm64 파일을, x86_64 에뮬레이터는 x86_64 파일을 씁니다.
 
 ```sh
-adb install apk/[팀명]_Hawkeye_release.apk
+adb install -r apk/Hawkeye_v0.2.0_arm64-v8a_release.apk
 ```
 
 ### 2. 서버 연결
@@ -131,9 +131,11 @@ adb install apk/[팀명]_Hawkeye_release.apk
 
 ```sh
 cd app
-./gradlew :app:assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
+./gradlew :app:assembleRelease      # app/build/outputs/apk/release/app-arm64-v8a-release.apk, app-x86_64-release.apk
 ./gradlew :app:testDebugUnitTest    # 단위 테스트와 화면 스냅숏
 ```
+
+네이티브 라이브러리(MediaPipe, ONNX Runtime 등)가 커서 APK를 기기용(arm64-v8a)과 에뮬레이터용(x86_64)으로 나눠 만듭니다. release APK는 시험용으로 Android debug 키로 서명합니다.
 
 실제 서버에 연결하려면 `app/local.properties`에 서버 주소를 적습니다. 적지 않으면 `http://10.0.2.2:8080/`(에뮬레이터에서 본 개발 PC)을 씁니다.
 

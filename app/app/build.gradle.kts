@@ -29,18 +29,29 @@ android {
             ?: "http://10.0.2.2:8080/"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
 
-        ndk {
-            // MediaPipe·OpenCV 네이티브 라이브러리 ABI. 실기기(arm64)와 에뮬레이터(x86_64, arm64)만 포함해 APK 크기를 줄인다.
-            // 32비트 기기 지원이 필요하면 armeabi-v7a 를 추가한다(두 라이브러리 모두 제공).
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // 제출·시험용 APK 를 바로 설치할 수 있게 debug 키로 서명한다. 스토어에 올릴 때는 전용 키로 바꾼다.
+            signingConfig = signingConfigs.getByName("debug")
         }
+    }
+    // MediaPipe·OpenCV·ONNX Runtime 네이티브 라이브러리가 커서 ABI 별로 APK 를 나눈다.
+    // arm64-v8a 는 실기기·차량, x86_64 는 에뮬레이터용이다. 32비트 기기 지원이 필요하면 armeabi-v7a 를 추가한다.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "x86_64")
+            isUniversalApk = false
+        }
+    }
+    packaging {
+        // 네이티브 라이브러리를 APK 안에서 압축해 파일 크기를 줄인다(설치할 때 풀린다)
+        jniLibs { useLegacyPackaging = true }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
