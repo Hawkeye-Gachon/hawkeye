@@ -13,10 +13,14 @@
 | 1. 출발 전 | 운전자가 평소 자세로 정면을 바라보면 그 방향을 기준으로 등록합니다. |
 | 2. 관찰 | 전면 카메라 영상을 기기 안에서 분석해 눈 감김과 머리 방향을 추적합니다. |
 | 3. 전방 주시 이탈 | 3초 이상 옆을 보면 음성으로 알리고 무드등을 주황으로 바꿉니다. 정면을 다시 보면 스스로 닫힙니다. |
-| 4. 졸음 | 눈 감김이 이어지면 경고음·음성과 함께 차량 실내를 바꿔 운전자를 깨웁니다. |
-| 5. 쉼터 제안 | 진행 방향의 가장 가까운 휴게소·졸음쉼터를 음성으로 묻고, "응"이라고 답하면 차량 내비 경유지로 넣습니다. |
-| 6. 휴식 확인 | 그 쉼터 300m 안에서 멈추면 도착으로 기록하고, 바꿨던 실내를 원래대로 돌립니다. |
-| 7. 리포트 | 주행 경로 위에 감지 위치와 휴식 여부를 보여 주고, 일간·주간 통계로 쌓습니다. |
+| 4. 졸음 | 눈 감김이 이어지면 음성과 함께 차량 실내를 바꿔 운전자를 깨웁니다. |
+| 5. 반응 확인 | 경고 뒤에도 5초 동안 눈을 뜨지 않으면 경고음과 함께 괜찮은지 묻고, 10초 동안 대답이 없으면 119 전화 화면을 엽니다. |
+| 6. 쉼터 제안 | 괜찮다고 확인되면 진행 방향의 가장 가까운 휴게소·졸음쉼터를 음성으로 묻고, "응"이라고 답하면 차량 내비 경유지로 넣습니다. |
+| 7. 쉼터까지 | 쉼터로 가는 동안 운전 상식 O/X 퀴즈를 음성으로 내 운전자가 깨어 있게 돕습니다. |
+| 8. 휴식 | 그 쉼터 300m 안에서 멈추면 도착으로 기록하고, 휴식에 맞게 실내 온도를 맞추고 등받이를 눕힙니다. 다시 출발하면 되돌립니다. |
+| 9. 리포트 | 주행 경로 위에 감지 위치와 들른 쉼터를 보여 주고, 일간·주간 통계로 쌓습니다. |
+
+4번부터 8번까지는 한 번에 하나씩, 앞 단계가 끝난 뒤에만 다음으로 넘어갑니다. 음성 안내와 질문이 서로 겹치지 않고, 진행 중에는 새 경고가 끼어들지 않습니다.
 
 ## Android 앱에서 만든 것
 
@@ -29,7 +33,8 @@
 | 전방 주시 이탈 | 음성 안내, 무드등 주황 |
 | 졸음 | 음성 안내, 무드등 빨강, 에어컨 켜기, 온도 18°C, 바람 최대, 내기 순환을 꺼 바깥 공기 유입 |
 | 졸음 반복 | 위 조치에 더해 운전석 창문 20% 열기, 운전석 시트 통풍 최대 |
-| 쉼터 도착·관찰 종료 | 모두 조작 전 상태로 되돌림 |
+| 쉼터 도착 | 졸음 대응을 되돌리고, 실내 23°C·바람 약하게, 주차 상태(P)면 운전석 등받이 눕힘 |
+| 다시 출발·관찰 종료 | 모두 조작 전 상태로 되돌림 |
 
 - 조작하기 전의 값을 읽어 두었다가 그대로 되돌립니다. 앱이 차의 설정을 바꿔 놓은 채 끝나지 않습니다.
 - 권한이 없거나 차량이 지원하지 않는 조작은 건너뛰고, **실제로 반영된 조치만** 화면에 표시합니다. 차가 왜 갑자기 바람을 세게 트는지 운전자가 알 수 있습니다.
@@ -49,18 +54,25 @@
 
 ### 3. 화면을 누르지 않아도 됩니다
 
-- 쉼터 제안은 Pleos TextToSpeech로 묻고 SpeechToText로 대답을 듣습니다. "응" 한마디면 경유지가 추가됩니다.
-- 대답이 없으면 스스로 관찰 화면으로 돌아갑니다. 다시 감지되면 다시 묻습니다.
-- 경고는 다른 음성 안내보다 먼저 나갑니다.
+- 쉼터 제안은 Pleos TextToSpeech로 묻고 SpeechToText로 대답을 듣습니다. 질문이 끝나면 신호음이 울리고, "응" 한마디면 경유지가 추가됩니다. 알아듣지 못하면 한 번 더 묻습니다.
+- 대답이 없으면 스스로 관찰 화면으로 돌아갑니다.
+- 쉼터로 가는 동안의 퀴즈도 문제와 대답을 음성으로만 주고받습니다. 화면에는 띄우지 않습니다.
+- 말하기와 듣기는 한 번에 하나만 합니다. 안내가 끝나기 전에 다음 안내가 시작되거나, 안내 음성을 운전자의 대답으로 듣는 일이 없습니다.
 
-### 4. 영상은 기기 밖으로 나가지 않습니다
+### 4. 반응이 없으면 119로 이어 줍니다
+
+- 졸음 경고 뒤에도 눈을 뜨지 않으면 경고음과 함께 "괜찮으세요?"라고 묻습니다.
+- 눈을 뜨거나, 대답하거나, 화면을 누르면 취소되고 쉼터 제안으로 넘어갑니다.
+- 10초 동안 반응이 없으면 119가 입력된 전화 화면을 열고 현재 위치(위도·경도)를 화면에 보여 줍니다. Android는 일반 앱이 긴급 번호로 바로 전화를 걸지 못하게 하므로, 통화 버튼은 사람이 눌러야 합니다.
+
+### 5. 영상은 기기 밖으로 나가지 않습니다
 
 - 감지는 모두 기기 안에서 합니다. 카메라 프레임 → MediaPipe 얼굴 랜드마크 → `ai/kotlin` 졸음 판정 라이브러리 순서로 처리하며(초당 약 15프레임), 영상과 사진은 저장하지도 서버로 보내지도 않습니다.
 - 주행 기록(감지 시각과 위치, 단순화한 경로, 들른 쉼터)은 앱 안에 모았다가 종료할 때 한 번에 올립니다. 올리지 못하면 기기에 남겨 두었다가 다음 실행 때 다시 올립니다.
-- 사람마다 눈 크기와 앉는 자세가 다르므로, 시작 후 약 1분 동안 운전자의 평소 상태를 익힌 뒤 판정합니다.
+- 사람마다 눈 크기와 앉는 자세가 다르므로, 시작 후 약 1분 동안 운전자의 평소 상태를 익혀 판정에 반영합니다. 그동안에도 졸음과 고개 돌림은 감지합니다.
 - 저속에서는 경고하지 않습니다(전방 주시·눈 감김 시속 20km 미만, 졸음 시속 50km 미만). 신호 대기 중에 옆을 본다고 경고가 울리지 않습니다.
 
-### 5. 차량이 아니어도 끝까지 동작합니다
+### 6. Pleos 차량이 아니어도 멈추지 않습니다
 
 Pleos 연동은 모두 인터페이스 뒤에 두었습니다. 연결에 실패하면 해당 기능만 건너뛰거나 Android 기본 기능으로 바꿔 동작합니다.
 
@@ -68,11 +80,9 @@ Pleos 연동은 모두 인터페이스 뒤에 두었습니다. 연결에 실패�
 | --- | --- | --- |
 | 음성 안내·응답 | 차량 스피커·마이크 | Android 기본 음성 |
 | 위치 | 차량 위치(FusedLocation) | Android 위치 |
-| 실내 조치·내비 | 실제 조작 | 건너뜀(시연 모드에서는 가상 응답) |
+| 실내 조치·내비 | 실제 조작 | 건너뜀 |
 
-**시연 모드**를 켜면 서버·차량·위치가 모두 앱 안의 가상 구현으로 바뀌어, 태블릿 한 대로 전체 흐름을 볼 수 있습니다. 경부고속도로 서울→부산을 시속 80km로 달리는 모의 주행 위에서 실제 휴게소·졸음쉼터가 제안됩니다. 이때도 졸음 감지만은 실제 카메라 영상으로 동작합니다.
-
-### 6. 차량 화면에 맞춘 UI
+### 7. 차량 화면에 맞춘 UI
 
 - 차량 센터 디스플레이(가로 1280 × 800dp)를 기준으로 그렸고, 다른 크기에서는 같은 비율로 확대·축소합니다.
 - 주행 중 화면은 모두 왼쪽 카메라 카드와 오른쪽 시트의 같은 구성입니다. 경고가 떠도 배치는 그대로이고 내용만 바뀝니다.
@@ -111,24 +121,9 @@ release APK는 저장소 루트의 `apk/` 폴더에 있습니다.
 adb install apk/[팀명]_Hawkeye_release.apk
 ```
 
-### 2. 시연 모드로 실행(서버·차량 없이 전체 흐름 확인)
+### 2. 서버 연결
 
-1. 앱을 실행하고 카메라·마이크·위치 권한을 허용합니다.
-2. 로그인 화면 오른쪽 위의 **시연 모드** 스위치를 켭니다.
-3. 미리 채워진 시연 계정으로 **로그인**을 누릅니다.
-4. 홈에서 **관찰 시작** → **이 방향으로 설정** → **관찰 시작**을 차례로 누릅니다.
-5. 카메라에 얼굴이 보이게 두고 약 1분 기다립니다(운전자의 평소 눈 크기와 자세를 익히는 시간).
-6. 눈을 1초 이상 감으면 졸음 경고가, 3초 이상 옆을 보면 전방 주시 경고가 뜹니다.
-7. 졸음 경고 뒤 쉼터 제안 화면에서 **경유지 추가**를 누르거나 "응"이라고 답하면 약 6초 뒤 쉼터 도착 화면이 뜹니다.
-8. **관찰 종료** → **종료하고 리포트 보기**로 주행 리포트를 확인합니다.
-
-시연 모드에서 실제와 다른 것은 세 가지입니다.
-
-- 위치: 경부고속도로 서울(양재IC)→부산 방향을 시속 80km로 달리는 모의 주행
-- 차량: 내비 반영과 실내 조치는 가상 응답(화면 왼쪽 위 "차량 조치"에 표시)
-- 서버: 앱 안의 가짜 서버가 응답(이번 주·지난주 예시 기록 포함)
-
-졸음·전방 주시 이탈 감지는 시연 모드에서도 실제 카메라 영상으로 동작합니다. 카메라 카드를 길게 누르면 감지를 직접 넣는 시연 메뉴가 열립니다.
+로그인, 쉼터 조회, 주행 기록, 리포트는 백엔드 서버(`../backend/`)가 필요합니다. 서버 주소는 빌드할 때 정합니다(아래 3번).
 
 ### 3. 소스에서 빌드
 
@@ -150,15 +145,15 @@ hawkeye.apiBaseUrl=http://<서버 주소>:<포트>/
 
 - **화면 규격**: 가로 고정, 1280 × 800dp 기준으로 설계했고 화면 크기에 맞춰 비율대로 확대·축소합니다.
 - **Android**: minSdk 28, targetSdk 36.
-- **확인한 기기**: 갤럭시 탭 S9(SM-X710, Android 16 / One UI 8.0, 화면 2560 × 1600)과 Android 에뮬레이터(API 36)에서 시연 모드 전체 흐름을 확인했습니다.
+- **확인한 기기**: 갤럭시 탭 S9(SM-X710, Android 16 / One UI 8.0, 화면 2560 × 1600)에서 카메라 감지, 음성 안내와 응답, 화면 흐름을 확인했습니다. 이때 차량과 서버의 응답은 개발용 가상 구현으로 대신했고, 그 구현은 제출본에서 뺐습니다.
 - **Pleos Connect 에뮬레이터**: 아직 실행하지 못했습니다. Pleos SDK 호출 코드는 SDK 라이브러리에 맞춰 작성하고 빌드했으며, 차량 제어 권한(`CONTROL_CAR_*`)과 실차 동작은 2차 심사 전에 검증할 예정입니다.
 - **권한**: 카메라(필수), 위치, 마이크(음성 응답), Pleos 차량 권한(내비·공조·조명·창문·시트·안전·주행·위치·음성).
-- **네트워크**: 시연 모드는 네트워크 없이 동작합니다. 실제 모드는 서버 연결이 필요합니다.
+- **네트워크**: 서버 연결이 필요합니다. Pleos가 아닌 기기에서는 음성 안내와 음성 인식에도 네트워크나 기기에 내려받은 한국어 음성 데이터가 필요합니다.
 
 ## 알아둘 점
 
 - 졸음 판정은 현재 눈 감김 규칙(PERCLOS, 감김 지속 시간)으로 동작합니다. 학습된 모델은 아직 포함되지 않았습니다(`ai/README.md`).
-- 경고는 주행 속도가 낮으면 나가지 않습니다(시선·감김 시속 20km 미만, 졸음 시속 50km 미만). debug 빌드는 시험을 위해 모의 위치(시속 100km)를 쓰며, `DebugFlags.DUMMY_ROUTE`로 끕니다.
+- 경고는 주행 속도가 낮으면 나가지 않습니다(시선·감김 시속 20km 미만, 졸음 시속 50km 미만). 세워 둔 차나 책상 위에서는 경고가 나지 않습니다.
 - 이 앱의 경고와 안내는 운전을 돕는 보조 수단이며 안전 시스템이 아닙니다.
 
 ## 코드 구조
@@ -167,7 +162,7 @@ hawkeye.apiBaseUrl=http://<서버 주소>:<포트>/
 
 | 모듈 | 내용 |
 | --- | --- |
-| `app/` | 화면(Jetpack Compose), 앱 상태, Pleos 연동, 시연 모드 |
+| `app/` | 화면(Jetpack Compose), 앱 상태, Pleos 연동 |
 | `analysis/` | MediaPipe 얼굴 랜드마크 추론 |
 | `data/` | 서버 API 클라이언트(Retrofit), 로그인 토큰 저장과 갱신 |
 | `domain/`, `entity/` | Android에 의존하지 않는 순수 Kotlin 인터페이스와 자료형 |
@@ -180,15 +175,17 @@ hawkeye.apiBaseUrl=http://<서버 주소>:<포트>/
    │  CameraX, 약 15fps, 한 번에 한 프레임만 처리
    ▼
 DrowsyDetector ── MediaPipe 얼굴 랜드마크 ──▶ DrowsinessMonitor(ai/kotlin)
-   │  Detection(졸음 / 전방 주시 이탈 / 정면 복귀)
+   │  졸음 / 전방 주시 이탈 / 정면 복귀
    ▼
-HawkeyeViewModel ──┬─▶ VoiceGuide          음성 안내, "응" 듣기
-   │               ├─▶ VehicleCabin        무드등·공조·창문·시트, 차량 상태 읽기
-   │               ├─▶ IVehicleNavigation  쉼터 경유지 추가
-   │               ├─▶ HawkeyeApi          쉼터 조회, 주행 기록 업로드
-   │               └─▶ DriveRecorder       감지·경로·쉼터 방문 기록
+DriveDirector   경고 → 반응 확인(119) → 쉼터 제안 → 퀴즈 → 도착 안내를 한 번에 하나씩
+   │
+   ├─▶ VoiceGuide          음성 안내, 대답 듣기
+   ├─▶ VehicleCabin        무드등·공조·창문·시트, 차량 상태 읽기
+   ├─▶ IVehicleNavigation  쉼터 경유지 추가
+   ├─▶ HawkeyeApi          쉼터 조회, 주행 기록 업로드
+   └─▶ DriveRecorder       감지·경로·쉼터 방문 기록
    ▼  StateFlow
-화면(Compose) ── 관찰 중 → 경고 → 쉼터 제안 → 쉼터 도착 → 리포트
+화면(Compose)  진행 단계를 따라 바뀜
 ```
 
 ### 주요 코드
@@ -197,26 +194,27 @@ HawkeyeViewModel ──┬─▶ VoiceGuide          음성 안내, "응" 듣기
 
 | 위치 | 역할 |
 | --- | --- |
-| [`ui/Nav.kt`](app/src/main/java/com/personal/driverguard/ui/Nav.kt) | 전체 화면 목록(`Screen`)과 화면 이동. 감지 결과와 쉼터 도착을 받아 경고·도착 화면을 띄웁니다. |
-| [`ui/screens/`](app/src/main/java/com/personal/driverguard/ui/screens) | 화면. `Start`(로그인·가입·약관), `Home`, `Observe`(설정·관찰·경고·쉼터 제안), `Records`(리포트·통계) |
-| [`ui/design/`](app/src/main/java/com/personal/driverguard/ui/design), [`ui/theme/Tokens.kt`](app/src/main/java/com/personal/driverguard/ui/theme/Tokens.kt) | 공통 컴포넌트(카드, 시트, 버튼, 가장자리 빛, 차트)와 시안의 색·글자·치수 토큰 |
-| [`ui/state/HawkeyeViewModel.kt`](app/src/main/java/com/personal/driverguard/ui/state/HawkeyeViewModel.kt) | 앱 전체 상태. 감지를 받아 단계를 정하고 음성·차량·내비·서버 호출을 조율합니다. |
-| [`ui/state/DriveRecorder.kt`](app/src/main/java/com/personal/driverguard/ui/state/DriveRecorder.kt) | 한 번의 주행 기록. 경로를 솎아 내고, 쉼터 근처 정차를 도착으로 판정합니다. |
+| [`ui/Nav.kt`](app/src/main/java/com/personal/driverguard/ui/Nav.kt) | 전체 화면 목록(`Screen`)과 화면 이동. 관찰 중의 화면은 진행 단계를 따라갑니다. |
+| [`ui/screens/`](app/src/main/java/com/personal/driverguard/ui/screens) | 화면. `Start`(로그인·가입·약관), `Home`, `Observe`(설정·관찰·경고·119 확인·쉼터 제안·도착), `Records`(리포트·통계) |
+| [`ui/design/`](app/src/main/java/com/personal/driverguard/ui/design), [`ui/theme/Tokens.kt`](app/src/main/java/com/personal/driverguard/ui/theme/Tokens.kt) | 공통 컴포넌트(카드, 시트, 버튼, 가장자리 빛, 차트, 경로 지도)와 시안의 색·글자·치수 토큰 |
+| [`ui/state/DriveDirector.kt`](app/src/main/java/com/personal/driverguard/ui/state/DriveDirector.kt) | 감지 뒤의 흐름을 정해진 순서와 간격으로 진행합니다. |
+| [`ui/state/HawkeyeViewModel.kt`](app/src/main/java/com/personal/driverguard/ui/state/HawkeyeViewModel.kt) | 앱 전체 상태. 음성·차량·내비·서버를 실제로 호출합니다. |
+| [`ui/state/VoiceQueue.kt`](app/src/main/java/com/personal/driverguard/ui/state/VoiceQueue.kt) | 말하기와 듣기가 겹치지 않게 차례를 정합니다. |
+| [`ui/state/DrowsyQuiz.kt`](app/src/main/java/com/personal/driverguard/ui/state/DrowsyQuiz.kt) | 음성 O/X 퀴즈의 문제와 대답 알아듣기 |
+| [`ui/state/DriveRecorder.kt`](app/src/main/java/com/personal/driverguard/ui/state/DriveRecorder.kt), [`ui/state/PendingUploads.kt`](app/src/main/java/com/personal/driverguard/ui/state/PendingUploads.kt) | 한 번의 주행 기록과 쉼터 도착 판정, 아직 올리지 못한 기록 보관 |
 | [`platform/DrowsyDetector.kt`](app/src/main/java/com/personal/driverguard/platform/DrowsyDetector.kt) | 카메라 프레임을 MediaPipe와 판정 라이브러리에 잇는 감지기 |
 | [`platform/VehicleCabin.kt`](app/src/main/java/com/personal/driverguard/platform/VehicleCabin.kt), [`platform/VoiceGuide.kt`](app/src/main/java/com/personal/driverguard/platform/VoiceGuide.kt) | 차량 실내 조작과 음성의 인터페이스, 개입 단계 정의 |
 | [`platform/pleos/`](app/src/main/java/com/personal/driverguard/platform/pleos) | Pleos SDK 구현: `PleosVehicleCabin`, `PleosVehicleNavigation`, `PleosVoiceGuide`, `PleosFusedLocation` |
-| [`ui/state/DemoServer.kt`](app/src/main/java/com/personal/driverguard/ui/state/DemoServer.kt), [`ui/state/DriveSimulator.kt`](app/src/main/java/com/personal/driverguard/ui/state/DriveSimulator.kt) | 시연 모드의 가상 서버와 모의 주행 |
-| [`PlatformLocator.kt`](app/src/main/java/com/personal/driverguard/PlatformLocator.kt) | Pleos·Android·시연 구현 중 무엇을 쓸지 정해 주는 곳 |
+| [`PlatformLocator.kt`](app/src/main/java/com/personal/driverguard/PlatformLocator.kt) | 차량·음성·위치 구현을 만들어 주는 곳 |
 
 ### 구현에서 신경 쓴 점
 
-- **구현을 바꿔 끼우는 구조**: 차량 기능은 `VehicleCabin`, `VoiceGuide`, `IVehicleNavigation` 인터페이스로만 부릅니다. 그 뒤에 Pleos 구현, Android 기본 구현, 시연용 구현이 있어 화면과 상태 코드는 지금 차량인지 태블릿인지 모릅니다.
+- **한 번에 하나씩 진행**: 경고, 119 확인, 쉼터 질문, 퀴즈, 도착 안내가 따로 움직이면 음성과 화면이 서로 끼어듭니다. 그래서 한 곳(`DriveDirector`)에서 순서대로만 진행하고, 순서와 간격은 가상 시간으로 돌리는 단위 테스트로 확인합니다.
+- **구현을 바꿔 끼우는 구조**: 차량 기능은 `VehicleCabin`, `VoiceGuide`, `IVehicleNavigation` 인터페이스로만 부릅니다. 그 뒤에 Pleos 구현과 Android 기본 구현이 있어 화면과 상태 코드는 지금 차량인지 태블릿인지 모릅니다.
 - **콜백을 순서 있는 호출로**: Pleos SDK는 결과를 콜백으로 줍니다. 호출 하나를 코루틴으로 감싸 응답이 올 때까지 기다리고, 시간 안에 오지 않으면 실패로 처리합니다. 요청이 겹치지 않도록 한 번에 하나씩 보냅니다.
 - **실패해도 관찰은 계속**: 차량 연결, 내비 응답, 감지기, 서버 등록 중 어느 하나가 실패해도 나머지는 계속 동작합니다. 감지기가 멈추면 화면에 사유를 보여 줍니다.
+- **기록을 잃지 않게**: 주행 중에도 기록을 기기에 주기적으로 저장하고, 올리지 못한 기록은 다음 실행 때 같은 계정으로만 다시 올립니다.
 - **프레임이 밀리지 않게**: 처리 중에 들어온 프레임은 버립니다. MediaPipe가 결과를 돌려주지 않는 경우에도 일정 시간이 지나면 다음 프레임을 받습니다.
-- **시연 모드는 네트워크 층에서 바꿉니다**: 가상 서버는 OkHttp 인터셉터로 넣어 실제 서버와 같은 형식으로 응답합니다. 앱의 나머지 코드는 시연인지 구분하지 않습니다.
 - **화면은 시안과 대조**: 모든 화면을 1280 × 800dp로 그려 이미지로 남기는 테스트가 있어, 화면이 시안에서 벗어나면 바로 알 수 있습니다.
 
 `views/`, `runtime/`, `domain/engine/`, `data/db/`에는 초기 프로토타입(화면과 판정 로직을 앱 안에서 직접 구현했던 버전)의 코드가 남아 있습니다. 현재 앱의 화면 흐름은 `ui/` 아래 코드를 씁니다.
-
-쉼터·경로 시연 데이터(`app/src/main/assets/demo/`)는 OpenStreetMap(© OpenStreetMap contributors, ODbL)의 경부고속도로 형상과 휴게소 위치를 썼습니다.
