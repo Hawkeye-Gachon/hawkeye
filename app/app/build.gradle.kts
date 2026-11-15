@@ -103,6 +103,11 @@ dependencies {
     implementation(libs.guava)
     // Pleos Connect: 졸음 감지 후 차량 기본 내비에 쉼터 경유지 추가
     implementation(libs.pleos.navihelper)
+    // Pleos Connect: 졸음 단계별 차량 개입(공조·무드등·창문·시트), 차량 스피커 음성 안내·음성 응답, 차량 위치
+    implementation(libs.pleos.vehicle)
+    implementation(libs.pleos.tts)
+    implementation(libs.pleos.stt)
+    implementation(libs.pleos.fusedlocation)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     testImplementation(libs.junit)

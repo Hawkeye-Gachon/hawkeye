@@ -55,12 +55,16 @@ fun DriverCamera(modifier: Modifier = Modifier, fallback: @Composable BoxScope.(
     val executor = remember { Executors.newSingleThreadExecutor { Thread(it, "driver-camera") } }
     DisposableEffect(executor) { onDispose { executor.shutdown() } }
 
-    // 카메라와 위치를 한 번에 묻는다(두 요청을 따로 띄우면 하나가 무시될 수 있다). 결과는 화면 복귀 시 permission 이 다시 읽는다.
+    // 카메라·위치·마이크를 한 번에 묻는다(두 요청을 따로 띄우면 하나가 무시될 수 있다). 결과는 화면 복귀 시 permission 이 다시 읽는다.
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
     LaunchedEffect(permission.status) {
         if (permission.status == PermissionStatus.REQUESTABLE && !CameraPermissionPrompt.asked) {
             CameraPermissionPrompt.asked = true
-            launcher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+            // 마이크는 쉼터 제안에 음성으로 답할 때, Pleos 차량 위치는 Pleos 차량에서만 쓴다(없는 권한은 무시된다)
+            launcher.launch(arrayOf(
+                Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.RECORD_AUDIO, "pleos.car.permission.FUSED_LOCATION",
+            ))
         }
     }
 

@@ -66,6 +66,34 @@ object PlatformLocator {
         vehicleNavigation = navigation
     }
 
+    @Volatile private var vehicleCabin: com.personal.driverguard.platform.VehicleCabin? = null
+    @Volatile private var voiceGuide: com.personal.driverguard.platform.VoiceGuide? = null
+    @Volatile private var fusedLocation: com.personal.driverguard.platform.pleos.PleosFusedLocation? = null
+
+    /** 차량 실내 개입(Pleos Vehicle SDK: 공조·무드등·창문·시트)과 차량 상태 읽기 */
+    fun provideVehicleCabin(context: Context): com.personal.driverguard.platform.VehicleCabin =
+        vehicleCabin ?: synchronized(this) {
+            vehicleCabin ?: com.personal.driverguard.platform.pleos.PleosVehicleCabin(context.applicationContext).also { vehicleCabin = it }
+        }
+
+    /** 음성 안내·응답(Pleos TTS·STT, 없으면 Android 기본 음성) */
+    fun provideVoiceGuide(context: Context): com.personal.driverguard.platform.VoiceGuide =
+        voiceGuide ?: synchronized(this) {
+            voiceGuide ?: com.personal.driverguard.platform.AutoVoiceGuide(context.applicationContext).also { voiceGuide = it }
+        }
+
+    /** 차량 위치(Pleos FusedLocation) */
+    fun provideFusedLocation(context: Context): com.personal.driverguard.platform.pleos.PleosFusedLocation =
+        fusedLocation ?: synchronized(this) {
+            fusedLocation ?: com.personal.driverguard.platform.pleos.PleosFusedLocation(context.applicationContext).also { fusedLocation = it }
+        }
+
+    /** 테스트에서 차량 실내·음성 구현을 바꿔 끼운다(Robolectric 에는 Pleos 서비스가 없다) */
+    fun overrideCabinAndVoice(cabin: com.personal.driverguard.platform.VehicleCabin, voice: com.personal.driverguard.platform.VoiceGuide) {
+        vehicleCabin = cabin
+        voiceGuide = voice
+    }
+
     /** 주행 화면마다 새로 만들고 화면이 끝나면 release 한다. */
     fun createAlertOutput(context: Context): IAlertOutput = AndroidAlertOutput(context)
 }

@@ -11,6 +11,25 @@
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
 
+    <!-- Pleos Vehicle SDK: 졸음 단계별 실내 개입(제어)과 차량 상태 읽기 -->
+    <uses-permission android:name="pleos.car.permission.CAR_CLIMATE" />
+    <uses-permission android:name="pleos.car.permission.CONTROL_CAR_CLIMATE" />
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+    <uses-permission android:name="pleos.car.permission.CONTROL_CAR_LIGHTS" />
+    <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
+    <uses-permission android:name="pleos.car.permission.CONTROL_CAR_WINDOWS" />
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <uses-permission android:name="pleos.car.permission.CONTROL_CAR_SEATS" />
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <!-- Pleos FusedLocation: 차량 위치 -->
+    <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
+    <!-- Pleos 음성: 차량 스피커 안내(TTS)와 음성 인식(STT) -->
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+    <uses-permission android:name="pleos.car.permission.STT_SERVICE" />
+    <!-- 쉼터 제안에 음성으로 답하기(Pleos STT, 없으면 Android 음성 인식). 녹음은 저장하지 않는다. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <!-- 백엔드(로그인·약관·쉼터 조회·주행 기록·리포트) 통신. 영상·얼굴 이미지는 보내지 않는다. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -22,6 +41,13 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="geo" />
+        </intent>
+        <!-- 음성 안내·인식(Android 기본 음성, 시연 태블릿) -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
         </intent>
     </queries>
 
