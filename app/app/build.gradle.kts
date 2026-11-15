@@ -17,7 +17,7 @@ android {
         minSdk = 28
         targetSdk = 36
         versionCode = 1
-        versionName = "0.2.0"
+        versionName = "1.0.0"
 
         // 백엔드 주소. local.properties(또는 -P)에 hawkeye.apiBaseUrl=http://<서버주소>:8080/ 으로 바꾼다.
         // 기본값 10.0.2.2 는 안드로이드 에뮬레이터에서 본 '이 컴퓨터'(localhost)다.

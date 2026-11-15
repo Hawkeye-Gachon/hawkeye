@@ -38,7 +38,7 @@ adb install -r apk/Hawk_Hawkeye_release.apk
 
 ## 알아둘 점
 
-- 버전 0.2.0, Android 9(API 28) 이상.
+- 버전 1.0.0, Android 9(API 28) 이상.
 - 경고는 주행 속도가 낮으면 나가지 않습니다(전방 주시·눈 감김 시속 20km 미만, 졸음 시속 50km 미만).
 - 시험용으로 Android debug 키로 서명했습니다. 다른 키로 서명한 빌드를 설치하려면 먼저 이 앱을 지워야 합니다.
 - 다시 만들려면 `app` 폴더에서 `./gradlew :app:assembleRelease`를 실행합니다. 결과는 `app/app/build/outputs/apk/release/`에 생깁니다.
