@@ -27,6 +27,21 @@ import com.personal.driverguard.data.remote.getOrNull
 import com.personal.driverguard.domain.platform.NaviResult
 import com.personal.driverguard.domain.platform.NaviRouteState
 import com.personal.driverguard.domain.platform.RestStop
+import com.personal.driverguard.platform.CabinAction
+import com.personal.driverguard.platform.CabinAlert
+import com.personal.driverguard.platform.CabinStatus
+import com.personal.driverguard.platform.DemoVehicleCabin
+import com.personal.driverguard.platform.Detection
+import com.personal.driverguard.platform.DetectorUi
+import com.personal.driverguard.platform.DrowsyDetector
+import com.personal.driverguard.ui.design.DriverFrames
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.personal.driverguard.platform.DemoVehicleNavigation
+import com.personal.driverguard.platform.VoiceGuide
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -106,8 +121,18 @@ data class WeeklyUi(val loading: Boolean = false, val data: WeeklyReport? = null
 
 data class CalendarUi(val month: YearMonth = YearMonth.now(SEOUL), val data: CalendarResponse? = null, val loading: Boolean = false)
 
-/** 테스트용 자동 경고 종류 */
-enum class DemoCue { DROWSY, SUGGEST }
+/** 차량이 한 조치와 차량에서 읽은 상태(관찰 화면 표시용) */
+data class CabinUi(
+    val level: CabinAlert? = null,
+    val actions: List<CabinAction> = emptyList(),
+    val status: CabinStatus = CabinStatus(),
+)
+
+/** 음성으로 묻고 답을 듣는 상태(쉼터 제안 화면) */
+data class VoiceUi(val asking: Boolean = false, val listening: Boolean = false, val heard: String? = null, val answer: Boolean? = null)
+
+/** 들른 쉼터(쉼터 도착 화면) */
+data class ArrivalUi(val name: String, val type: String?)
 
 /** 다음에 열 화면(내비게이션은 화면 쪽이 한다) */
 enum class Next { LOGIN, TERMS, HOME }
@@ -116,15 +141,28 @@ enum class Next { LOGIN, TERMS, HOME }
  * 앱 전체 상태와 백엔드·차량 내비 호출을 맡는다. 화면은 상태를 읽고, 동작은 여기 함수를 부른 뒤 결과에 따라 이동한다.
  *
  * 연결 범위(임시 포함):
- *  - 졸음·전방 주시 이탈 '감지'는 AI 추론 서버가 아직 없어 화면의 시연 신호가 [signal] 을 부른다. AI 연동 시 같은 함수를 쓴다.
- *  - 위치는 일반 Android 위치(Pleos FusedLocation 은 준비 중), 경유지 추가는 Pleos NaviHelper.
+ *  - 졸음·전방 주시 이탈 '감지'는 AI 추론 서버가 아직 없어 화면의 시연 신호가 [detectDrowsiness]·[detectInattention] 을 부른다.
+ *    AI 연동 시 같은 함수를 쓴다.
+ *  - 감지되면 단계별로 차량이 개입한다: 음성 안내(Pleos TTS), 무드등·공조·창문·시트(Pleos Vehicle SDK). 쉼터 제안은 음성으로 묻고
+ *    '응'이라고 답하면 경유지로 넣는다(Pleos STT, NaviHelper). 쉼터에 멈추면 도착으로 기록하고 실내를 원래대로 돌린다.
+ *  - 위치는 Pleos FusedLocation, 없으면 일반 Android 위치.
+ *  - [DemoMode] 가 켜지면 서버·차량·위치가 모두 시연용 가짜로 바뀐다(DemoServer, DemoVehicleNavigation, DemoVehicleCabin, DriveSimulator).
  */
 class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     private val context: Context get() = getApplication()
     val api: HawkeyeApi = RepositoryLocator.provideApi(app)
-    private val navigation = PlatformLocator.provideVehicleNavigation(app)
+    private val realNavigation by lazy { PlatformLocator.provideVehicleNavigation(app) }
+    private val realCabin by lazy { PlatformLocator.provideVehicleCabin(app) }
+    private val demoNavigation = DemoVehicleNavigation()
+    private val demoCabin = DemoVehicleCabin()
+    private val voice: VoiceGuide by lazy { PlatformLocator.provideVoiceGuide(app) }
     private val location = LocationTracker(app)
+
+    /** 시연 모드면 가짜 차량 내비·실내, 아니면 Pleos */
+    private val navigation get() = if (DemoMode.enabled) demoNavigation else realNavigation
+    private val cabin get() = if (DemoMode.enabled) demoCabin else realCabin
+    val demoMode: StateFlow<Boolean> = DemoMode.on
     private val pendingStore = app.getSharedPreferences("pending_uploads", Context.MODE_PRIVATE)
 
     val loggedIn: StateFlow<Boolean> = api.loggedIn
@@ -152,14 +190,60 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     val weekly = _weekly.asStateFlow()
     private val _calendar = MutableStateFlow(CalendarUi())
     val calendar = _calendar.asStateFlow()
+    private val _cabinUi = MutableStateFlow(CabinUi())
+    val cabinUi = _cabinUi.asStateFlow()
+    private val _voiceUi = MutableStateFlow(VoiceUi())
+    val voiceUi = _voiceUi.asStateFlow()
+    private val _arrival = MutableStateFlow<ArrivalUi?>(null)
+    val arrival = _arrival.asStateFlow()
+
+    /** 쉼터에 도착함 — 화면 쪽이 받아 쉼터 도착 화면으로 이동한다 */
+    private val _arrivals = MutableSharedFlow<Unit>(extraBufferCapacity = 2)
+    val arrivals: SharedFlow<Unit> = _arrivals
+
+    /** 카메라 영상 감지 결과 — 화면 쪽이 받아 경고 화면으로 이동한다 */
+    private val _detections = MutableSharedFlow<Detection>(extraBufferCapacity = 8)
+    val detections: SharedFlow<Detection> = _detections
+    /** 졸음 경고가 난 횟수(같은 화면에서 다시 경고가 나면 화면이 표시 시간을 다시 센다) */
+    private val _drowsyAlerts = MutableStateFlow(0)
+    val drowsyAlerts = _drowsyAlerts.asStateFlow()
+    private val _detectorUi = MutableStateFlow(DetectorUi())
+    val detectorUi = _detectorUi.asStateFlow()
+    private var detector: DrowsyDetector? = null
+    private var detectorJob: Job? = null
+    private var lastDrowsyMs = 0L
+    private var speedFrom: GeoFix? = null
 
     private var recorder: DriveRecorder? = null
+    private var simulator: DriveSimulator? = null
     private var locationJob: Job? = null
-    private var demoJob: Job? = null
+    private var cabinStatusJob: Job? = null
+    private var interveneJob: Job? = null
 
-    /** 테스트용 자동 경고([DebugFlags.AUTO_WARNINGS]) — 화면 쪽이 받아 해당 경고 화면으로 이동한다. */
-    private val _demoCues = MutableSharedFlow<DemoCue>(extraBufferCapacity = 2)
-    val demoCues: SharedFlow<DemoCue> = _demoCues
+    /** 경유지로 넣은 쉼터 이름(도착 안내용) */
+    private val addedPlaces = mutableMapOf<Long, NearestPlace>()
+
+    init {
+        DemoMode.init(app)
+    }
+
+    // ════════════════════════ 시연 모드 ════════════════════════
+
+    /** 시연 모드를 켜고 끈다. 진행 중인 관찰을 멈추고 로그아웃한 뒤 바꾼다(화면은 로그인으로). */
+    suspend fun setDemoMode(on: Boolean) {
+        if (DemoMode.enabled == on) return
+        stopDriveLocally()
+        api.logout()
+        DemoMode.set(context, on)
+        _home.value = HomeUi()
+        _terms.value = TermsUi()
+        _daily.value = DailyUi()
+        _weekly.value = WeeklyUi()
+        _calendar.value = CalendarUi()
+        _report.value = ReportUi()
+        clearForms()
+    }
+
 
     // ════════════════════════ 시작 · 인증 ════════════════════════
 
@@ -168,7 +252,8 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         if (!api.loggedIn.value) return Next.LOGIN
         return when (val r = api.resumeSession()) {
             is ApiResult.Success -> {
-                viewModelScope.launch { retryPendingUploads() }
+                // 시연 모드에서는 실제 서버로 올릴 기록을 건드리지 않는다
+                if (!DemoMode.enabled) viewModelScope.launch { retryPendingUploads() }
                 if (r.data.termsAgreementRequired) Next.TERMS else Next.HOME
             }
             // 네트워크 문제면 저장된 로그인으로 홈에 들어간다(기록 화면은 각자 오류를 보여 준다)
@@ -281,14 +366,14 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         _home.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val me = async { api.me() }
-            val last = async { if (DebugFlags.FAKE_HISTORY) null else api.drives(size = 1) }
-            val week = async { if (DebugFlags.FAKE_HISTORY) null else api.weekly(null) }
+            val last = async { api.drives(size = 1) }
+            val week = async { api.weekly(null) }
             val meR = me.await()
             _home.value = HomeUi(
                 loading = false,
                 me = meR.getOrNull(),
-                lastDrive = if (DebugFlags.FAKE_HISTORY) FakeHistory.latestDrive() else last.await()?.getOrNull()?.drives?.firstOrNull(),
-                weekly = if (DebugFlags.FAKE_HISTORY) FakeHistory.weekly(null) else week.await()?.getOrNull(),
+                lastDrive = last.await().getOrNull()?.drives?.firstOrNull(),
+                weekly = week.await().getOrNull(),
                 error = (meR as? ApiResult.Failure)?.message,
             )
         }
@@ -296,31 +381,170 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     // ════════════════════════ 관찰 ════════════════════════
 
-    /** '관찰 시작'(보는 방향 설정 완료 후). 주행을 등록하고 위치 기록을 시작한다. */
+    /** '관찰 시작'(보는 방향 설정 완료 후). 주행을 등록하고 위치 기록을 시작하고, 차량 상태를 읽기 시작한다. */
     fun startDrive() {
         if (recorder != null) return
+        val demo = DemoMode.enabled
         val rec = DriveRecorder(startedMonotonicMs = SystemClock.elapsedRealtime())
         recorder = rec
-        _observe.value = ObserveUi(active = true, startedMonotonicMs = rec.startedMonotonicMs, locationEnabled = DebugFlags.DUMMY_ROUTE || location.hasPermission())
+        addedPlaces.clear()
+        _arrival.value = null
+        _cabinUi.value = CabinUi()
+        if (demo) demoNavigation.clear()
+        _observe.value = ObserveUi(
+            active = true, startedMonotonicMs = rec.startedMonotonicMs,
+            locationEnabled = demo || DebugFlags.DUMMY_ROUTE || location.hasPermission(),
+        )
         _report.value = ReportUi()
         _end.value = EndUi()
-        // 테스트용: debug 빌드는 실제 GPS 대신 경부고속도로 모의 주행 위치를 1초마다 찍는다(DummyRoute.drive)
-        // 쉼터를 추가하면 모의 주행이 그 쉼터에 들러 잠시 멈췄다가(도착 감지 확인용) 경로로 돌아온다
-        val fixes = if (DebugFlags.DUMMY_ROUTE) DummyRoute.drive(restStop = { rec.pendingStop() }) else location.updates()
-        locationJob = viewModelScope.launch { fixes.collect { rec.onLocation(it) } }
-        // 등록에 실패해도 관찰은 계속한다. 종료할 때 다시 등록한다.
-        viewModelScope.launch { api.startDrive(rec.clientDriveId, rec.startedAt).getOrNull()?.let { rec.driveId = it.driveId } }
-        if (DebugFlags.AUTO_WARNINGS) {
-            // 테스트용: 3초 뒤 졸음 경고(실제 감지처럼 주행 기록에도 남는다), 다시 3초 뒤 쉼터 경유지 추천 화면
-            demoJob = viewModelScope.launch {
-                delay(AUTO_WARNING_DELAY_MS)
-                signal(EventType.DROWSINESS)
-                openSuggestion(TriggerType.DROWSINESS)
-                _demoCues.emit(DemoCue.DROWSY)
-                delay(AUTO_WARNING_DELAY_MS)
-                _demoCues.emit(DemoCue.SUGGEST)
+        // 위치: 시연은 경부고속도로 시속 80km 모의 주행(경유지를 넣으면 6초 뒤 도착), debug 서버 시험은 시속 100km,
+        // 실제는 Pleos 차량 위치(없으면 Android 위치)
+        val sim = when {
+            demo -> DriveSimulator(DemoRoute.load(context), arriveWithinMs = DriveSimulator.DEMO_ARRIVE_MS)
+            DebugFlags.DUMMY_ROUTE -> DriveSimulator(DemoRoute.load(context), DriveSimulator.TEST_SPEED_MPS, restMs = DriveSimulator.TEST_REST_MS)
+            else -> null
+        }
+        simulator = sim
+        val fixes = sim?.fixes { rec.pendingStop()?.let { LatLng(it.first, it.second) } } ?: vehicleLocation()
+        locationJob = viewModelScope.launch {
+            fixes.collect {
+                rec.onLocation(it)
+                detector?.speedKmh = speedKmh(it)
+                announceArrivals(rec)
             }
         }
+        // 카메라 영상으로 졸음·전방 주시 이탈을 감지한다. 시연 모드도 감지는 실제 AI 를 쓴다(위치·차량·서버만 가짜).
+        startDetector()
+        // 등록에 실패해도 관찰은 계속한다. 종료할 때 다시 등록한다.
+        viewModelScope.launch { api.startDrive(rec.clientDriveId, rec.startedAt).getOrNull()?.let { rec.driveId = it.driveId } }
+        // 차량 상태(안전벨트·크루즈·기어)를 읽고, 안전벨트를 안 맸으면 음성으로 알린다
+        cabinStatusJob = viewModelScope.launch {
+            val c = cabin
+            if (!c.connect()) return@launch
+            if (c.status.value.seatBeltUnbuckled == true) launch { say("안전벨트를 매 주세요.") }
+            c.status.collect { st -> _cabinUi.update { it.copy(status = st) } }
+        }
+    }
+
+    /** 감지기를 준비하고 카메라 프레임을 잇는다. 실패하면 감지 없이 관찰만 계속한다(화면에 사유를 보여 준다). */
+    private fun startDetector() {
+        lastDrowsyMs = 0L
+        speedFrom = null
+        val d = DrowsyDetector(context) { detection -> viewModelScope.launch { onDetection(detection) } }
+        detector = d
+        detectorJob = viewModelScope.launch {
+            launch { d.ui.collect { _detectorUi.value = it } }
+            val ok = withContext(Dispatchers.Default) { d.start() }
+            if (ok && detector === d) DriverFrames.sink = d::analyze
+        }
+    }
+
+    private fun onDetection(detection: Detection) {
+        if (recorder == null) return
+        when (detection) {
+            Detection.DROWSY -> {
+                // 경고는 감지될 때마다 다시 낸다(재경고 간격은 판정 라이브러리의 rules.json 이 정한다).
+                // 다만 한 번의 졸음이 여러 건으로 세어지지 않게, 직전 기록 뒤 짧은 시간 안의 감지는 새로 기록하지 않는다.
+                val now = SystemClock.elapsedRealtime()
+                val sameEpisode = lastDrowsyMs != 0L && now - lastDrowsyMs < DROWSY_REPEAT_MS
+                lastDrowsyMs = now
+                detectDrowsiness(record = !sameEpisode)
+            }
+            Detection.LOOK_AWAY -> detectInattention()
+            Detection.LOOK_BACK -> inattentionCleared()
+        }
+        _detections.tryEmit(detection)
+    }
+
+    /** 위치가 속도를 주면 그 값을, 아니면 앞 위치와의 거리로 계산한 값을 km/h 로 */
+    private fun speedKmh(fix: GeoFix): Double? {
+        val prev = speedFrom
+        speedFrom = fix
+        fix.speedMps?.let { return it * 3.6 }
+        prev ?: return null
+        val sec = (fix.monotonicMs - prev.monotonicMs) / 1000.0
+        if (sec <= 0) return null
+        return DemoRoute.dist(LatLng(prev.latitude, prev.longitude), LatLng(fix.latitude, fix.longitude)) / sec * 3.6
+    }
+
+    /** Pleos 차량 위치를 쓰고, 지원하지 않으면 일반 Android 위치 */
+    private fun vehicleLocation(): Flow<GeoFix> = flow {
+        val fused = PlatformLocator.provideFusedLocation(context)
+        if (fused.isAvailable()) emitAll(fused.updates()) else emitAll(location.updates())
+    }
+
+    /** 쉼터에 멈춰 방문으로 기록되면 도착 화면을 띄우고, 실내를 원래대로 돌리고, 음성으로 알린다 */
+    private fun announceArrivals(rec: DriveRecorder) {
+        val ids = rec.takeArrivals()
+        if (ids.isEmpty()) return
+        val place = addedPlaces[ids.last()]
+        val name = place?.name ?: "쉼터"
+        _arrival.value = ArrivalUi(name, place?.type)
+        _arrivals.tryEmit(Unit)
+        if (DemoMode.enabled) demoNavigation.clear(name)
+        interveneJob?.cancel()
+        viewModelScope.launch {
+            cabin.restore()
+            _cabinUi.update { it.copy(level = null, actions = emptyList()) }
+            say("${name}에 도착했습니다. 충분히 쉬고 출발하세요.")
+        }
+    }
+
+    /** 쉼터 도착 화면의 '다시 출발'. 시연 모의 주행은 경로로 돌아가 이어 달린다. */
+    fun resumeAfterRest() {
+        simulator?.resume()
+        _arrival.value = null
+    }
+
+    /** 졸음 감지: 기록하고, 단계에 맞게 차량이 개입하고, 가까운 쉼터를 찾는다 */
+    fun detectDrowsiness(record: Boolean = true) {
+        _drowsyAlerts.value += 1
+        if (record) signal(EventType.DROWSINESS)
+        val repeated = (recorder?.drowsinessCount ?: 1) >= 2
+        // 이어지는 같은 졸음이면 이미 찾은 쉼터를 그대로 쓴다
+        if (record || _suggestion.value.place == null) openSuggestion(TriggerType.DROWSINESS)
+        intervene(
+            if (repeated) CabinAlert.DROWSY_REPEATED else CabinAlert.DROWSY,
+            if (repeated) "졸음이 반복되고 있습니다. 창문을 조금 열었어요. 가까운 쉼터에서 꼭 쉬어 가세요."
+            else "졸음이 감지됐습니다. 시원한 바깥 공기를 들이고 있어요. 가까운 쉼터에서 쉬어 가세요.",
+        )
+    }
+
+    /** 전방 주시 이탈 감지: 기록하고 음성·무드등으로 알린다 */
+    fun detectInattention() {
+        signal(EventType.INATTENTION)
+        intervene(CabinAlert.INATTENTION, "전방을 주시해 주세요.")
+    }
+
+    /** 정면을 다시 봤을 때: 부주의 단계의 무드등만 되돌린다(졸음 단계면 쉼터에 들를 때까지 유지) */
+    fun inattentionCleared() {
+        if (_cabinUi.value.level != CabinAlert.INATTENTION) return
+        viewModelScope.launch {
+            cabin.restore()
+            _cabinUi.update { it.copy(level = null, actions = emptyList()) }
+        }
+    }
+
+    /** 차량 개입: 음성 안내와 실내 조작을 함께 하고, 반영된 조치를 화면에 보여 준다. 더 낮은 단계로는 내려가지 않는다. */
+    private fun intervene(level: CabinAlert, message: String) {
+        val current = _cabinUi.value.level
+        val apply = current == null || level.ordinal >= current.ordinal
+        interveneJob = viewModelScope.launch {
+            val spoken = async { say(message) }
+            if (apply) {
+                val done = cabin.alert(level)
+                val voiced = voice.connect()
+                _cabinUi.update { ui ->
+                    ui.copy(level = level, actions = (if (voiced) listOf(CabinAction(CabinAction.Kind.VOICE, "음성 안내")) else emptyList()) + done)
+                }
+            }
+            spoken.await()
+        }
+    }
+
+    /** 음성 안내. 쓸 수 없으면 조용히 넘어간다. */
+    private suspend fun say(text: String) {
+        runCatching { if (voice.connect()) voice.speak(text) }
     }
 
     /**
@@ -344,8 +568,7 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     fun openSuggestion(trigger: String) {
         _suggestion.value = SuggestionUi(loading = true, trigger = trigger)
         viewModelScope.launch {
-            // 테스트용: 실내라 위치가 없으면 경부고속도로 위 더미 위치로 묻는다(DebugFlags.DUMMY_REST_PLACE)
-            val fix = recorder?.lastFix ?: if (DebugFlags.DUMMY_REST_PLACE) DummyRoute.fix() else null
+            val fix = recorder?.lastFix
             val navi = async { navigation.routeState() }
             if (fix == null) {
                 _suggestion.update { it.copy(loading = false, noPlaceReason = "현재 위치를 확인할 수 없어 쉼터를 찾지 못했습니다.", navi = navi.await()) }
@@ -358,9 +581,8 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
                 r.getOrNull()?.onHighway == false -> "고속도로가 아닌 곳에서는 쉼터를 안내하지 않습니다. 안전한 곳에 정차해 주세요."
                 else -> "진행 방향에서 바로 들어갈 수 있는 쉼터를 확인하지 못했습니다. 안전한 곳에 정차해 주세요."
             }
-            // 테스트용: 서버가 쉼터를 못 찾아도 추천 화면을 볼 수 있게 더미 쉼터를 쓴다
-            val place = r.getOrNull()?.place ?: if (DebugFlags.DUMMY_REST_PLACE) DummyRoute.restPlace() else null
-            _suggestion.update { it.copy(loading = false, place = place, noPlaceReason = reason.takeIf { place == null }, navi = navi.await()) }
+            val place = r.getOrNull()?.place
+            _suggestion.update { it.copy(loading = false, place = place, noPlaceReason = reason, navi = navi.await()) }
         }
     }
 
@@ -370,21 +592,49 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
      */
     suspend fun addRestStop(destination: Boolean): NaviResult? {
         val place = _suggestion.value.place ?: return NaviResult.Failed("쉼터 정보가 없습니다")
-        fun record() = recorder?.recordWaypoint(
-            place.placeId, if (destination) NavMode.DESTINATION else NavMode.WAYPOINT, _suggestion.value.trigger,
-            latitude = place.latitude, longitude = place.longitude,
-        )
-        if (!navigation.connect()) {
-            // 테스트용: Pleos 내비가 없는 탭에서도 경유지 추가·쉼터 도착(방문) 기록을 시험할 수 있게 기록만 남긴다
-            if (DebugFlags.DUMMY_REST_PLACE) record()
+        fun record() {
+            addedPlaces[place.placeId] = place
+            recorder?.recordWaypoint(
+                place.placeId, if (destination) NavMode.DESTINATION else NavMode.WAYPOINT, _suggestion.value.trigger,
+                latitude = place.latitude, longitude = place.longitude,
+            )
+        }
+        val nav = navigation
+        if (!nav.connect()) {
+            // 테스트용(debug): Pleos 내비가 없는 탭에서도 경유지 추가·쉼터 도착 기록을 시험할 수 있게 기록만 남긴다
+            if (DebugFlags.DUMMY_ROUTE) record()
             return null
         }
         _suggestion.update { it.copy(busy = true, failure = null) }
         val stop = RestStop(place.name, placeTypeLabel(place.type), place.latitude, place.longitude)
-        val result = if (destination) navigation.routeToRestStop(stop) else navigation.addRestStop(stop)
-        if (result == NaviResult.Added) record()
+        val result = if (destination) nav.routeToRestStop(stop) else nav.addRestStop(stop)
+        if (result == NaviResult.Added) {
+            record()
+            viewModelScope.launch { say(if (destination) "${place.name}${josaRo(place.name)} 안내를 시작합니다." else "${place.name}${josaReul(place.name)} 경유지로 추가했습니다.") }
+        }
         _suggestion.update { it.copy(busy = false, failure = (result as? NaviResult.Failed)?.reason) }
         return result
+    }
+
+    /**
+     * 쉼터를 경유지로 넣을지 음성으로 묻고 한 번 듣는다. '응'이면 true, '아니'면 false, 못 들었으면 null.
+     * 음성을 쓸 수 없으면 바로 null(화면 버튼으로 고른다).
+     */
+    suspend fun askToAddRestStop(): Boolean? {
+        val place = _suggestion.value.place ?: return null
+        if (!runCatching { voice.connect() }.getOrDefault(false)) return null
+        _voiceUi.value = VoiceUi(asking = true)
+        voice.speak("${place.name}${josaReul(place.name)} 경유지로 추가할까요? 응 이라고 답해 주세요.")
+        _voiceUi.value = VoiceUi(listening = true)
+        val heard = voice.listen(LISTEN_MS)
+        val answer = VoiceGuide.yesNo(heard)
+        _voiceUi.value = VoiceUi(heard = heard, answer = answer)
+        return answer
+    }
+
+    fun stopVoice() {
+        runCatching { voice.stop() }
+        _voiceUi.value = VoiceUi()
     }
 
     // ════════════════════════ 종료 · 리포트 ════════════════════════
@@ -393,6 +643,9 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     suspend fun endDrive(): Boolean {
         val rec = recorder ?: return false
         _end.value = EndUi(busy = true)
+        interveneJob?.cancel()
+        runCatching { voice.stop() }
+        cabin.restore()
         val body = rec.toEndRequest()
         val driveId = rec.driveId ?: api.startDrive(rec.clientDriveId, rec.startedAt).getOrNull()?.driveId?.also { rec.driveId = it }
         val result = driveId?.let { api.endDrive(it, body) }
@@ -411,7 +664,6 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     /** 주행 목록·일간 리포트에서 연 리포트 */
     fun openReport(driveId: Long) {
-        if (DebugFlags.FAKE_HISTORY) FakeHistory.report(driveId)?.let { _report.value = ReportUi(report = it); return }
         _report.value = ReportUi(loading = true)
         viewModelScope.launch {
             val r = api.driveReport(driveId)
@@ -419,32 +671,31 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** 시안 확인 모드용 자동 경고: 주행 기록 없이 3초 뒤 졸음 경고, 다시 3초 뒤 쉼터 경유지 추천 화면만 띄운다. */
-    fun startDemoCues() {
-        if (!DebugFlags.AUTO_WARNINGS) return
-        demoJob?.cancel()
-        demoJob = viewModelScope.launch {
-            delay(AUTO_WARNING_DELAY_MS)
-            _demoCues.emit(DemoCue.DROWSY)
-            delay(AUTO_WARNING_DELAY_MS)
-            _demoCues.emit(DemoCue.SUGGEST)
-        }
-    }
-
     private fun stopDriveLocally() {
-        demoJob?.cancel()
-        demoJob = null
+        DriverFrames.sink = null
+        detectorJob?.cancel()
+        detectorJob = null
+        detector?.let { d -> viewModelScope.launch(Dispatchers.Default) { d.close() } }
+        detector = null
+        _detectorUi.value = DetectorUi()
+        interveneJob?.cancel()
+        cabinStatusJob?.cancel()
+        cabinStatusJob = null
         locationJob?.cancel()
         locationJob = null
+        simulator = null
         recorder = null
+        if (DemoMode.enabled) demoNavigation.clear()
         _observe.value = ObserveUi()
+        _cabinUi.value = CabinUi()
+        _voiceUi.value = VoiceUi()
+        _arrival.value = null
     }
 
     // ════════════════════════ 이전 기록 ════════════════════════
 
     /** [date] 가 null 이면 가장 최근 주행일 */
     fun loadDaily(date: LocalDate?) {
-        if (DebugFlags.FAKE_HISTORY) { _daily.value = DailyUi(data = FakeHistory.daily(date)); return }
         _daily.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val r = api.daily(date?.toString())
@@ -454,7 +705,6 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
 
     /** [weekStart] 는 월요일. null 이면 가장 최근 주행일이 속한 주 */
     fun loadWeekly(weekStart: LocalDate?) {
-        if (DebugFlags.FAKE_HISTORY) { _weekly.value = WeeklyUi(data = FakeHistory.weekly(weekStart)); return }
         _weekly.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
             val r = api.weekly(weekStart?.toString())
@@ -463,7 +713,6 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun loadCalendar(month: YearMonth) {
-        if (DebugFlags.FAKE_HISTORY) { _calendar.value = CalendarUi(month = month, data = FakeHistory.calendar(month)); return }
         _calendar.value = CalendarUi(month = month, loading = true)
         viewModelScope.launch {
             _calendar.value = CalendarUi(month = month, data = api.calendar(month.toString()).getOrNull())
@@ -494,15 +743,36 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
+        DriverFrames.sink = null
+        detector?.close()
         locationJob?.cancel()
+        cabinStatusJob?.cancel()
     }
 
     companion object {
         /** 전방 주시 이탈이 이 횟수만큼 쌓일 때마다 쉼터를 제안한다 */
         const val INATTENTION_SUGGEST_EVERY = 3
-        /** 테스트용 자동 경고 간격 */
-        const val AUTO_WARNING_DELAY_MS = 3_000L
+        /** 직전 졸음 감지 뒤 이 시간 안의 감지는 같은 졸음으로 보고 기록 횟수를 늘리지 않는다(경고는 다시 낸다) */
+        const val DROWSY_REPEAT_MS = 10_000L
+        /** 쉼터 제안에 음성으로 답을 기다리는 시간 */
+        const val LISTEN_MS = 6_000L
         private const val KEY_PENDING = "pending"
+
+        /** 받침이 있으면 '을', 없으면 '를' */
+        fun josaReul(word: String) = if (hasBatchim(word)) "을" else "를"
+
+        /** 받침이 있으면 '으로'(ㄹ 받침은 '로'), 없으면 '로' */
+        fun josaRo(word: String): String {
+            val c = word.lastOrNull() ?: return "로"
+            if (c !in '가'..'힣') return "로"
+            val jong = (c - '가') % 28
+            return if (jong == 0 || jong == 8) "로" else "으로"
+        }
+
+        private fun hasBatchim(word: String): Boolean {
+            val c = word.lastOrNull() ?: return false
+            return c in '가'..'힣' && (c - '가') % 28 != 0
+        }
 
         fun placeTypeLabel(type: String?) = when (type) {
             PlaceType.REST_AREA -> "휴게소"

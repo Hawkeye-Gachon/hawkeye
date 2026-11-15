@@ -33,6 +33,14 @@ class ScreensTest(private val screen: Screen) {
             override suspend fun routeToRestStop(stop: RestStop): NaviResult = NaviResult.Failed("테스트")
             override fun release() = Unit
         })
+        // Pleos 차량·음성 서비스가 없는 환경
+        PlatformLocator.overrideCabinAndVoice(com.personal.driverguard.platform.DemoVehicleCabin(), object : com.personal.driverguard.platform.VoiceGuide {
+            override suspend fun connect() = false
+            override suspend fun speak(text: String) = Unit
+            override suspend fun listen(timeoutMs: Long): String? = null
+            override fun stop() = Unit
+            override fun release() = Unit
+        })
     }
 
     @Test fun render() {

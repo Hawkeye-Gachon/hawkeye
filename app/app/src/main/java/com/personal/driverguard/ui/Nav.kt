@@ -30,7 +30,7 @@ enum class Screen(val title: String) {
     Observe("관찰 중"), ObserveLook("전방 주시 경고"), ObserveDrowsy("졸음 경고"),
     Suggest("경유지 추가 제안, 졸음 후"), SuggestRepeat("경유지 추가 제안, 부주의 3회"), SuggestExisting("기존 경유지가 있을 때"),
     SuggestNoDest("안내 중인 목적지 없음"), SuggestFull("경유지가 가득 참"), SuggestFail("내비 연동 실패"), SuggestAdded("경유지 추가 완료"),
-    SuggestNoPlace("쉼터를 찾지 못함"),
+    SuggestNoPlace("쉼터를 찾지 못함"), RestArrived("쉼터 도착"),
     EndConfirm("관찰 종료 확인"), Report("이번 주행 리포트"), ReportFromHistory("주행 리포트, 기록에서 열기"),
     HistoryDay("일간 리포트"), HistoryCal("날짜 선택"), HistoryDayNone("일간 리포트, 주행 기록 없음"),
     HistoryWeek("주간 통계"), HistoryWeekEmpty("주간 통계, 졸음 0회"),
@@ -54,6 +54,9 @@ private val OBSERVING_SCREENS = setOf(
     Screen.Observe, Screen.ObserveLook, Screen.ObserveDrowsy, Screen.Suggest, Screen.SuggestRepeat, Screen.SuggestExisting,
     Screen.SuggestNoDest, Screen.SuggestFull, Screen.SuggestFail, Screen.SuggestAdded, Screen.SuggestNoPlace,
 )
+
+/** 관찰 중 화면 중 쉼터 도착을 띄워도 되는 화면(종료 확인 중이면 띄우지 않는다) */
+val Screen.observing: Boolean get() = this in OBSERVING_SCREENS
 
 /** 화면에서 쓰는 앱 상태(백엔드·차량 내비 호출) */
 val LocalHawkeye = staticCompositionLocalOf<HawkeyeViewModel> { error("HawkeyeViewModel 이 없습니다") }
@@ -84,11 +87,30 @@ fun HawkeyeApp(start: Screen = Screen.Splash) {
             }
         }
     }
-    // 테스트용 자동 경고: 관찰 화면에 있을 때만 해당 경고 화면으로 바꾼다(종료 확인 등 다른 화면이면 건너뜀)
+    // 쉼터에 도착하면(멈춰서 방문으로 기록되면) 관찰 화면 위에 쉼터 도착 화면을 띄운다
     LaunchedEffect(vm) {
-        vm.demoCues.collect { cue ->
-            if (nav.current !in OBSERVING_SCREENS) return@collect
-            nav.replace(if (cue == com.personal.driverguard.ui.state.DemoCue.DROWSY) Screen.ObserveDrowsy else Screen.Suggest)
+        vm.arrivals.collect {
+            if (nav.current in OBSERVING_SCREENS) nav.replace(Screen.RestArrived)
+        }
+    }
+    // 카메라 영상 감지 결과에 따라 경고 화면을 띄우고 닫는다(시연 모드도 같다)
+    LaunchedEffect(vm) {
+        vm.detections.collect { d ->
+            if (state.preview) return@collect
+            when (d) {
+                // 졸음은 관찰 중 어느 화면에 있든(쉼터 제안 중이어도) 경고 화면을 다시 띄운다
+                com.personal.driverguard.platform.Detection.DROWSY ->
+                    if (nav.current in OBSERVING_SCREENS && nav.current != Screen.ObserveDrowsy) nav.replace(Screen.ObserveDrowsy)
+                com.personal.driverguard.platform.Detection.LOOK_AWAY ->
+                    if (nav.current == Screen.Observe) nav.replace(Screen.ObserveLook)
+                com.personal.driverguard.platform.Detection.LOOK_BACK ->
+                    if (nav.current == Screen.ObserveLook) {
+                        if (vm.inattentionDue) {
+                            vm.openSuggestion(com.personal.driverguard.data.remote.TriggerType.INATTENTION_REPEATED)
+                            nav.replace(Screen.SuggestRepeat)
+                        } else nav.replace(Screen.Observe)
+                    }
+            }
         }
     }
     CompositionLocalProvider(LocalHawkeye provides vm) { DesignBoard {
@@ -116,6 +138,7 @@ fun ScreenContent(s: Screen, nav: Navigator, state: AppState) {
         Screen.ObserveDrowsy -> DrowsyScreen(nav, state)
         Screen.Suggest, Screen.SuggestRepeat, Screen.SuggestExisting, Screen.SuggestNoDest,
         Screen.SuggestFull, Screen.SuggestFail, Screen.SuggestAdded, Screen.SuggestNoPlace -> SuggestScreen(nav, state, s)
+        Screen.RestArrived -> RestArrivedScreen(nav, state)
         Screen.EndConfirm -> EndConfirmScreen(nav, state)
         Screen.Report -> ReportScreen(nav, state, fromHistory = false)
         Screen.ReportFromHistory -> ReportScreen(nav, state, fromHistory = true)

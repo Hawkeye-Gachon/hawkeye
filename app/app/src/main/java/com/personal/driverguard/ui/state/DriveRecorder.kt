@@ -34,7 +34,7 @@ class DriveRecorder(
 
     private val events = mutableListOf<EventRequest>()
     /** 추가한 쉼터. 위치가 쉼터 가까이에서 멈추면 [visitedAt] 을 채운다. */
-    private class Waypoint(val request: WaypointRequest, val latitude: Double?, val longitude: Double?, var visitedAt: String? = null)
+    private class Waypoint(val request: WaypointRequest, val latitude: Double?, val longitude: Double?, var visitedAt: String? = null, var announced: Boolean = false)
     private val waypoints = mutableListOf<Waypoint>()
     private val route = mutableListOf<List<Double>>()
     private val distance = DistanceAccumulator()
@@ -68,6 +68,11 @@ class DriveRecorder(
     fun recordWaypoint(placeId: Long, mode: String, trigger: String, at: String = nowIso(), latitude: Double? = null, longitude: Double? = null) {
         waypoints += Waypoint(WaypointRequest(placeId, mode, trigger, at), latitude, longitude)
     }
+
+    /** 방문으로 기록됐지만 아직 알리지 않은 쉼터의 placeId(한 번만 돌려준다) */
+    fun takeArrivals(): List<Long> = waypoints.filter { it.visitedAt != null && !it.announced }
+        .onEach { it.announced = true }
+        .map { it.request.placeId }
 
     /** 아직 들르지 않은 쉼터 중 가장 먼저 추가한 곳(모의 주행이 찾아갈 곳) */
     fun pendingStop(): Pair<Double, Double>? =

@@ -43,6 +43,7 @@ import com.personal.driverguard.data.remote.EventType
 import com.personal.driverguard.data.remote.TriggerType
 import com.personal.driverguard.ui.AppState
 import com.personal.driverguard.ui.LocalHawkeye
+import com.personal.driverguard.platform.CabinAction
 import com.personal.driverguard.ui.state.Fmt
 import com.personal.driverguard.ui.state.HawkeyeViewModel
 import com.personal.driverguard.ui.state.SuggestionUi
@@ -108,9 +109,9 @@ private fun rememberElapsedSeconds(startedMonotonicMs: Long): Long {
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMode = CamMode.Ok) {
+private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMode = CamMode.Ok, onTap: (() -> Unit)? = null) {
     var demo by remember { mutableStateOf(false) }
-    SceneCard(Modifier.background(NColor.camBg).combinedClickable(remember { MutableInteractionSource() }, null, onLongClick = { demo = true }, onClick = {})) {
+    SceneCard(Modifier.background(NColor.camBg).combinedClickable(remember { MutableInteractionSource() }, null, onLongClick = { demo = true }, onClick = { onTap?.invoke() })) {
         // 실제 전면 카메라. 권한이 없거나 카메라가 없으면 어두운 바탕만 보인다.
         DriverCamera(Modifier.fillMaxSize()) {}
         // 눈 위치 표시·고개 방향 화살표는 AI 추론 결과로 그릴 자리다. 아직 실제 좌표가 없어 시안 확인 모드에서만 예시로 그린다.
@@ -138,8 +139,17 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
         }
         CamLabel()
         Btn("관찰 종료", Modifier.align(Alignment.TopEnd).padding(top = 20.dp, end = 20.dp), Kind.OnDark, height = 52.dp, radius = 16.dp, style = S.t(18, 24, 600), horizontal = 22.dp) { nav.go(Screen.EndConfirm) }
+        val det by LocalHawkeye.current.detectorUi.collectAsStateWithLifecycle()
         val (head, headColor, dot) = when (mode) {
-            CamMode.Ok -> Triple("눈과 머리 방향을 추적하고 있습니다", NColor.onNight2, CamBlue)
+            CamMode.Ok -> Triple(
+                when {
+                    state.preview || !det.running -> det.error?.let { "감지를 시작하지 못했습니다" } ?: "눈과 머리 방향을 추적하고 있습니다"
+                    !det.faceVisible -> "얼굴이 보이지 않습니다"
+                    det.calibrating -> "평소 눈 크기와 자세를 익히고 있습니다(약 1분)"
+                    else -> "눈과 머리 방향을 추적하고 있습니다"
+                },
+                NColor.onNight2, CamBlue,
+            )
             CamMode.Look -> Triple("머리가 기준 방향에서 벗어났습니다", NColor.alert, NColor.alert)
             CamMode.Drowsy -> Triple("눈을 감은 상태가 이어지고 있습니다", Color(0xFFFF7A72), CamRed)
         }
@@ -151,7 +161,7 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
             CamMode.Ok -> listOf(Triple("0.82", "눈 뜬 정도", Color.White), Triple("정면", "머리 방향, 기준에서 3° 이내", Color.White), Triple("4%", "최근 30초 눈 감김 비율", Color.White))
             CamMode.Look -> listOf(Triple("오른쪽 31°", "머리 방향", NColor.alert), Triple("2.4초", "이탈 지속 시간", NColor.alert), Triple("0.80", "눈 뜬 정도", Color.White))
             CamMode.Drowsy -> listOf(Triple("0.06", "눈 뜬 정도", CamRed), Triple("2.6초", "눈을 감고 있던 시간", CamRed), Triple("31%", "최근 30초 눈 감김 비율", CamRed))
-        }.map { if (state.preview) it else Triple("–", it.second, it.third) }
+        }.map { if (state.preview) it else Triple(liveValue(it.second, det) ?: "–", it.second, it.third) }
         Row(Modifier.align(Alignment.BottomStart).padding(start = 36.dp, end = 36.dp, bottom = 36.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             tele.forEach { (v, l, c) ->
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -159,9 +169,79 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
                 }
             }
         }
+        CabinPanel(state, mode)
         if (demo) DemoMenu(nav, state, mode) { demo = false }
     }
 }
+
+/** 감지기가 주는 값으로 채울 수 있는 수치(눈 뜬 정도, 머리 방향). 나머지는 null. */
+private fun liveValue(label: String, det: com.personal.driverguard.platform.DetectorUi): String? = when {
+    !det.running || !det.faceVisible -> null
+    label == "눈 뜬 정도" -> det.closure?.let { "%.2f".format((1 - it).coerceIn(0.0, 1.0)) }
+    label.startsWith("머리 방향") -> det.yawDeg?.let { y ->
+        val a = kotlin.math.abs(y).toInt()
+        if (a < 5) "정면" else "${if (y > 0) "왼쪽" else "오른쪽"} ${a}°"
+    }
+    else -> null
+}
+
+/** 쉼터 제안에 응답이 없을 때 관찰 화면으로 돌아가기까지(음성 질문과 듣는 시간 포함) */
+private const val SUGGEST_TIMEOUT_MS = 25_000L
+
+/** 추가 완료·실패 같은 결과 화면을 보여 주는 시간 */
+private const val SUGGEST_RESULT_MS = 8_000L
+
+/** 졸음 경고 화면을 보여 주는 시간(그 뒤 쉼터 제안) */
+private const val DROWSY_SCREEN_MS = 5_000L
+
+/** 시안 확인 모드의 차량 조치 예시 */
+private fun sampleActions(mode: CamMode): List<CabinAction> = when (mode) {
+    CamMode.Ok -> emptyList()
+    CamMode.Look -> listOf(CabinAction(CabinAction.Kind.VOICE, "음성 안내"), CabinAction(CabinAction.Kind.LIGHT, "무드등 주황"))
+    CamMode.Drowsy -> listOf(
+        CabinAction(CabinAction.Kind.VOICE, "음성 안내"), CabinAction(CabinAction.Kind.LIGHT, "무드등 빨강"),
+        CabinAction(CabinAction.Kind.AIR, "에어컨 18°C, 바깥 공기, 바람 세게"),
+    )
+}
+
+/**
+ * 차량이 한 조치(음성 안내·무드등·공조·창문·시트). 감지되면 카메라 영상 왼쪽 위에 쌓인다.
+ * 실제 차량은 반영된 조치만, 시연 모드는 반영된 것처럼 보여 준다.
+ */
+@Composable
+private fun BoxScope.CabinPanel(state: AppState, mode: CamMode) {
+    val vm = LocalHawkeye.current
+    val ui by vm.cabinUi.collectAsStateWithLifecycle()
+    val actions = if (state.preview) sampleActions(mode) else ui.actions
+    if (actions.isEmpty()) return
+    Column(Modifier.padding(start = 24.dp, top = 84.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        T("차량 조치", TextStyleOnCam(14, 20, 600, NColor.onNight2))
+        actions.forEach { a ->
+            Row(
+                Modifier.clip(RoundedCornerShape(14.dp)).background(Color(0xB30B1220)).padding(horizontal = 14.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Ic(cabinIcon(a.kind), cabinColor(a.kind), 20.dp)
+                T(a.text, S.t(16, 22, 600, Color.White))
+            }
+        }
+    }
+}
+
+private fun cabinIcon(kind: CabinAction.Kind) = when (kind) {
+    CabinAction.Kind.VOICE -> R.drawable.ic_volume
+    CabinAction.Kind.AIR -> R.drawable.ic_air
+    CabinAction.Kind.LIGHT -> R.drawable.ic_light
+    CabinAction.Kind.WINDOW -> R.drawable.ic_window
+    CabinAction.Kind.SEAT -> R.drawable.ic_seat
+}
+
+private fun cabinColor(kind: CabinAction.Kind) = when (kind) {
+    CabinAction.Kind.LIGHT -> Color(0xFFFFB340)
+    CabinAction.Kind.AIR, CabinAction.Kind.WINDOW, CabinAction.Kind.SEAT -> Color(0xFF7CC4FF)
+    CabinAction.Kind.VOICE -> Color.White
+}
+
 
 /**
  * 카메라 카드를 길게 누르면 여는 시연 신호. AI 추론 서버가 붙기 전까지 감지를 대신한다.
@@ -171,10 +251,11 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
 private fun BoxScope.DemoMenu(nav: Navigator, state: AppState, mode: CamMode, close: () -> Unit) {
     val vm = LocalHawkeye.current
     val live = !state.preview
-    fun inattention() { vm.signal(EventType.INATTENTION); nav.replace(Screen.ObserveLook) }
-    fun drowsiness() { vm.signal(EventType.DROWSINESS); vm.openSuggestion(TriggerType.DROWSINESS); nav.replace(Screen.ObserveDrowsy) }
+    fun inattention() { vm.detectInattention(); nav.replace(Screen.ObserveLook) }
+    fun drowsiness() { vm.detectDrowsiness(); nav.replace(Screen.ObserveDrowsy) }
     /** 정면 주시 확인: 부주의가 3회 단위로 쌓였으면 쉼터 제안, 아니면 관찰로 돌아간다 */
     fun facingFront() {
+        vm.inattentionCleared()
         if (vm.inattentionDue) { vm.openSuggestion(TriggerType.INATTENTION_REPEATED); nav.replace(Screen.SuggestRepeat) } else nav.replace(Screen.Observe)
     }
     val items: List<Pair<String, () -> Unit>> = if (live) when (mode) {
@@ -231,7 +312,7 @@ fun SetupScreen(nav: Navigator, state: AppState, setup: SetupState) {
                     SetupState.Done -> {
                         Btn("관찰 시작", Modifier.fillMaxWidth()) {
                             // 주행을 등록하고 위치 기록을 시작한다(시안 확인 모드는 이동만)
-                            if (!state.preview) vm.startDrive() else vm.startDemoCues()
+                            if (!state.preview) vm.startDrive()
                             nav.go(Screen.Observe)
                         }
                         Btn("다시 설정", Modifier.fillMaxWidth(), Kind.Ghost) { nav.replace(Screen.Setup) }
@@ -261,6 +342,8 @@ fun ObserveScreen(nav: Navigator, state: AppState) {
     val v = rememberObserveView(state)
     val vm = LocalHawkeye.current
     val ui by vm.observe.collectAsStateWithLifecycle()
+    val cabin by vm.cabinUi.collectAsStateWithLifecycle()
+    val demo by vm.demoMode.collectAsStateWithLifecycle()
     Box(Modifier.fillMaxSize()) {
         ObserveCamera(nav, state)
         Sheet {
@@ -274,14 +357,26 @@ fun ObserveScreen(nav: Navigator, state: AppState) {
                     if (state.preview) listOf(
                         R.drawable.ic_route to boldParts("차량 내비가 " to false, "집" to true, "까지 안내 중입니다" to false),
                         R.drawable.ic_pin to boldParts("다음 쉼터는 " to false, "천안 졸음쉼터" to true, ", 전방 9.6km" to false),
-                    ) else listOf(
-                        R.drawable.ic_route to boldParts("졸음이 감지되면 " to false, "가까운 쉼터" to true, "를 차량 내비 경유지로 제안합니다" to false),
+                    ) else listOfNotNull(
+                        if (demo) R.drawable.ic_route to boldParts("차량 내비가 " to false, "부산" to true, "까지 안내 중입니다" to false)
+                        else R.drawable.ic_route to boldParts("졸음이 감지되면 " to false, "가까운 쉼터" to true, "를 차량 내비 경유지로 제안합니다" to false),
                         R.drawable.ic_pin to boldParts(if (ui.locationEnabled) "이동 경로와 감지 위치를 기록하고 있습니다" to false else "위치 권한이 없어 이동 경로와 쉼터 안내를 쓸 수 없습니다" to false),
+                        vehicleLine(cabin.status)?.let { R.drawable.ic_car to it },
                     ),
                 )
             })
         }
     }
+}
+
+/** 차량에서 읽은 상태 한 줄(안전벨트·크루즈·기어). 차량에 연결되지 않았으면 null. */
+private fun vehicleLine(st: com.personal.driverguard.platform.CabinStatus) = if (!st.connected) null else {
+    val parts = listOfNotNull(
+        st.gear?.let { "${it}단" },
+        when (st.cruiseActive) { true -> "크루즈 작동 중, 졸음에 더 주의합니다"; else -> null },
+        when (st.seatBeltUnbuckled) { true -> "안전벨트를 매 주세요"; false -> "안전벨트 착용"; null -> null },
+    )
+    boldParts("차량 연결됨" to true, (if (parts.isEmpty()) "" else ", " + parts.joinToString(", ")) to false)
 }
 
 @Composable
@@ -317,6 +412,13 @@ fun DrowsyScreen(nav: Navigator, state: AppState) {
         sug.loading -> boldParts("가까운 쉼터를 찾고 있습니다" to false)
         sug.place != null -> sug.place!!.let { boldParts("가장 가까운 쉼터는 " to false, it.name to true, ", ${Fmt.ahead(it.roadDistanceMeters)}" to false) }
         else -> boldParts((sug.noPlaceReason ?: "안전한 곳에 정차해 주세요") to false)
+    }
+    // 경고를 잠시 보여 준 뒤 쉼터 제안으로 넘어간다. 그사이 다시 감지되면 시간을 새로 센다.
+    val alertSeq by vm.drowsyAlerts.collectAsStateWithLifecycle()
+    LaunchedEffect(alertSeq) {
+        if (state.preview) return@LaunchedEffect
+        delay(DROWSY_SCREEN_MS)
+        if (nav.current == Screen.ObserveDrowsy) nav.replace(Screen.Suggest)
     }
     Box(Modifier.fillMaxSize()) {
         ObserveCamera(nav, state, CamMode.Drowsy)
@@ -406,6 +508,20 @@ fun SuggestScreen(nav: Navigator, state: AppState, s: Screen) {
     }
 
     val ready = !live || (!ui.loading && !ui.busy && ui.place != null)
+    // 쉼터를 찾으면 음성으로 묻고, '응'이라고 답하면 경유지로 넣는다(화면을 누르지 않아도 되게). 화면을 떠나면 듣기를 멈춘다.
+    val voice by vm.voiceUi.collectAsStateWithLifecycle()
+    val asks = live && ready && (s == Screen.Suggest || s == Screen.SuggestRepeat || s == Screen.SuggestExisting)
+    LaunchedEffect(asks, ui.place?.placeId) {
+        if (!asks) return@LaunchedEffect
+        if (vm.askToAddRestStop() == true) request(destination = false, demo = Screen.SuggestAdded, onSuccess = Screen.SuggestAdded)
+    }
+    DisposableEffect(Unit) { onDispose { vm.stopVoice() } }
+    // 주행 중에는 운전자가 화면을 누르지 못하므로, 응답이 없으면 관찰 화면으로 돌아간다(다시 감지되면 다시 뜬다).
+    LaunchedEffect(s, ui.busy) {
+        if (!live || ui.busy) return@LaunchedEffect
+        delay(if (s == Screen.Suggest || s == Screen.SuggestRepeat || s == Screen.SuggestExisting || s == Screen.SuggestNoDest) SUGGEST_TIMEOUT_MS else SUGGEST_RESULT_MS)
+        if (nav.current == s) nav.replace(Screen.Observe)
+    }
     val stops = v.existing.take(1).map { Stop.Was to it }
     val glow = when (s) { Screen.Suggest, Screen.SuggestExisting, Screen.SuggestNoDest, Screen.SuggestFull, Screen.SuggestFail, Screen.SuggestNoPlace -> Glow.RedFaint; else -> Glow.None }
     val grey = s == Screen.SuggestFull || s == Screen.SuggestFail || s == Screen.SuggestNoPlace
@@ -423,6 +539,7 @@ fun SuggestScreen(nav: Navigator, state: AppState, s: Screen) {
                         if (s == Screen.SuggestRepeat) T("이번 주행에서 전방 주시 이탈이 ${if (live) vm.observe.value.inattentionCount else 3}번 감지됐습니다.", S.body)
                         Place(v.placeLine)
                         Seq(listOf(Stop.Here to "현재 위치", Stop.Rest to v.name, Stop.Dest to v.destination), Modifier.padding(top = if (s == Screen.Suggest) 18.dp else 12.dp))
+                        if (asks || !live) VoiceLine(if (live) voice else com.personal.driverguard.ui.state.VoiceUi(listening = true))
                     }
                     Screen.SuggestExisting -> {
                         T(accent(v.name to true, "를\n경유지로 추가할까요?" to false), S.h2)
@@ -510,6 +627,49 @@ private fun Modifier.combinedClickableLong(onLong: () -> Unit) = this.combinedCl
 @Composable
 private fun Place(text: String) = Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     Ic(R.drawable.ic_pin, NColor.indigo); T(text, S.t(20, 28, color = NColor.ink2))
+}
+
+/** 음성 질문 상태: 묻는 중 → 듣는 중 → 들은 말 */
+@Composable
+private fun VoiceLine(v: com.personal.driverguard.ui.state.VoiceUi) {
+    val text = when {
+        v.asking -> "음성으로 묻고 있습니다"
+        v.listening -> "'응'이라고 답하면 경유지로 추가합니다"
+        v.heard != null -> "\"${v.heard}\"" + when (v.answer) { true -> ", 추가합니다"; false -> ", 다음에 안내합니다"; null -> ", 버튼으로 골라 주세요" }
+        else -> return
+    }
+    Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Ic(R.drawable.ic_mic, if (v.listening) NColor.danger else NColor.indigo, 22.dp)
+        T(text, S.t(17, 24, 500, NColor.ink2))
+    }
+}
+
+// ------------------------------------------------------------------ rest arrived
+/** 경유지로 넣은 쉼터에 멈춰 도착으로 기록됐을 때. 실내는 원래대로 돌리고, 휴식은 리포트에 '휴식함'으로 남는다. */
+@Composable
+fun RestArrivedScreen(nav: Navigator, state: AppState) {
+    val vm = LocalHawkeye.current
+    val arrival by vm.arrival.collectAsStateWithLifecycle()
+    val name = if (state.preview) "기흥휴게소" else arrival?.name ?: "쉼터"
+    val v = rememberObserveView(state)
+    Box(Modifier.fillMaxSize()) {
+        ObserveCamera(nav, state)
+        Sheet {
+            SheetPic(R.drawable.scene_rest, biasX = .24f, biasY = .2f)
+            SheetBody(gap = 12.dp, content = {
+                Ic(R.drawable.ic_check, NColor.indigo, 44.dp)
+                T(accent(name to true, "에\n도착했습니다" to false), S.h2)
+                T("충분히 쉬고 출발하세요. 바꿨던 공조와 무드등은 원래대로 돌려놓았습니다.", S.body)
+                Box(Modifier.padding(top = 6.dp)) { Counts(listOf("${v.inattention}회" to "부주의", "${v.drowsiness}회" to "졸음")) }
+            }, bottom = {
+                InfoRows(listOf(R.drawable.ic_pin to boldParts("이번 휴식은 주행 리포트에 " to false, "휴식함" to true, "으로 남습니다" to false)))
+                Btn("휴식 마치고 다시 출발", Modifier.fillMaxWidth()) {
+                    if (!state.preview) vm.resumeAfterRest()
+                    nav.replace(Screen.Observe)
+                }
+            })
+        }
+    }
 }
 
 // ------------------------------------------------------------------ end confirm

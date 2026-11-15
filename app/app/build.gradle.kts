@@ -103,6 +103,10 @@ dependencies {
     implementation(libs.haze)
     // CameraX 의 ProcessCameraProvider.getInstance 가 돌려주는 ListenableFuture
     implementation(libs.guava)
+    // 졸음·전방 주시 이탈 판정(AI 팀 라이브러리, ai/kotlin) + 모델 실행(ONNX Runtime) + 얼굴 랜드마크(MediaPipe)
+    implementation(libs.drowsy.onnx)
+    implementation(libs.onnxruntime.android)
+    implementation(libs.mediapipe.tasks.vision)
     // Pleos Connect: 졸음 감지 후 차량 기본 내비에 쉼터 경유지 추가
     implementation(libs.pleos.navihelper)
     // Pleos Connect: 졸음 단계별 차량 개입(공조·무드등·창문·시트), 차량 스피커 음성 안내·음성 응답, 차량 위치
