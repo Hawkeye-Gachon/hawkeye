@@ -1,9 +1,6 @@
 package com.personal.driverguard.platform
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 /** 감지 단계별 차량 개입 수준 */
 enum class CabinAlert {
@@ -35,7 +32,7 @@ data class CabinStatus(
 
 /**
  * 차량 실내 개입(공조·무드등·창문·시트)과 차량 상태 읽기.
- * 구현: Pleos Vehicle SDK([com.personal.driverguard.platform.pleos.PleosVehicleCabin]), 시연 모드는 [DemoVehicleCabin].
+ * 구현: Pleos Vehicle SDK([com.personal.driverguard.platform.pleos.PleosVehicleCabin]).
  * 권한이나 차량 지원이 없는 조작은 건너뛰고, 실제로 반영된 조치만 돌려준다.
  */
 interface VehicleCabin {
@@ -47,50 +44,26 @@ interface VehicleCabin {
     /** [level] 에 맞게 차량을 조작하고, 반영된 조치를 돌려준다. 처음 조작 전 상태는 [restore] 를 위해 기억한다. */
     suspend fun alert(level: CabinAlert): List<CabinAction>
 
-    /** 바꾼 것을 처음 상태로 돌린다(쉼터 도착·관찰 종료) */
+    /**
+     * 쉼터에 도착해 쉴 때: 실내 온도를 [CabinPlan.REST_TEMP_C] 로 맞추고 바람을 약하게 하고, 주차 상태면 운전석 등받이를 눕힌다.
+     * 반영된 조치를 돌려준다. 바꾸기 전 상태는 [restore] 를 위해 기억한다.
+     */
+    suspend fun rest(): List<CabinAction>
+
+    /** 바꾼 것을 처음 상태로 돌린다(쉼터 도착·다시 출발·관찰 종료) */
     suspend fun restore()
 
     fun release()
 }
 
-/** 시연 모드: 차량 없이 조치가 반영된 것처럼 보여 준다(실제 조작 없음). */
-class DemoVehicleCabin : VehicleCabin {
-    private val _status = MutableStateFlow(CabinStatus())
-    override val status: StateFlow<CabinStatus> = _status.asStateFlow()
+/** 차량 개입에 쓰는 값 */
+object CabinPlan {
+    /** 졸음 때 낮추는 온도 */
+    const val COOL_TEMP_C = 18f
 
-    override suspend fun connect(): Boolean {
-        // 시연: 안전벨트 착용, 고속도로 크루즈 주행, D 단
-        _status.value = CabinStatus(connected = true, seatBeltUnbuckled = false, cruiseActive = true, gear = "D")
-        return true
-    }
+    /** 졸음 반복 때 여는 운전석 창문 비율 */
+    const val WINDOW_OPEN_PERCENT = 20
 
-    override suspend fun alert(level: CabinAlert): List<CabinAction> {
-        delay(250)
-        return actionsFor(level)
-    }
-
-    override suspend fun restore() = Unit
-
-    override fun release() = Unit
-
-    companion object {
-        /** 단계별로 하는 조치(실제 차량 구현도 같은 문구를 쓴다) */
-        fun actionsFor(level: CabinAlert): List<CabinAction> = when (level) {
-            CabinAlert.INATTENTION -> listOf(CabinAction(CabinAction.Kind.LIGHT, "무드등 주황"))
-            CabinAlert.DROWSY -> listOf(
-                CabinAction(CabinAction.Kind.LIGHT, "무드등 빨강"),
-                CabinAction(CabinAction.Kind.AIR, "에어컨 ${COOL_TEMP_C.toInt()}°C, 바깥 공기, 바람 세게"),
-            )
-            CabinAlert.DROWSY_REPEATED -> actionsFor(CabinAlert.DROWSY) + listOf(
-                CabinAction(CabinAction.Kind.WINDOW, "운전석 창문 ${WINDOW_OPEN_PERCENT}% 열림"),
-                CabinAction(CabinAction.Kind.SEAT, "운전석 시트 통풍 최대"),
-            )
-        }
-
-        /** 졸음 때 낮추는 온도 */
-        const val COOL_TEMP_C = 18f
-
-        /** 졸음 반복 때 여는 운전석 창문 비율 */
-        const val WINDOW_OPEN_PERCENT = 20
-    }
+    /** 쉴 때 맞추는 실내 온도 */
+    const val REST_TEMP_C = 23f
 }

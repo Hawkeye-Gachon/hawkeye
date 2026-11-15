@@ -55,8 +55,15 @@ private fun ReportBack(nav: Navigator, fromHistory: Boolean) =
 /** 백엔드 리포트(종료 업로드 응답 또는 주행 상세) */
 @Composable
 private fun LiveReport(nav: Navigator, fromHistory: Boolean) {
-    val ui by LocalHawkeye.current.report.collectAsStateWithLifecycle()
+    val vm = LocalHawkeye.current
+    val ui by vm.report.collectAsStateWithLifecycle()
     val r = ui.report
+    // 경유지로 넣은 쉼터 중 위치를 아는 것(같은 쉼터를 여러 번 넣었으면 한 번만, 들른 적이 있으면 '휴식함')
+    val stops = remember(r) {
+        r?.waypoints.orEmpty().groupBy { it.placeId }.mapNotNull { (id, items) ->
+            vm.restPlaceLocation(id)?.let { (lat, lng) -> RouteStop(lat, lng, items.first().placeName ?: "쉼터", items.any { it.visited }) }
+        }
+    }
     val start = Fmt.parse(r?.startedAt)
     val end = Fmt.parse(r?.endedAt)
     Box(Modifier.fillMaxSize()) {
@@ -69,6 +76,7 @@ private fun LiveReport(nav: Navigator, fromHistory: Boolean) {
                     },
                     startLabel = "출발 ${Fmt.time(start)}",
                     endLabel = "도착 ${Fmt.time(end)}",
+                    stops = stops,
                 )
             }
             Box(Modifier.padding(start = 32.dp, top = 28.dp).width(300.dp).clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = .86f)).padding(horizontal = 16.dp, vertical = 12.dp)) {

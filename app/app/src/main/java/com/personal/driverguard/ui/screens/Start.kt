@@ -122,15 +122,9 @@ fun LoginScreen(nav: Navigator, state: AppState, error: Boolean) {
     var pw by remember { mutableStateOf(if (!state.preview) "" else if (error) "123456" else "drive1234") }
     val pwError = if (state.preview) "비밀번호가 맞지 않습니다. 대소문자를 확인하고 다시 입력해 주세요.".takeIf { error } else form.fieldErrors["password"] ?: form.message
     val idError = if (state.preview) null else form.fieldErrors["email"]
-    // 시연 모드면 시연 계정을 미리 채워 '로그인'만 누르면 되게 한다
-    val demo by vm.demoMode.collectAsStateWithLifecycle()
-    LaunchedEffect(demo) {
-        if (demo && !state.preview && id.isBlank()) { id = "haneul.kim@mail.com"; pw = "drive1234" }
-    }
     Box(Modifier.fillMaxSize()) {
         run {
             LoginBackdrop()
-            DemoSwitch(nav, state, Modifier.align(Alignment.TopEnd).padding(top = 24.dp, end = 28.dp))
             // 왼쪽: 로고와 인사
             HawkeyeLogo(x = 116, y = 225, size = 112)
             Column(Modifier.at(116.dp, 354.dp, 470.dp, 260.dp)) {

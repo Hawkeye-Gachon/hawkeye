@@ -28,7 +28,7 @@ fun GalleryScreen(nav: Navigator, state: com.personal.driverguard.ui.AppState) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     BackBtn("닫기") { nav.back() }; WGap(20.dp)
                     T("화면 목록", S.h1); Fill()
-                    T("관찰 화면에서는 카메라 카드를 길게 누르면 시연 신호를 고를 수 있습니다", S.small)
+                    T("관찰 화면에서는 카메라 카드를 길게 누르면 다른 관찰 화면으로 넘어갈 수 있습니다", S.small)
                 }
                 LazyVerticalGrid(GridCells.Fixed(4), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     itemsIndexed(Screen.entries.filter { it != Screen.Gallery }) { i, s ->

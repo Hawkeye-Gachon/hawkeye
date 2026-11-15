@@ -70,12 +70,15 @@ class PleosVoiceGuide(context: Context) : VoiceGuide {
             override fun onStop() { done.complete(Unit) }
             override fun onUpdatedRms(rms: Double) = Unit
         }
-        runCatching {
-            tts.addEventListener(listener)
-            tts.speak(text, true)
-        }.onFailure { done.complete(Unit) }
-        withTimeoutOrNull(SPEAK_TIMEOUT_MS) { done.await() }
-        runCatching { tts.removeEventListener(listener) }
+        try {
+            runCatching {
+                tts.addEventListener(listener)
+                tts.speak(text, true)
+            }.onFailure { done.complete(Unit) }
+            withTimeoutOrNull(SPEAK_TIMEOUT_MS) { done.await() }
+        } finally {
+            runCatching { tts.removeEventListener(listener) }
+        }
     }
 
     override suspend fun listen(timeoutMs: Long): String? {

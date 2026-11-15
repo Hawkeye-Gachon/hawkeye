@@ -57,8 +57,14 @@ fun DriverCamera(modifier: Modifier = Modifier, fallback: @Composable BoxScope.(
 
     // 카메라·위치·마이크를 한 번에 묻는다(두 요청을 따로 띄우면 하나가 무시될 수 있다). 결과는 화면 복귀 시 permission 이 다시 읽는다.
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
+    val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(permission.status) {
-        if (permission.status == PermissionStatus.REQUESTABLE && !CameraPermissionPrompt.asked) {
+        // 카메라만 보면 카메라를 이미 허용한 기기에서는 마이크를 한 번도 묻지 않게 된다(그러면 음성 대답을 들을 수 없다).
+        // 카메라·마이크·위치 중 하나라도 없으면 묻는다. 이미 허용한 것은 다시 묻지 않는다.
+        val missing = listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.ACCESS_FINE_LOCATION).any {
+            androidx.core.content.ContextCompat.checkSelfPermission(context, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        if (missing && permission.status != PermissionStatus.BLOCKED && !CameraPermissionPrompt.asked) {
             CameraPermissionPrompt.asked = true
             // 마이크는 쉼터 제안에 음성으로 답할 때, Pleos 차량 위치는 Pleos 차량에서만 쓴다(없는 권한은 무시된다)
             launcher.launch(arrayOf(

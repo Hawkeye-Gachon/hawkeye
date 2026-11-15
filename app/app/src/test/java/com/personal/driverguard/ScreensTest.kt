@@ -34,7 +34,14 @@ class ScreensTest(private val screen: Screen) {
             override fun release() = Unit
         })
         // Pleos 차량·음성 서비스가 없는 환경
-        PlatformLocator.overrideCabinAndVoice(com.personal.driverguard.platform.DemoVehicleCabin(), object : com.personal.driverguard.platform.VoiceGuide {
+        PlatformLocator.overrideCabinAndVoice(object : com.personal.driverguard.platform.VehicleCabin {
+            override val status = kotlinx.coroutines.flow.MutableStateFlow(com.personal.driverguard.platform.CabinStatus())
+            override suspend fun connect() = false
+            override suspend fun alert(level: com.personal.driverguard.platform.CabinAlert) = emptyList<com.personal.driverguard.platform.CabinAction>()
+            override suspend fun rest() = emptyList<com.personal.driverguard.platform.CabinAction>()
+            override suspend fun restore() = Unit
+            override fun release() = Unit
+        }, object : com.personal.driverguard.platform.VoiceGuide {
             override suspend fun connect() = false
             override suspend fun speak(text: String) = Unit
             override suspend fun listen(timeoutMs: Long): String? = null

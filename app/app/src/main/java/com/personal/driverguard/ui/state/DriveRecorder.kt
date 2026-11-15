@@ -74,7 +74,7 @@ class DriveRecorder(
         .onEach { it.announced = true }
         .map { it.request.placeId }
 
-    /** 아직 들르지 않은 쉼터 중 가장 먼저 추가한 곳(모의 주행이 찾아갈 곳) */
+    /** 아직 들르지 않은 쉼터 중 가장 먼저 추가한 곳의 위도·경도. 없으면 null. */
     fun pendingStop(): Pair<Double, Double>? =
         waypoints.firstOrNull { it.visitedAt == null && it.latitude != null && it.longitude != null }?.let { it.latitude!! to it.longitude!! }
 
@@ -125,11 +125,13 @@ class DriveRecorder(
     }
 }
 
-/** 종료 업로드에 실패한 주행. 다음 실행 때 다시 올린다. */
+/** 종료 업로드에 실패했거나 진행 중에 중간 저장한 주행. 다음 실행 때 다시 올린다([PendingUploads]). */
 @Serializable
 data class PendingUpload(
     val clientDriveId: String,
     val startedAt: String,
     val driveId: Long?,
     val body: EndDriveRequest,
+    /** 기록한 계정([PendingUploads.owner]). 이 필드가 생기기 전에 저장된 기록은 null. */
+    val owner: String? = null,
 )

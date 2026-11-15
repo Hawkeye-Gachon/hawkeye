@@ -8,6 +8,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.mutableStateListOf
@@ -16,10 +17,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.personal.driverguard.data.remote.SessionEvent
 import com.personal.driverguard.ui.design.DesignBoard
 import com.personal.driverguard.ui.state.HawkeyeViewModel
+import com.personal.driverguard.ui.state.DriveScene
 import com.personal.driverguard.ui.screens.*
 
 /** Every screen of the design, in the order of the review board. */
@@ -28,6 +32,7 @@ enum class Screen(val title: String) {
     Terms("약관 동의"), Home("홈"),
     Setup("보는 방향 설정, 설정 전"), SetupDone("보는 방향 설정, 설정 완료"), SetupNoFace("보는 방향 설정, 얼굴 확인 불가"),
     Observe("관찰 중"), ObserveLook("전방 주시 경고"), ObserveDrowsy("졸음 경고"),
+    Unresponsive("반응 확인"), EmergencyCountdown("119 신고 대기"), EmergencyReported("119 전화 화면 열림"),
     Suggest("경유지 추가 제안, 졸음 후"), SuggestRepeat("경유지 추가 제안, 부주의 3회"), SuggestExisting("기존 경유지가 있을 때"),
     SuggestNoDest("안내 중인 목적지 없음"), SuggestFull("경유지가 가득 참"), SuggestFail("내비 연동 실패"), SuggestAdded("경유지 추가 완료"),
     SuggestNoPlace("쉼터를 찾지 못함"), RestArrived("쉼터 도착"),
@@ -55,6 +60,30 @@ private val OBSERVING_SCREENS = setOf(
     Screen.SuggestNoDest, Screen.SuggestFull, Screen.SuggestFail, Screen.SuggestAdded, Screen.SuggestNoPlace,
 )
 
+/** 119 확인 화면(괜찮은지 묻기 → 신고 예고 → 전화 화면 엶) */
+private val EMERGENCY_SCREENS = setOf(Screen.Unresponsive, Screen.EmergencyCountdown, Screen.EmergencyReported)
+
+/** 진행자의 장면을 따라 바뀌는 화면 */
+private val DRIVE_SCREENS = OBSERVING_SCREENS + EMERGENCY_SCREENS + Screen.RestArrived
+
+private fun DriveScene.screen(): Screen = when (this) {
+    DriveScene.OBSERVE -> Screen.Observe
+    DriveScene.LOOK -> Screen.ObserveLook
+    DriveScene.DROWSY -> Screen.ObserveDrowsy
+    DriveScene.UNRESPONSIVE -> Screen.Unresponsive
+    DriveScene.COUNTDOWN -> Screen.EmergencyCountdown
+    DriveScene.REPORTED -> Screen.EmergencyReported
+    DriveScene.SUGGEST -> Screen.Suggest
+    DriveScene.SUGGEST_REPEAT -> Screen.SuggestRepeat
+    DriveScene.SUGGEST_EXISTING -> Screen.SuggestExisting
+    DriveScene.SUGGEST_NO_DEST -> Screen.SuggestNoDest
+    DriveScene.SUGGEST_FULL -> Screen.SuggestFull
+    DriveScene.SUGGEST_FAIL -> Screen.SuggestFail
+    DriveScene.SUGGEST_NO_PLACE -> Screen.SuggestNoPlace
+    DriveScene.SUGGEST_ADDED -> Screen.SuggestAdded
+    DriveScene.ARRIVED -> Screen.RestArrived
+}
+
 /** 관찰 중 화면 중 쉼터 도착을 띄워도 되는 화면(종료 확인 중이면 띄우지 않는다) */
 val Screen.observing: Boolean get() = this in OBSERVING_SCREENS
 
@@ -77,6 +106,13 @@ fun HawkeyeApp(start: Screen = Screen.Splash) {
     val state = remember { AppState(preview = start != Screen.Splash || com.personal.driverguard.ui.state.DebugFlags.CLICK_THROUGH) }
     val vm: HawkeyeViewModel = viewModel()
     BackHandler(enabled = nav.stack.size > 1) { nav.back() }
+    // 관찰 중에는 화면이 꺼지지 않게 한다(화면이 꺼지면 카메라가 멈춰 감지도 멈춘다)
+    val observing by vm.observe.collectAsStateWithLifecycle()
+    val view = LocalView.current
+    DisposableEffect(view, observing.active) {
+        view.keepScreenOn = observing.active
+        onDispose { view.keepScreenOn = false }
+    }
     // 로그인 만료 → 로그인 화면, 약관 미동의 → 약관 동의 화면
     LaunchedEffect(vm) {
         vm.sessionEvents.collect { e ->
@@ -87,31 +123,15 @@ fun HawkeyeApp(start: Screen = Screen.Splash) {
             }
         }
     }
-    // 쉼터에 도착하면(멈춰서 방문으로 기록되면) 관찰 화면 위에 쉼터 도착 화면을 띄운다
-    LaunchedEffect(vm) {
-        vm.arrivals.collect {
-            if (nav.current in OBSERVING_SCREENS) nav.replace(Screen.RestArrived)
-        }
-    }
-    // 카메라 영상 감지 결과에 따라 경고 화면을 띄우고 닫는다(시연 모드도 같다)
-    LaunchedEffect(vm) {
-        vm.detections.collect { d ->
-            if (state.preview) return@collect
-            when (d) {
-                // 졸음은 관찰 중 어느 화면에 있든(쉼터 제안 중이어도) 경고 화면을 다시 띄운다
-                com.personal.driverguard.platform.Detection.DROWSY ->
-                    if (nav.current in OBSERVING_SCREENS && nav.current != Screen.ObserveDrowsy) nav.replace(Screen.ObserveDrowsy)
-                com.personal.driverguard.platform.Detection.LOOK_AWAY ->
-                    if (nav.current == Screen.Observe) nav.replace(Screen.ObserveLook)
-                com.personal.driverguard.platform.Detection.LOOK_BACK ->
-                    if (nav.current == Screen.ObserveLook) {
-                        if (vm.inattentionDue) {
-                            vm.openSuggestion(com.personal.driverguard.data.remote.TriggerType.INATTENTION_REPEATED)
-                            nav.replace(Screen.SuggestRepeat)
-                        } else nav.replace(Screen.Observe)
-                    }
-            }
-        }
+    // 관찰 중의 화면은 진행자가 정한 장면을 따라간다(감지·119 확인·쉼터 제안·도착이 한 번에 하나씩 순서대로 진행된다).
+    // 종료 확인 화면 위로는 119 확인만 끼어든다. 종료 확인에서 돌아오면 그때의 장면으로 맞춘다.
+    val scene by vm.scene.collectAsStateWithLifecycle()
+    val current = nav.current
+    LaunchedEffect(scene, current) {
+        if (state.preview) return@LaunchedEffect
+        val target = scene.screen()
+        if (current == target) return@LaunchedEffect
+        if (current in DRIVE_SCREENS || (current == Screen.EndConfirm && target in EMERGENCY_SCREENS)) nav.replace(target)
     }
     CompositionLocalProvider(LocalHawkeye provides vm) { DesignBoard {
         AnimatedContent(nav.current, transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) }, label = "screen") { s ->
@@ -136,6 +156,7 @@ fun ScreenContent(s: Screen, nav: Navigator, state: AppState) {
         Screen.Observe -> ObserveScreen(nav, state)
         Screen.ObserveLook -> LookScreen(nav, state)
         Screen.ObserveDrowsy -> DrowsyScreen(nav, state)
+        Screen.Unresponsive, Screen.EmergencyCountdown, Screen.EmergencyReported -> EmergencyScreen(nav, state, s)
         Screen.Suggest, Screen.SuggestRepeat, Screen.SuggestExisting, Screen.SuggestNoDest,
         Screen.SuggestFull, Screen.SuggestFail, Screen.SuggestAdded, Screen.SuggestNoPlace -> SuggestScreen(nav, state, s)
         Screen.RestArrived -> RestArrivedScreen(nav, state)

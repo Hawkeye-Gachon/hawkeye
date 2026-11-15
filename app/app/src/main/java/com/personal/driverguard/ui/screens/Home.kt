@@ -98,7 +98,6 @@ fun HomeScreen(nav: Navigator, state: AppState) {
             Image(painterResource(R.drawable.head_hero), null, Modifier.at(160.dp, 52.dp, 370.dp, 405.dp))
             Row(Modifier.at(40.dp, 32.dp, 608.dp, 52.dp), verticalAlignment = Alignment.CenterVertically) {
                 Mark(); Fill()
-                DemoSwitch(nav, state); WGap(8.dp)
                 Btn(v.userName?.let { "${it}님 로그아웃" } ?: "로그아웃", kind = Kind.Ghost, height = 52.dp, radius = 16.dp, style = S.t(18, 24, 600), horizontal = 20.dp) {
                     if (state.preview) nav.go(Screen.Login) else scope.launch { vm.logout(); nav.reset(Screen.Login) }
                 }

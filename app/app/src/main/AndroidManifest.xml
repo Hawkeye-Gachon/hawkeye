@@ -33,6 +33,8 @@
     <!-- 백엔드(로그인·약관·쉼터 조회·주행 기록·리포트) 통신. 영상·얼굴 이미지는 보내지 않는다. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 카메라가 없는 기기에도 설치는 되게 한다(감지 없이 기록 화면은 쓸 수 있다) -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.front" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
@@ -42,7 +44,7 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="geo" />
         </intent>
-        <!-- 음성 안내·인식(Android 기본 음성, 시연 태블릿) -->
+        <!-- 음성 안내·인식(Pleos 음성을 쓸 수 없는 기기의 Android 기본 음성) -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>

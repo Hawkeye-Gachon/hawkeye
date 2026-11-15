@@ -1,5 +1,9 @@
 package com.personal.driverguard.platform.pleos
 
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.NonCancellable
+import ai.pleos.playground.vehicle.constant.control.MoveControl
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.model.area.SeatArea
 import ai.pleos.playground.vehicle.api.model.area.WindowArea
@@ -17,7 +21,7 @@ import android.util.Log
 import com.personal.driverguard.platform.CabinAction
 import com.personal.driverguard.platform.CabinAlert
 import com.personal.driverguard.platform.CabinStatus
-import com.personal.driverguard.platform.DemoVehicleCabin
+import com.personal.driverguard.platform.CabinPlan
 import com.personal.driverguard.platform.VehicleCabin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -69,6 +73,8 @@ class PleosVehicleCabin(context: Context) : VehicleCabin {
         var ambientAuto: Boolean? = null
         var window: Int? = null
         var seatVentilation: Int? = null
+        /** 쉴 때 등받이를 뒤로 움직인 시간(ms). 되돌릴 때 같은 시간만큼 앞으로 움직인다. */
+        var reclinedMs = 0L
     }
 
     private var saved = Saved()
@@ -132,8 +138,8 @@ class PleosVehicleCabin(context: Context) : VehicleCabin {
                 val parts = mutableListOf<String>()
                 set { ok, fail -> v.getHVAC().setHvacPower(DRIVER, true, { _, _ -> ok(Unit) }, fail) }
                 if (set { ok, fail -> v.getHVAC().setHvacAc(DRIVER, true, { _, _ -> ok(Unit) }, fail) } and
-                    set { ok, fail -> v.getHVAC().setHvacTemperature(DRIVER, DemoVehicleCabin.COOL_TEMP_C, TemperatureUnit.CELSIUS, { _, _ -> ok(Unit) }, fail) }
-                ) parts += "에어컨 ${DemoVehicleCabin.COOL_TEMP_C.toInt()}°C"
+                    set { ok, fail -> v.getHVAC().setHvacTemperature(DRIVER, CabinPlan.COOL_TEMP_C, TemperatureUnit.CELSIUS, { _, _ -> ok(Unit) }, fail) }
+                ) parts += "에어컨 ${CabinPlan.COOL_TEMP_C.toInt()}°C"
                 if (set { ok, fail -> v.getHVAC().setHvacRecirculation(DRIVER, false, { _, _ -> ok(Unit) }, fail) }) parts += "바깥 공기"
                 val fanMax = call<Map<SeatArea, ai.pleos.playground.vehicle.api.model.capability.AreaBounds<Int>>> { ok, fail ->
                     v.getHVAC().checkHvacFanSpeedCapabilities(ok, fail)
@@ -145,9 +151,9 @@ class PleosVehicleCabin(context: Context) : VehicleCabin {
                 val windowMax = call<Map<WindowArea, ai.pleos.playground.vehicle.api.model.capability.AreaBounds<Int>>> { ok, fail ->
                     v.getWindow().checkWindowPositionCapabilities(ok, fail)
                 }?.get(DRIVER_WINDOW)?.maxValue ?: 100
-                val open = (windowMax * DemoVehicleCabin.WINDOW_OPEN_PERCENT / 100.0).roundToInt()
+                val open = (windowMax * CabinPlan.WINDOW_OPEN_PERCENT / 100.0).roundToInt()
                 if (set { ok, fail -> v.getWindow().setWindowPosition(DRIVER_WINDOW, open, { _, _ -> ok(Unit) }, fail) }) {
-                    done += CabinAction(CabinAction.Kind.WINDOW, "운전석 창문 ${DemoVehicleCabin.WINDOW_OPEN_PERCENT}% 열림")
+                    done += CabinAction(CabinAction.Kind.WINDOW, "운전석 창문 ${CabinPlan.WINDOW_OPEN_PERCENT}% 열림")
                 }
                 val ventMax = call<Map<SeatArea, ai.pleos.playground.vehicle.api.model.capability.AreaBounds<Int>>> { ok, fail ->
                     v.getSeat().checkSeatVentilationCapabilities(ok, fail)
@@ -160,11 +166,57 @@ class PleosVehicleCabin(context: Context) : VehicleCabin {
         }
     }
 
+    /**
+     * 쉴 때의 실내: 온도 [CabinPlan.REST_TEMP_C], 바람 약하게. 기어가 P 일 때만 운전석 등받이를 눕힌다
+     * (주행 중에 시트가 움직이면 위험하다).
+     *
+     * 등받이는 '이 각도로'가 아니라 '이 방향으로 움직여라'로만 조작할 수 있다(moveSeatBackrestAngle + MoveControl).
+     * 그래서 뒤로 움직이기 시작하고 [RECLINE_MS] 뒤에 멈춘다. 되돌릴 때는 같은 시간만큼 앞으로 움직인다.
+     * 문서로 확인하지 못한 점(차량에서 확인 필요): BACKWARD 가 눕히는 방향인지, 움직이는 속도.
+     */
+    override suspend fun rest(): List<CabinAction> {
+        if (!connect()) return emptyList()
+        val v = vehicle ?: return emptyList()
+        return lock.withLock {
+            saveOnce(v)
+            val done = mutableListOf<CabinAction>()
+            val parts = mutableListOf<String>()
+            set { ok, fail -> v.getHVAC().setHvacPower(DRIVER, true, { _, _ -> ok(Unit) }, fail) }
+            if (set { ok, fail -> v.getHVAC().setHvacTemperature(DRIVER, CabinPlan.REST_TEMP_C, TemperatureUnit.CELSIUS, { _, _ -> ok(Unit) }, fail) }) {
+                parts += "실내 ${CabinPlan.REST_TEMP_C.toInt()}°C"
+            }
+            if (set { ok, fail -> v.getHVAC().setHvacFanSpeed(DRIVER, REST_FAN, { _, _ -> ok(Unit) }, fail) }) parts += "바람 약하게"
+            if (parts.isNotEmpty()) done += CabinAction(CabinAction.Kind.AIR, parts.joinToString(", "))
+            if (_status.value.gear == "P" && moveBackrest(v, MoveControl.BACKWARD, RECLINE_MS)) {
+                saved.reclinedMs = RECLINE_MS
+                done += CabinAction(CabinAction.Kind.SEAT, "운전석 등받이 눕힘")
+            }
+            done
+        }
+    }
+
+    /** 등받이를 [direction] 으로 [ms] 동안 움직이고 멈춘다. 움직이기 시작했으면 true(멈춤 명령은 실패해도 한 번 더 보낸다). */
+    private suspend fun moveBackrest(v: Vehicle, direction: MoveControl, ms: Long): Boolean {
+        if (!set { ok, fail -> v.getSeat().moveSeatBackrestAngle(DRIVER, direction, { _, _ -> ok(Unit) }, fail) }) return false
+        try {
+            delay(ms)
+        } finally {
+            withContext(NonCancellable) {
+                if (!set { ok, fail -> v.getSeat().moveSeatBackrestAngle(DRIVER, MoveControl.STOP, { _, _ -> ok(Unit) }, fail) }) {
+                    set { ok, fail -> v.getSeat().moveSeatBackrestAngle(DRIVER, MoveControl.STOP, { _, _ -> ok(Unit) }, fail) }
+                }
+            }
+        }
+        return true
+    }
+
     override suspend fun restore() {
         val v = vehicle ?: return
         lock.withLock {
             val s = saved
             if (!s.taken) return@withLock
+            // 눕힌 등받이는 주차 상태일 때만 세운다(그렇지 않으면 운전자가 직접 세운다)
+            if (s.reclinedMs > 0 && _status.value.gear == "P") moveBackrest(v, MoveControl.FORWARD, s.reclinedMs)
             s.window?.let { w -> set { ok, fail -> v.getWindow().setWindowPosition(DRIVER_WINDOW, w, { _, _ -> ok(Unit) }, fail) } }
             s.seatVentilation?.let { x -> set { ok, fail -> v.getSeat().setHvacSeatVentilation(DRIVER, x, { _, _ -> ok(Unit) }, fail) } }
             s.recirculation?.let { x -> set { ok, fail -> v.getHVAC().setHvacRecirculation(DRIVER, x, { _, _ -> ok(Unit) }, fail) } }
@@ -245,6 +297,10 @@ class PleosVehicleCabin(context: Context) : VehicleCabin {
         const val CONNECT_TRIES = 3
         const val DEFAULT_FAN_MAX = 6
         const val DEFAULT_VENT_MAX = 3
+        /** 쉴 때의 바람 세기 */
+        const val REST_FAN = 1
+        /** 등받이를 눕히느라 움직이는 시간 */
+        const val RECLINE_MS = 4_000L
         val DRIVER = SeatArea(SeatValue.ROW_1_LEFT)
         val DRIVER_WINDOW = WindowArea(WindowValue.ROW_1_LEFT)
         val RED = 0xFFFF2E24.toInt()

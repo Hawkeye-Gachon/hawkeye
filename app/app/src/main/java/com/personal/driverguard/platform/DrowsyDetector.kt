@@ -167,17 +167,20 @@ class DrowsyDetector(context: Context, private val onDetection: (Detection) -> U
             onDetection(Detection.LOOK_AWAY)
         }
         // 시선 이탈 경고 뒤 이탈이 끝나면 정면 복귀로 알린다
-        if (lookingAway && !state.isActive(EventType.GAZE_AWAY_LONG) && !state.isActive(EventType.VATS)) {
+        if (lookingAway && !fallbackAway && !state.isActive(EventType.GAZE_AWAY_LONG) && !state.isActive(EventType.VATS)) {
             lookingAway = false
             onDetection(Detection.LOOK_BACK)
         }
         val f = state.output.state
+        if (!f.poseValid || fallbackAway) fallbackGaze(f.face, f.poseValid, state.sessionMs, state.speedKmh)
         _ui.value = DetectorUi(
             running = true,
             calibrating = state.calibration == CalibrationStatus.CALIBRATING,
             faceVisible = f.face,
             closure = f.closure.takeIf { f.closureValid && it.isFinite() },
-            yawDeg = f.yawRel.takeIf { f.poseValid && it.isFinite() },
+            // 라이브러리는 평소 자세 기준이 잡힌 뒤(시작 후 약 1분)에만 머리 방향을 준다.
+            // 그 전에는 화면에 보여 줄 값만 따로 계산한다(판정에는 쓰지 않는다).
+            yawDeg = f.yawRel.takeIf { f.poseValid && it.isFinite() } ?: provisionalYawDeg().takeIf { f.face },
         )
     }
 
@@ -214,14 +217,81 @@ class DrowsyDetector(context: Context, private val onDetection: (Detection) -> U
         val names = shapes[0].map { it.categoryName() }
         val scores = FloatArray(shapes[0].size) { shapes[0][it].score() }
         val matrix = matrices[0]
+        trackRawYaw(matrix)
         if (x.any { !it.isFinite() } || y.any { !it.isFinite() } || scores.any { !it.isFinite() } || matrix.any { !it.isFinite() }) {
             return updateNoFace(tMs, imageWidth, imageHeight, speedKmh)
         }
         return update(tMs, imageWidth, imageHeight, x, y, names, scores, matrix, speedKmh)
     }
 
+    // ── 기준이 잡히기 전의 머리 방향(화면 표시용) ──
+    private var rawYawDeg: Double? = null
+    private var yawZeroSum = 0.0
+    private var yawZeroCount = 0
+
+    /**
+     * 얼굴 변환 행렬(열 우선 4×4)에서 좌우 각도를 구한다. 라이브러리와 같은 식이다(yaw = atan2(m[8], m[10])).
+     * 처음 [YAW_ZERO_FRAMES] 프레임의 평균을 임시 정면으로 삼는다(관찰은 정면 방향을 설정한 직후에 시작한다).
+     */
+    private fun trackRawYaw(matrix: FloatArray) {
+        if (matrix.size < 11 || !matrix[8].isFinite() || !matrix[10].isFinite()) { rawYawDeg = null; return }
+        val yaw = Math.toDegrees(kotlin.math.atan2(matrix[8].toDouble(), matrix[10].toDouble()))
+        rawYawDeg = yaw
+        if (yawZeroCount < YAW_ZERO_FRAMES) { yawZeroSum += yaw; yawZeroCount++ }
+    }
+
+    /** 임시 정면 대비 좌우 각도. 임시 정면을 아직 못 잡았으면 null. */
+    private fun provisionalYawDeg(): Double? {
+        val yaw = rawYawDeg ?: return null
+        if (yawZeroCount < YAW_ZERO_FRAMES) return null
+        return yaw - yawZeroSum / yawZeroCount
+    }
+
+    // ── 기준이 잡히지 않았을 때의 전방 주시 판정 ──
+    private var fallbackAway = false
+    private var awaySinceMs: Long? = null
+    private var lastYawAway = false
+
+    /**
+     * 라이브러리가 머리 방향을 판정하지 못하는 동안(평소 자세를 익히는 첫 1분, 또는 익히기에 실패해 공통 기준으로 넘어간 경우)의
+     * 전방 주시 이탈 판정. 그대로 두면 이 구간에는 고개를 돌려도 경고가 전혀 나지 않는다.
+     * 관찰 시작 직후의 방향(정면 방향을 설정한 직후)을 임시 정면으로 삼아, [FALLBACK_AWAY_DEG] 넘게 [FALLBACK_AWAY_MS] 이상
+     * 돌리고 있으면 이탈로, [FALLBACK_BACK_DEG] 안으로 돌아오면 복귀로 알린다.
+     * 라이브러리와 같이 저속(시속 20km 미만)에서는 경고하지 않는다. 기준이 잡히면 라이브러리 판정으로 넘어간다.
+     */
+    private fun fallbackGaze(face: Boolean, poseValid: Boolean, sessionMs: Long, speedKmh: Double?) {
+        val yaw = provisionalYawDeg()?.takeIf { face }
+        // 고개를 크게 돌리면 얼굴을 놓치기도 한다. 그때는 직전 상태(돌리고 있었는지)를 이어 간다.
+        val away = if (yaw != null) kotlin.math.abs(yaw) > FALLBACK_AWAY_DEG else lastYawAway
+        lastYawAway = away
+        if (fallbackAway) {
+            val back = yaw != null && kotlin.math.abs(yaw) < FALLBACK_BACK_DEG
+            if (back || (poseValid && !away)) {
+                fallbackAway = false
+                lookingAway = false
+                awaySinceMs = null
+                onDetection(Detection.LOOK_BACK)
+            }
+            return
+        }
+        if (!away || lookingAway) { awaySinceMs = null; return }
+        val since = awaySinceMs ?: sessionMs.also { awaySinceMs = it }
+        if (sessionMs - since < FALLBACK_AWAY_MS) return
+        if (speedKmh != null && speedKmh < FALLBACK_MIN_SPEED_KMH) return
+        Log.i(TAG, "t=${sessionMs}ms 임시 기준으로 전방 주시 이탈(기준이 아직 없음)")
+        fallbackAway = true
+        lookingAway = true
+        onDetection(Detection.LOOK_AWAY)
+    }
+
     private companion object {
         const val TAG = "DrowsyDetector"
+        const val FALLBACK_AWAY_DEG = 30.0
+        const val FALLBACK_BACK_DEG = 15.0
+        const val FALLBACK_AWAY_MS = 3_000L
+        const val FALLBACK_MIN_SPEED_KMH = 20.0
+        /** 임시 정면을 잡는 프레임 수(약 1초) */
+        const val YAW_ZERO_FRAMES = 15
         /** 분석 간격(약 15fps). 라이브러리는 프레임 간격 200ms 이하를 요구한다. */
         const val MIN_INTERVAL_MS = 60L
         /** 결과가 이 시간 넘게 오지 않으면 그 프레임은 버려진 것으로 본다 */

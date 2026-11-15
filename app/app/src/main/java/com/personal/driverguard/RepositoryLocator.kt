@@ -24,12 +24,7 @@ object RepositoryLocator {
     fun provideApi(context: Context): HawkeyeApi =
         api ?: synchronized(this) {
             api ?: run {
-                // 시연 모드가 켜져 있으면 앱 안의 가짜 서버가 대신 응답한다
-                com.personal.driverguard.ui.state.DemoMode.init(context)
-                HawkeyeApi(
-                    BuildConfig.API_BASE_URL, TokenStore.create(context), debugLogging = BuildConfig.DEBUG,
-                    frontInterceptor = com.personal.driverguard.ui.state.DemoServer.create(context),
-                )
+                HawkeyeApi(BuildConfig.API_BASE_URL, TokenStore.create(context), debugLogging = BuildConfig.DEBUG)
             }.also { api = it }
         }
 
