@@ -91,6 +91,8 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+    // 시연 모드의 가짜 서버(DemoServer)가 OkHttp 인터셉터로 응답한다
+    implementation(libs.okhttp)
 
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)

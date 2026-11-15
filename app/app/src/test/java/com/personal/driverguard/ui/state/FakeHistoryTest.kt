@@ -39,7 +39,7 @@ class FakeHistoryTest {
     fun latestDriveOpensReportWithRoute() {
         val last = FakeHistory.latestDrive()
         assertNotNull(last)
-        val r = FakeHistory.report(last!!.driveId)!!
+        val r = FakeHistory.report(last!!.driveId, DemoTestData.route)!!
         assertEquals(last.inattentionCount, r.inattentionCount)
         assertTrue(r.route!!.points.size >= 2)
         r.events.forEach { assertNotNull(it.latitude) }

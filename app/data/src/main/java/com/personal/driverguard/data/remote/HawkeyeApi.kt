@@ -132,6 +132,8 @@ class HawkeyeApi(
     baseUrl: String,
     private val tokens: TokenStore,
     debugLogging: Boolean = false,
+    /** 가장 먼저 거치는 인터셉터. 앱의 시연 모드가 서버 대신 응답할 때 쓴다(없으면 null). */
+    private val frontInterceptor: Interceptor? = null,
 ) {
     private val _events = MutableSharedFlow<SessionEvent>(extraBufferCapacity = 4)
     val sessionEvents: SharedFlow<SessionEvent> = _events.asSharedFlow()
@@ -178,6 +180,7 @@ class HawkeyeApi(
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
+        .apply { frontInterceptor?.let { addInterceptor(it) } }
         .addInterceptor(authHeader)
         .authenticator(refreshOn401)
         .apply {

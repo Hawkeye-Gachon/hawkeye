@@ -1,0 +1,248 @@
+[
+ {
+  "name": "기흥휴게소",
+  "type": "REST_AREA",
+  "lat": 37.235177,
+  "lon": 127.105093
+ },
+ {
+  "name": "오산 졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 37.155546,
+  "lon": 127.086765
+ },
+ {
+  "name": "남사졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 37.096465,
+  "lon": 127.12038
+ },
+ {
+  "name": "안성휴게소",
+  "type": "REST_AREA",
+  "lat": 37.013544,
+  "lon": 127.145157
+ },
+ {
+  "name": "원곡졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 37.001201,
+  "lon": 127.151914
+ },
+ {
+  "name": "연곡졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.954359,
+  "lon": 127.18238
+ },
+ {
+  "name": "입장졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.914404,
+  "lon": 127.188717
+ },
+ {
+  "name": "망향휴게소",
+  "type": "REST_AREA",
+  "lat": 36.854611,
+  "lon": 127.18136
+ },
+ {
+  "name": "천안삼거리휴게소",
+  "type": "REST_AREA",
+  "lat": 36.787725,
+  "lon": 127.1736
+ },
+ {
+  "name": "천안호두휴게소",
+  "type": "REST_AREA",
+  "lat": 36.731064,
+  "lon": 127.263922
+ },
+ {
+  "name": "옥산휴게소",
+  "type": "REST_AREA",
+  "lat": 36.656748,
+  "lon": 127.370786
+ },
+ {
+  "name": "옥산졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.655911,
+  "lon": 127.3723
+ },
+ {
+  "name": "죽암휴게소",
+  "type": "REST_AREA",
+  "lat": 36.48705,
+  "lon": 127.429547
+ },
+ {
+  "name": "현도휴게소",
+  "type": "REST_AREA",
+  "lat": 36.47815,
+  "lon": 127.426655
+ },
+ {
+  "name": "신탄진졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.425245,
+  "lon": 127.416546
+ },
+ {
+  "name": "신탄진휴게소",
+  "type": "REST_AREA",
+  "lat": 36.425549,
+  "lon": 127.418128
+ },
+ {
+  "name": "옥천졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.336269,
+  "lon": 127.528586
+ },
+ {
+  "name": "옥천만남의광장휴게소",
+  "type": "REST_AREA",
+  "lat": 36.308709,
+  "lon": 127.571764
+ },
+ {
+  "name": "옥천휴게소",
+  "type": "REST_AREA",
+  "lat": 36.297348,
+  "lon": 127.596001
+ },
+ {
+  "name": "금강휴게소",
+  "type": "REST_AREA",
+  "lat": 36.279256,
+  "lon": 127.671952
+ },
+ {
+  "name": "청성졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.271704,
+  "lon": 127.740739
+ },
+ {
+  "name": "황간휴게소",
+  "type": "REST_AREA",
+  "lat": 36.249072,
+  "lon": 127.853149
+ },
+ {
+  "name": "추풍령졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.210606,
+  "lon": 127.988589
+ },
+ {
+  "name": "추풍령휴게소",
+  "type": "REST_AREA",
+  "lat": 36.201142,
+  "lon": 128.00066
+ },
+ {
+  "name": "봉산졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.156508,
+  "lon": 128.026434
+ },
+ {
+  "name": "김천휴게소",
+  "type": "REST_AREA",
+  "lat": 36.129461,
+  "lon": 128.165052
+ },
+ {
+  "name": "대신졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.152515,
+  "lon": 128.19125
+ },
+ {
+  "name": "선기졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.136291,
+  "lon": 128.316388
+ },
+ {
+  "name": "석적졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 36.051436,
+  "lon": 128.407477
+ },
+ {
+  "name": "칠곡휴게소",
+  "type": "REST_AREA",
+  "lat": 36.019416,
+  "lon": 128.428914
+ },
+ {
+  "name": "하빈졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.932204,
+  "lon": 128.473594
+ },
+ {
+  "name": "검단졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.915793,
+  "lon": 128.614804
+ },
+ {
+  "name": "평사휴게소",
+  "type": "REST_AREA",
+  "lat": 35.885766,
+  "lon": 128.866996
+ },
+ {
+  "name": "북안졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.924095,
+  "lon": 129.000209
+ },
+ {
+  "name": "건천휴게소",
+  "type": "REST_AREA",
+  "lat": 35.830209,
+  "lon": 129.109501
+ },
+ {
+  "name": "내남졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.752447,
+  "lon": 129.194698
+ },
+ {
+  "name": "경주휴게소",
+  "type": "REST_AREA",
+  "lat": 35.723859,
+  "lon": 129.193338
+ },
+ {
+  "name": "언양졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.594617,
+  "lon": 129.13802
+ },
+ {
+  "name": "삼남졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.545332,
+  "lon": 129.118872
+ },
+ {
+  "name": "통도사휴게소",
+  "type": "REST_AREA",
+  "lat": 35.489191,
+  "lon": 129.09181
+ },
+ {
+  "name": "양산졸음쉼터",
+  "type": "DROWSY_SHELTER",
+  "lat": 35.342676,
+  "lon": 129.042739
+ }
+]

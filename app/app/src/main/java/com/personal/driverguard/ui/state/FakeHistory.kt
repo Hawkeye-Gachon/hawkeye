@@ -23,7 +23,7 @@ import java.time.temporal.TemporalAdjusters
 import kotlin.random.Random
 
 /**
- * UI 테스트용 가짜 이전 기록([DebugFlags.FAKE_HISTORY]). 이번 주와 지난주의 주행을 날짜별로 정해진 값으로 만든다
+ * 시연 모드의 이전 기록([DemoServer] 가 응답에 쓴다). 이번 주와 지난주의 주행을 날짜별로 정해진 값으로 만든다
  * (같은 날짜는 언제 열어도 같은 기록). 오늘 이후·지금 이후 주행은 만들지 않는다.
  * 응답 형식은 백엔드와 같아서 화면 코드는 서버 데이터와 똑같이 그린다.
  */
@@ -44,8 +44,28 @@ object FakeHistory {
     /** 가짜 기록이 있는 기간: 지난주 월요일부터 오늘까지 */
     private fun firstDay() = today().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(1)
 
-    /** 그날의 주행(시작 시각 순). 기간 밖이면 없음. */
-    private fun drivesOn(d: LocalDate): List<Drive> {
+    /** 시연 모드에서 실제로 끝낸 주행(앱이 켜져 있는 동안만 남는다). 예시 기록과 함께 보인다. */
+    private class Recorded(val drive: Drive, val report: DriveReport)
+    private val recorded = mutableListOf<Recorded>()
+
+    /** 시연 모드 주행 종료 시 DemoServer 가 리포트를 넣는다 */
+    @Synchronized
+    fun addRecorded(report: DriveReport) {
+        val start = parse(report.startedAt)
+        val end = report.endedAt?.let(::parse) ?: start
+        val events = report.events.map { Ev(it.type, parse(it.detectedAt)) }
+        recorded.removeAll { it.drive.id == report.driveId }
+        recorded += Recorded(Drive(report.driveId, start, end, report.distanceMeters ?: 0, events), report)
+    }
+
+    private fun parse(iso: String): LocalDateTime = java.time.OffsetDateTime.parse(iso).atZoneSameInstant(SEOUL).toLocalDateTime()
+
+    /** 그날의 주행(시작 시각 순). 시연에서 끝낸 주행을 포함한다. */
+    @Synchronized
+    private fun drivesOn(d: LocalDate): List<Drive> = (generatedOn(d) + recorded.filter { it.drive.start.toLocalDate() == d }.map { it.drive }).sortedBy { it.start }
+
+    /** 예시로 만든 그날의 주행. 기간 밖이면 없음. */
+    private fun generatedOn(d: LocalDate): List<Drive> {
         if (d < firstDay() || d > today()) return emptyList()
         val r = Random(d.toEpochDay() * 7919)
         val weekend = d.dayOfWeek == DayOfWeek.SATURDAY || d.dayOfWeek == DayOfWeek.SUNDAY
@@ -135,25 +155,43 @@ object FakeHistory {
     /** 가장 최근 주행(홈의 '이전 기록') */
     fun latestDrive(): DriveListItem? = drivesOn(latestDriveDate()).maxByOrNull { it.start }?.let(::DriveListItem)
 
-    fun isFakeId(driveId: Long): Boolean = report(driveId) != null
-
-    /** 주행 리포트. 경로는 [DummyRoute], 감지는 시각 비율대로 경로 위에 놓는다. 졸음이 있으면 쉼터 경유지 추가 기록을 붙인다. */
-    fun report(driveId: Long): DriveReport? {
-        val dr = drivesOn(LocalDate.ofEpochDay(driveId / 10)).firstOrNull { it.id == driveId } ?: return null
-        val route = DummyRoute.points()
-        fun at(t: LocalDateTime): List<Double> {
-            val f = ChronoUnit.SECONDS.between(dr.start, t).toDouble() / dr.observed
-            return route[(f.coerceIn(0.0, 1.0) * route.lastIndex).toInt()]
+    /** 최근 주행 목록(최신순) */
+    fun recent(size: Int): List<DriveListItem> {
+        val out = mutableListOf<DriveListItem>()
+        var d = today()
+        while (d >= firstDay() && out.size < size) {
+            out += drivesOn(d).sortedByDescending { it.start }.map(::DriveListItem)
+            d = d.minusDays(1)
         }
+        return out.take(size)
+    }
+
+    /**
+     * 주행 리포트. 경로는 [route](경부고속도로 서울→부산)를 처음부터 주행 거리만큼 따라간 것으로 하고,
+     * 감지는 시각 비율대로 그 위에 놓는다. 졸음이 있으면 그 뒤 첫 쉼터를 경유지로 추가했고 들러 쉰 것으로 한다.
+     */
+    fun report(driveId: Long, route: DemoRoute): DriveReport? {
+        synchronized(this) { recorded.firstOrNull { it.drive.id == driveId }?.let { return it.report } }
+        val dr = generatedOn(LocalDate.ofEpochDay(driveId / 10)).firstOrNull { it.id == driveId } ?: return null
+        val length = dr.distance.toDouble().coerceAtMost(route.lengthMeters)
+        fun metersAt(t: LocalDateTime) = (ChronoUnit.SECONDS.between(dr.start, t).toDouble() / dr.observed).coerceIn(0.0, 1.0) * length
+        val steps = (length / ROUTE_STEP_M).toInt().coerceIn(2, 600)
+        val points = (0..steps).map { route.positionAt(length * it / steps) }.map { listOf(round6(it.lat), round6(it.lng)) }
         val waypoints = dr.events.firstOrNull { it.type == EventType.DROWSINESS }?.let { e ->
-            listOf(DriveReport.WaypointItem(1, 501, "망향휴게소", PlaceType.REST_AREA, NavMode.WAYPOINT, TriggerType.DROWSINESS, iso(e.at.plusSeconds(40)), visited = false))
+            val rest = route.nextRest(metersAt(e.at)) ?: return@let null
+            val added = e.at.plusSeconds(40)
+            val reach = added.plusSeconds(((rest.routeMeters - metersAt(e.at)) / DriveSimulator.DEMO_SPEED_MPS).toLong()).takeIf { it < dr.end }
+            listOf(DriveReport.WaypointItem(1, rest.placeId, rest.name, rest.type, NavMode.WAYPOINT, TriggerType.DROWSINESS, iso(added), visited = reach != null, visitedAt = reach?.let(::iso)))
         }.orEmpty()
         return DriveReport(
             driveId = dr.id, status = "ENDED", startedAt = iso(dr.start), endedAt = iso(dr.end),
             observedSeconds = dr.observed, distanceMeters = dr.distance, inattentionCount = dr.inattention, drowsinessCount = dr.drowsiness,
-            route = DriveReport.Route(DriveReport.Point(route.first()[0], route.first()[1]), DriveReport.Point(route.last()[0], route.last()[1]), route),
-            events = dr.events.map { e -> at(e.at).let { p -> DriveReport.EventItem(e.type, iso(e.at), p[0], p[1]) } },
+            route = DriveReport.Route(DriveReport.Point(points.first()[0], points.first()[1]), DriveReport.Point(points.last()[0], points.last()[1]), points),
+            events = dr.events.map { e -> route.positionAt(metersAt(e.at)).let { p -> DriveReport.EventItem(e.type, iso(e.at), round6(p.lat), round6(p.lng)) } },
             waypoints = waypoints,
         )
     }
+
+    private const val ROUTE_STEP_M = 150.0
+    private fun round6(v: Double) = Math.round(v * 1e6) / 1e6
 }

@@ -3,25 +3,19 @@ package com.personal.driverguard.ui.state
 import com.personal.driverguard.BuildConfig
 
 /**
- * UI 테스트용 임시 기능 스위치. debug 빌드에서만 켜지고 release 에는 적용되지 않는다.
- * 실제 서버 데이터로 확인하려면 해당 값을 false 로 바꾼다.
+ * 개발용 스위치. 시연 영상용 가짜 동작은 [DemoMode](앱 안 스위치)로 켜고 끈다. 여기 값은 코드에서만 바꾼다.
  */
 object DebugFlags {
     /**
      * 클릭 진행 모드: 앱을 시안 확인 모드로 시작해, 서버 없이 버튼만 눌러도 다음 화면으로 넘어간다(화면 확인용).
-     * 화면 값은 시안 예시 값이다. 실제 로그인·서버 데이터로 확인하려면 false 로 바꾼다.
+     * 화면 값은 시안 예시 값이다.
      */
     val CLICK_THROUGH: Boolean = false
 
-    /** 관찰 시작 3초 뒤 졸음 경고, 다시 3초 뒤 쉼터 경유지 추천을 자동으로 띄운다(AI 연동 전 화면 확인용). */
-    val AUTO_WARNINGS: Boolean = BuildConfig.DEBUG
-
-    /** 홈의 이전 기록·이전 기록 화면(일간·주간·달력·주행 리포트)에 이번 주와 지난주 가짜 기록을 보여 준다([FakeHistory]). */
-    val FAKE_HISTORY: Boolean = BuildConfig.DEBUG
-
-    /** 관찰 중 실제 GPS 대신 경부고속도로(양재→기흥)를 시속 100km로 달리는 모의 위치를 1초마다 찍는다([DummyRoute.drive]). */
+    /**
+     * 서버 시험용 모의 위치(debug 빌드): 시연 모드가 아닐 때도 실제 GPS 대신 경부고속도로를 시속 100km로 달리는 위치를
+     * 1초마다 실제 서버로 올린다. 추가한 쉼터에는 들러 20초 정차한다([DriveSimulator]).
+     * 실제 차량에서 debug 빌드로 시험할 때는 false 로 바꿔야 차량 위치를 쓴다.
+     */
     val DUMMY_ROUTE: Boolean = BuildConfig.DEBUG
-
-    /** 쉼터 추천 시 위치가 없으면 더미 위치로 묻고, 서버가 쉼터를 못 찾으면 더미 쉼터를 쓴다([DummyRoute.restPlace]). */
-    val DUMMY_REST_PLACE: Boolean = BuildConfig.DEBUG
 }
