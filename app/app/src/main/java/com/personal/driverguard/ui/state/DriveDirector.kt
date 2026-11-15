@@ -49,6 +49,8 @@ interface DrivePorts {
     fun eyesOpen(): Boolean
 
     // 차량 실내(기다리지 않는다. 반영된 조치는 화면에 따로 표시된다)
+    /** 차량에 연결돼 실내를 조작할 수 있는지. 아니면 음성 안내에서 차량 조치를 말하지 않는다. */
+    fun vehicleConnected(): Boolean
     fun cabinAlert(level: CabinAlert)
     fun cabinClearInattention()
     /** 쉼터 도착: 졸음 대응으로 바꾼 것을 되돌리고, 휴식에 맞게 온도와 등받이를 바꾼다 */
@@ -265,7 +267,7 @@ class DriveDirector(
         coroutineScope {
             // 쉼터는 미리 찾아 둔다(물을 때 기다리지 않게). 이미 넣은 쉼터가 있으면 찾지 않는다.
             val lookup = if (ports.pendingRestName() == null) async { find(TriggerType.DROWSINESS) } else null
-            ports.speak(if (repeated) DROWSY_REPEATED_TEXT else DROWSY_TEXT)
+            ports.speak(drowsyText(repeated, ports.vehicleConnected()))
             // 경고가 끝난 뒤에도 계속 눈을 감고 있는지 지켜본다. 눈 상태를 모르면(감지기 꺼짐) 119 확인은 하지 않는다.
             val awake = !ports.eyesKnown() || watchEyes(WATCH_MS)
             if (!awake) {
@@ -588,7 +590,7 @@ class DriveDirector(
         val depart = CompletableDeferred<Unit>().also { departTap = it }
         try {
             coroutineScope {
-                val talk = launch { ports.speak("${a.name}에 도착했습니다. 휴식에 알맞은 온도로 맞추고 의자를 눕힐게요. 충분히 쉬고 출발하세요.") }
+                val talk = launch { ports.speak(arrivalText(a.name, ports.vehicleConnected())) }
                 depart.await()
                 talk.cancel()
             }
@@ -604,8 +606,20 @@ class DriveDirector(
 
     companion object {
         const val LOOK_TEXT = "전방을 주시해 주세요."
-        const val DROWSY_TEXT = "졸음이 감지됐습니다. 시원한 바깥 공기를 들이고 있어요."
-        const val DROWSY_REPEATED_TEXT = "졸음이 반복되고 있습니다. 창문을 조금 열었어요."
+        const val DROWSY_TEXT = "졸음이 감지됐습니다."
+        const val DROWSY_REPEATED_TEXT = "졸음이 반복되고 있습니다."
+
+        /** 졸음 경고 음성. 차량에 연결돼 있을 때만 차량이 하는 조치를 덧붙인다. */
+        fun drowsyText(repeated: Boolean, vehicle: Boolean): String = when {
+            !vehicle -> if (repeated) DROWSY_REPEATED_TEXT else DROWSY_TEXT
+            repeated -> "$DROWSY_REPEATED_TEXT 창문을 조금 열게요."
+            else -> "$DROWSY_TEXT 시원한 바깥 공기를 들일게요."
+        }
+
+        /** 쉼터 도착 음성. 차량에 연결돼 있을 때만 실내를 바꾼다고 말한다(등받이는 주차 상태에서만 눕힌다). */
+        fun arrivalText(name: String, vehicle: Boolean): String =
+            if (vehicle) "${name}에 도착했습니다. 휴식에 알맞은 온도로 맞추고, 주차하면 의자를 눕힐게요. 충분히 쉬고 출발하세요."
+            else "${name}에 도착했습니다. 충분히 쉬고 출발하세요."
 
         /** 상태를 확인하는 간격 */
         const val POLL_MS = 100L

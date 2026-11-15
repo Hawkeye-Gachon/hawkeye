@@ -60,6 +60,8 @@ class DriveDirectorTest {
         override suspend fun alarm(durationMs: Long) { note("경고음"); delay(durationMs) }
         override fun eyesKnown() = known
         override fun eyesOpen() = open
+        var vehicle = false
+        override fun vehicleConnected() = vehicle
         override fun cabinAlert(level: CabinAlert) = note("차량", level.name)
         override fun cabinClearInattention() = note("차량", "주황 해제")
         override fun cabinRest() = note("차량", "휴식 모드")
@@ -126,7 +128,7 @@ class DriveDirectorTest {
         advanceTimeBy(SETTLE_MS)
         assertEquals(DriveScene.ARRIVED, d.scene.value)
         assertTrue(fake.log.any { it.endsWith("차량: 휴식 모드") })
-        assertTrue(fake.spoken().last().startsWith("죽전휴게소에 도착했습니다. 휴식에 알맞은 온도로 맞추고 의자를 눕힐게요."))
+        assertEquals("차량에 연결되지 않았으면 실내를 바꾼다고 말하지 않는다", "죽전휴게소에 도착했습니다. 충분히 쉬고 출발하세요.", fake.spoken().last())
         d.tapDepart()
         advanceTimeBy(SETTLE_MS)
         assertEquals(DriveScene.OBSERVE, d.scene.value)
@@ -291,6 +293,21 @@ class DriveDirectorTest {
         d.onDrowsy()
         advanceTimeBy(1_000)
         assertEquals("쉬는 시간이 지나면 다시 받는다", 2, fake.drowsy)
+    }
+
+    @Test
+    fun vehicleActionsAreOnlySpokenWhenAVehicleIsConnected() = runTest {
+        val fake = Fake(this, place).apply { vehicle = true }
+        fake.answers += 1_000L to "아니"
+        val d = start(fake)
+        d.onDrowsy()
+        advanceTimeBy(20_000)
+        assertEquals("졸음이 감지됐습니다. 시원한 바깥 공기를 들일게요.", fake.spoken().first())
+        d.onArrived("죽전휴게소", "REST_AREA")
+        advanceTimeBy(3_000)
+        assertTrue(fake.spoken().last().contains("휴식에 알맞은 온도로 맞추고"))
+        assertEquals("졸음이 감지됐습니다.", DriveDirector.drowsyText(repeated = false, vehicle = false))
+        assertEquals("졸음이 반복되고 있습니다.", DriveDirector.drowsyText(repeated = true, vehicle = false))
     }
 
     @Test

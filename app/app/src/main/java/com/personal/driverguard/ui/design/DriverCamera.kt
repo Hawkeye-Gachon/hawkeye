@@ -44,9 +44,8 @@ private object CameraPermissionPrompt {
 }
 
 /**
- * 운전자 전면 카메라 영상(거울상 미리보기). 임시 연결이다.
- * 카메라 권한이 없거나, 카메라가 없거나, 연결에 실패하면 [fallback](시안의 예시 사진)을 그린다.
- * 그래서 에뮬레이터와 스크린샷 테스트에서도 화면 흐름을 그대로 확인할 수 있다.
+ * 운전자 전면 카메라 영상(거울상 미리보기).
+ * 카메라 권한이 없거나, 카메라가 없거나, 연결에 실패하면 [fallback] 을 그린다(지금은 어두운 바탕만 둔다).
  */
 @Composable
 fun DriverCamera(modifier: Modifier = Modifier, fallback: @Composable BoxScope.() -> Unit) {

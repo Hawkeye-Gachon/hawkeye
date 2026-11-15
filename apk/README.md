@@ -4,10 +4,12 @@ Hawkeye Android 앱의 설치 파일입니다. 소스는 [`../app/`](../app)에 
 
 | 파일 | 용도 |
 | --- | --- |
-| [`Hawkeye_v0.2.0_arm64-v8a_release.apk`](Hawkeye_v0.2.0_arm64-v8a_release.apk) | 실제 기기와 차량(arm64) |
-| [`Hawkeye_v0.2.0_x86_64_release.apk`](Hawkeye_v0.2.0_x86_64_release.apk) | x86_64 에뮬레이터 |
+| [`Hawk_Hawkeye_release.apk`](Hawk_Hawkeye_release.apk) | 실제 기기와 차량(arm64) |
+| [`Hawk_Hawkeye_release_x86_64.apk`](Hawk_Hawkeye_release_x86_64.apk) | x86_64 에뮬레이터 |
 
-Apple Silicon Mac의 에뮬레이터는 arm64 파일을 씁니다.
+파일 이름은 공모전 규칙(`팀명_앱이름_release.apk`)을 따랐습니다. 팀명은 Hawk, 앱 이름은 Hawkeye입니다. 한 파일로 합치면 GitHub의 파일 크기 한도(100MB)를 넘어서, x86_64 에뮬레이터용은 이름 끝에 `_x86_64`를 붙여 따로 두었습니다.
+
+Apple Silicon Mac의 에뮬레이터는 `Hawk_Hawkeye_release.apk`를 씁니다.
 
 ## 먼저: 백엔드 서버가 준비돼 있어야 합니다
 
@@ -31,7 +33,7 @@ Apple Silicon Mac의 에뮬레이터는 arm64 파일을 씁니다.
 ## 설치
 
 ```sh
-adb install -r apk/Hawkeye_v0.2.0_arm64-v8a_release.apk
+adb install -r apk/Hawk_Hawkeye_release.apk
 ```
 
 ## 알아둘 점

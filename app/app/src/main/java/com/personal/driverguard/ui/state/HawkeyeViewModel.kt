@@ -45,6 +45,7 @@ import com.personal.driverguard.platform.VoiceGuide
 import com.personal.driverguard.platform.WakeAlarm
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -215,6 +216,7 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
     private var locationJob: Job? = null
     private var cabinStatusJob: Job? = null
     private var cabinJob: Job? = null
+    private var reclineJob: Job? = null
     private var directorJob: Job? = null
     private var checkpointJob: Job? = null
     /** 중간 저장을 바로 해 달라는 요청. 저장은 [checkpointJob] 안에서만 해서, 종료할 때 그 작업만 끝내면 뒤늦은 저장이 없다. */
@@ -484,6 +486,8 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
             return d.running && d.faceVisible && (d.closure?.let { it < EYES_OPEN_BELOW } ?: false)
         }
 
+        override fun vehicleConnected(): Boolean = _cabinUi.value.status.connected
+
         override fun cabinAlert(level: CabinAlert) = cabinDo {
             // 더 낮은 단계로는 내려가지 않는다(졸음 대응 중에 전방 주시 이탈이 와도 빨간 무드등을 주황으로 바꾸지 않는다)
             val current = _cabinUi.value.level
@@ -500,15 +504,30 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
             _cabinUi.update { it.copy(level = null, actions = emptyList()) }
         }
 
-        override fun cabinRest() = cabinDo {
-            cabin.restore()
-            val done = cabin.rest()
-            _cabinUi.update { it.copy(level = null, actions = done) }
+        override fun cabinRest() {
+            cabinDo {
+                cabin.restore()
+                val done = cabin.rest()
+                _cabinUi.update { it.copy(level = null, actions = done) }
+            }
+            // 등받이는 주차 상태(P)에서만 눕힌다. 도착했을 때 아직 P 가 아니면, P 로 바뀌는 순간에 한 번 더 건다.
+            reclineJob?.cancel()
+            reclineJob = viewModelScope.launch {
+                if (cabin.status.value.gear == "P") return@launch
+                cabin.status.first { it.gear == "P" }
+                cabinDo {
+                    val done = cabin.rest()
+                    _cabinUi.update { it.copy(actions = done) }
+                }
+            }
         }
 
-        override fun cabinRestore() = cabinDo {
-            cabin.restore()
-            _cabinUi.update { it.copy(level = null, actions = emptyList()) }
+        override fun cabinRestore() {
+            reclineJob?.cancel()
+            cabinDo {
+                cabin.restore()
+                _cabinUi.update { it.copy(level = null, actions = emptyList()) }
+            }
         }
 
         override fun record(eventType: String) { signal(eventType) }
@@ -742,6 +761,8 @@ class HawkeyeViewModel(app: Application) : AndroidViewModel(app) {
         directorJob = null
         cabinJob?.cancel()
         cabinJob = null
+        reclineJob?.cancel()
+        reclineJob = null
         wakeAlarm.stop()
         pendingRestName = null
         checkpointJob?.cancel()

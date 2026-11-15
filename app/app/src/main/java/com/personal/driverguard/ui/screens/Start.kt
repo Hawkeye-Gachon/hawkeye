@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.personal.driverguard.BuildConfig
 import com.personal.driverguard.R
 import com.personal.driverguard.ui.AppState
 import com.personal.driverguard.ui.LocalHawkeye
@@ -64,8 +65,9 @@ fun SplashScreen(nav: Navigator, state: AppState) {
         if (nav.current != Screen.Splash) return@LaunchedEffect
         if (next == null) nav.replace(Screen.Login) else nav.goNext(next.await())
     }
-    // 전체 화면. 길게 누르면 화면 목록(시안 확인용)
-    Box(Modifier.fillMaxSize().combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onLongClick = { state.preview = true; nav.go(Screen.Gallery) }, onClick = {})) {
+    // 전체 화면. debug 빌드에서만 길게 누르면 화면 목록(시안 확인용, 화면마다 시안의 예시 값이 나온다)이 열린다.
+    // 제출·배포용(release) 빌드에서는 예시 값이 나오는 화면으로 들어갈 길이 없다.
+    Box(Modifier.fillMaxSize().combinedClickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onLongClick = { if (BuildConfig.DEBUG) { state.preview = true; nav.go(Screen.Gallery) } }, onClick = {})) {
         HawkeyeLogo(x = 554, y = 301, size = 171)
         Box(Modifier.at(0.dp, 494.dp, 1280.dp, 84.dp), contentAlignment = Alignment.Center) {
             T("Hawkeye", S.t(58, 70, 700, tracking = -.01).copy(fontFamily = PretendardBold))

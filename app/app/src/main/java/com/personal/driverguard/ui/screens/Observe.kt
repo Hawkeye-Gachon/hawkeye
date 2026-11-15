@@ -64,7 +64,7 @@ private fun TextStyleOnCam(size: Int, line: Int, weight: Int = 400, color: Color
 
 @Composable
 private fun CamLabel() = Row(Modifier.padding(start = 28.dp, top = 34.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-    Ic(R.drawable.ic_camera, NColor.onNight2, 20.dp); T("운전자 카메라, 적외선 30fps", TextStyleOnCam(16, 22, color = NColor.onNight2))
+    Ic(R.drawable.ic_camera, NColor.onNight2, 20.dp); T("운전자 카메라", TextStyleOnCam(16, 22, color = NColor.onNight2))
 }
 
 /** 보는 방향 설정: 카드 전체가 카메라 영상. 영상 위에는 안내 도형을 그리지 않는다(문구만). */
@@ -76,8 +76,8 @@ private fun BoxScope.SetupCamera(state: SetupState) {
         CamLabel()
         val (msg, col, w) = when (state) {
             SetupState.Before -> Triple("얼굴이 화면 가운데 오도록 앉아 주세요", NColor.onNight2, 400)
-            SetupState.Done -> Triple("기준 방향 등록됨, 좌우 2°, 상하 1° 이내", Color.White, 600)
-            SetupState.NoFace -> Triple("얼굴이 화면 오른쪽 아래로 벗어났습니다", NColor.alert, 600)
+            SetupState.Done -> Triple("이 자세 그대로 관찰을 시작해 주세요", Color.White, 600)
+            SetupState.NoFace -> Triple("얼굴이 화면 밖으로 벗어났습니다", NColor.alert, 600)
         }
         T(msg, TextStyleOnCam(18, 24, w, col), Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp), align = TextAlign.Center)
     }
@@ -109,7 +109,7 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
     SceneCard(Modifier.background(NColor.camBg).combinedClickable(remember { MutableInteractionSource() }, null, onLongClick = { if (state.preview) review = true }, onClick = { onTap?.invoke() })) {
         // 실제 전면 카메라. 권한이 없거나 카메라가 없으면 어두운 바탕만 보인다.
         DriverCamera(Modifier.fillMaxSize()) {}
-        // 눈 위치 표시·고개 방향 화살표는 AI 추론 결과로 그릴 자리다. 아직 실제 좌표가 없어 시안 확인 모드에서만 예시로 그린다.
+        // 눈 위치 표시·고개 방향 화살표는 시안의 그림이다. 실제 좌표로 그리지 않으므로 시안 확인 모드에서만 예시로 보여 준다.
         if (state.preview) Canvas(Modifier.fillMaxSize()) {
             fun px(v: Int) = v.dp.toPx()
             when (mode) {
@@ -150,12 +150,16 @@ private fun BoxScope.ObserveCamera(nav: Navigator, state: AppState, mode: CamMod
         Row(Modifier.align(Alignment.BottomStart).padding(start = 36.dp, bottom = 130.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Dot(dot, 8.dp); T(head, TextStyleOnCam(17, 24, color = headColor))
         }
-        // 눈 뜬 정도·머리 방향 같은 수치는 AI 추론 서버가 붙으면 채운다. 실제 앱에서는 그 전까지 '–' 로 둔다.
+        // 시안에는 수치가 세 칸씩 있지만, 실제 앱에서는 감지기가 주는 값(눈 뜬 정도, 머리 방향)만 보여 준다.
+        // 측정하지 않는 값(눈 감김 비율, 지속 시간)의 칸은 시안 확인 모드에서만 예시로 그린다.
         val tele = when (mode) {
             CamMode.Ok -> listOf(Triple("0.82", "눈 뜬 정도", Color.White), Triple("정면", "머리 방향, 기준에서 3° 이내", Color.White), Triple("4%", "최근 30초 눈 감김 비율", Color.White))
             CamMode.Look -> listOf(Triple("오른쪽 31°", "머리 방향", NColor.alert), Triple("2.4초", "이탈 지속 시간", NColor.alert), Triple("0.80", "눈 뜬 정도", Color.White))
             CamMode.Drowsy -> listOf(Triple("0.06", "눈 뜬 정도", CamRed), Triple("2.6초", "눈을 감고 있던 시간", CamRed), Triple("31%", "최근 30초 눈 감김 비율", CamRed))
-        }.map { if (state.preview) it else Triple(liveValue(it.second, det) ?: "–", it.second, it.third) }
+        }.let { sample ->
+            if (state.preview) sample
+            else sample.filter { it.second == "눈 뜬 정도" || it.second.startsWith("머리 방향") }.map { Triple(liveValue(it.second, det) ?: "–", it.second.substringBefore(","), it.third) }
+        }
         Row(Modifier.align(Alignment.BottomStart).padding(start = 36.dp, end = 36.dp, bottom = 36.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             tele.forEach { (v, l, c) ->
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -266,8 +270,8 @@ fun SetupScreen(nav: Navigator, state: AppState, setup: SetupState) {
                     }
                     SetupState.Done -> {
                         Ic(R.drawable.ic_check, NColor.indigo, 44.dp)
-                        T("정면 방향을 설정했습니다", S.h2)
-                        T("이 방향을 기준으로 시선과 얼굴 방향을 살펴봅니다. 자세를 크게 바꿨다면 다시 설정해 주세요.", S.body)
+                        T("정면 방향을 확인했습니다", S.h2)
+                        T("관찰을 시작하는 순간 바라보는 방향이 기준이 됩니다. 이 자세 그대로 관찰 시작을 눌러 주세요.", S.body)
                     }
                     SetupState.NoFace -> {
                         Ic(R.drawable.ic_alert, NColor.alert, 44.dp)
@@ -361,7 +365,7 @@ fun LookScreen(nav: Navigator, state: AppState) {
                 T("정면을 다시 바라보면 경고가 닫힙니다", S.body.copy(fontSize = 20.sp, lineHeight = 30.sp))
             }, bottom = {
                 InfoRows(listOf(
-                    R.drawable.ic_volume to boldParts("짧은 알림음과 함께 음성으로 안내합니다" to false),
+                    R.drawable.ic_volume to boldParts("음성으로 안내합니다" to false),
                     R.drawable.ic_alert to boldParts("이번 주행 " to false, "${nth}번째" to true, " 전방 주시 이탈, 졸음 ${v.drowsiness}회" to false),
                 ))
             })
@@ -393,7 +397,7 @@ fun DrowsyScreen(nav: Navigator, state: AppState) {
                 T("가까운 안전한 곳에서 쉬어가세요", S.t(24, 34, color = NColor.ink2), align = TextAlign.Center)
                 Spacer(Modifier.weight(1f))
                 InfoRows(listOf(
-                    R.drawable.ic_volume to boldParts("경고음과 음성 안내가 함께 나갑니다" to false),
+                    R.drawable.ic_volume to boldParts("음성으로 안내합니다" to false),
                     R.drawable.ic_pin to placeRow,
                 ))
             }
@@ -632,6 +636,7 @@ fun RestArrivedScreen(nav: Navigator, state: AppState) {
     val vm = LocalHawkeye.current
     val arrival by vm.arrival.collectAsStateWithLifecycle()
     val name = if (state.preview) "기흥휴게소" else arrival?.name ?: "쉼터"
+    val cabin by vm.cabinUi.collectAsStateWithLifecycle()
     val v = rememberObserveView(state)
     Box(Modifier.fillMaxSize()) {
         ObserveCamera(nav, state)
@@ -640,7 +645,8 @@ fun RestArrivedScreen(nav: Navigator, state: AppState) {
             SheetBody(gap = 12.dp, content = {
                 Ic(R.drawable.ic_check, NColor.indigo, 44.dp)
                 T(accent(name to true, "에\n도착했습니다" to false), S.h2)
-                T("휴식에 알맞게 실내 온도를 맞추고 등받이를 눕혔습니다. 충분히 쉬고 출발하세요.", S.body)
+                // 차량에 실제로 반영된 조치가 있을 때만 그렇게 말한다(반영된 조치는 카메라 카드 왼쪽 위에 나온다)
+                T(if (state.preview || cabin.actions.isNotEmpty()) "휴식에 알맞게 실내를 바꿨습니다. 충분히 쉬고 출발하세요." else "충분히 쉬고 출발하세요.", S.body)
                 Box(Modifier.padding(top = 6.dp)) { Counts(listOf("${v.inattention}회" to "부주의", "${v.drowsiness}회" to "졸음")) }
             }, bottom = {
                 InfoRows(listOf(R.drawable.ic_pin to boldParts("이번 휴식은 주행 리포트에 " to false, "휴식함" to true, "으로 남습니다" to false)))
