@@ -1,4 +1,4 @@
-package com.personal.driverguard.views.components
+package com.personal.driverguard.ui.design
 
 import android.content.Context
 import android.content.Intent

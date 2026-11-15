@@ -115,7 +115,7 @@ Pleos 연동은 모두 인터페이스 뒤에 두었습니다. 연결에 실패�
 
 ### 1. APK 설치
 
-release APK는 저장소 루트의 [`apk/`](../apk) 폴더에 있습니다. 실제 기기와 차량은 arm64 파일을, x86_64 에뮬레이터는 x86_64 파일을 씁니다.
+release APK는 저장소 루트의 [`apk/`](../apk) 폴더에 있습니다. 실제 기기와 차량(arm64-v8a)용입니다.
 
 ```sh
 adb install -r apk/Hawk_Hawkeye_release.apk
@@ -131,11 +131,11 @@ adb install -r apk/Hawk_Hawkeye_release.apk
 
 ```sh
 cd app
-./gradlew :app:assembleRelease      # app/build/outputs/apk/release/app-arm64-v8a-release.apk, app-x86_64-release.apk
+./gradlew :app:assembleRelease      # app/build/outputs/apk/release/app-release.apk
 ./gradlew :app:testDebugUnitTest    # 단위 테스트와 화면 스냅숏
 ```
 
-네이티브 라이브러리(MediaPipe, ONNX Runtime 등)가 커서 APK를 기기용(arm64-v8a)과 에뮬레이터용(x86_64)으로 나눠 만듭니다. release APK는 시험용으로 Android debug 키로 서명합니다.
+네이티브 라이브러리(MediaPipe, ONNX Runtime 등)가 커서 APK는 실제 기기와 차량(arm64-v8a)용으로만 만듭니다. x86_64 에뮬레이터에서 돌리려면 `app/build.gradle.kts`의 `abiFilters`에 `x86_64`를 더해 다시 만듭니다. release APK는 시험용으로 Android debug 키로 서명합니다.
 
 실제 서버에 연결하려면 `app/local.properties`에 서버 주소를 적습니다. 적지 않으면 `http://10.0.2.2:8080/`(에뮬레이터에서 본 개발 PC)을 씁니다.
 
@@ -218,5 +218,3 @@ DriveDirector   경고 → 반응 확인(119) → 쉼터 제안 → 퀴즈 → �
 - **기록을 잃지 않게**: 주행 중에도 기록을 기기에 주기적으로 저장하고, 올리지 못한 기록은 다음 실행 때 같은 계정으로만 다시 올립니다.
 - **프레임이 밀리지 않게**: 처리 중에 들어온 프레임은 버립니다. MediaPipe가 결과를 돌려주지 않는 경우에도 일정 시간이 지나면 다음 프레임을 받습니다.
 - **화면은 시안과 대조**: 모든 화면을 1280 × 800dp로 그려 이미지로 남기는 테스트가 있어, 화면이 시안에서 벗어나면 바로 알 수 있습니다.
-
-`views/`, `runtime/`, `domain/engine/`, `data/db/`에는 초기 프로토타입(화면과 판정 로직을 앱 안에서 직접 구현했던 버전)의 코드가 남아 있습니다. 현재 앱의 화면 흐름은 `ui/` 아래 코드를 씁니다.

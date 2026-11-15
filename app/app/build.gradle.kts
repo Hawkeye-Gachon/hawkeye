@@ -39,15 +39,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    // MediaPipe·OpenCV·ONNX Runtime 네이티브 라이브러리가 커서 ABI 별로 APK 를 나눈다.
-    // arm64-v8a 는 실기기·차량, x86_64 는 에뮬레이터용이다. 32비트 기기 지원이 필요하면 armeabi-v7a 를 추가한다.
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("arm64-v8a", "x86_64")
-            isUniversalApk = false
-        }
+    // 실제 기기와 차량(arm64-v8a)용으로만 만든다. MediaPipe·OpenCV·ONNX Runtime 네이티브 라이브러리가 커서
+    // 다른 ABI 를 함께 넣으면 APK 가 GitHub 의 파일 크기 한도(100MB)를 넘는다.
+    // x86_64 에뮬레이터에서 돌리려면 아래에 "x86_64" 를 더해 다시 만든다.
+    defaultConfig {
+        ndk { abiFilters += listOf("arm64-v8a") }
     }
     packaging {
         // 네이티브 라이브러리를 APK 안에서 압축해 파일 크기를 줄인다(설치할 때 풀린다)

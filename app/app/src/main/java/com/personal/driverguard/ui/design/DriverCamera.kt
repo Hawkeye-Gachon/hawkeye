@@ -17,8 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.personal.driverguard.platform.android.camera.CameraBinding
-import com.personal.driverguard.views.components.PermissionStatus
-import com.personal.driverguard.views.components.rememberPermission
 import java.util.concurrent.Executors
 
 /**

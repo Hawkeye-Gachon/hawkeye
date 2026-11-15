@@ -4,12 +4,9 @@ Hawkeye Android 앱의 설치 파일입니다. 소스는 [`../app/`](../app)에 
 
 | 파일 | 용도 |
 | --- | --- |
-| [`Hawk_Hawkeye_release.apk`](Hawk_Hawkeye_release.apk) | 실제 기기와 차량(arm64) |
-| [`Hawk_Hawkeye_release_x86_64.apk`](Hawk_Hawkeye_release_x86_64.apk) | x86_64 에뮬레이터 |
+| [`Hawk_Hawkeye_release.apk`](Hawk_Hawkeye_release.apk) | 실제 기기와 차량(arm64-v8a) |
 
-파일 이름은 공모전 규칙(`팀명_앱이름_release.apk`)을 따랐습니다. 팀명은 Hawk, 앱 이름은 Hawkeye입니다. 한 파일로 합치면 GitHub의 파일 크기 한도(100MB)를 넘어서, x86_64 에뮬레이터용은 이름 끝에 `_x86_64`를 붙여 따로 두었습니다.
-
-Apple Silicon Mac의 에뮬레이터는 `Hawk_Hawkeye_release.apk`를 씁니다.
+파일 이름은 공모전 규칙(`팀명_앱이름_release.apk`)을 따랐습니다. 팀명은 Hawk, 앱 이름은 Hawkeye입니다.
 
 ## 먼저: 백엔드 서버가 준비돼 있어야 합니다
 
@@ -38,7 +35,8 @@ adb install -r apk/Hawk_Hawkeye_release.apk
 
 ## 알아둘 점
 
-- 버전 1.0.0, Android 9(API 28) 이상.
+- 버전 1.0.0, Android 9(API 28) 이상, arm64-v8a 기기.
+- x86_64 에뮬레이터(Intel·AMD PC)에는 설치되지 않습니다. 그 환경에서 돌리려면 `app/app/build.gradle.kts`의 `abiFilters`에 `x86_64`를 더해 다시 만듭니다. Apple Silicon Mac의 에뮬레이터에는 이 파일이 그대로 설치됩니다.
 - 경고는 주행 속도가 낮으면 나가지 않습니다(전방 주시·눈 감김 시속 20km 미만, 졸음 시속 50km 미만).
 - 시험용으로 Android debug 키로 서명했습니다. 다른 키로 서명한 빌드를 설치하려면 먼저 이 앱을 지워야 합니다.
-- 다시 만들려면 `app` 폴더에서 `./gradlew :app:assembleRelease`를 실행합니다. 결과는 `app/app/build/outputs/apk/release/`에 생깁니다.
+- 다시 만들려면 `app` 폴더에서 `./gradlew :app:assembleRelease`를 실행합니다. 결과는 `app/app/build/outputs/apk/release/app-release.apk`입니다.

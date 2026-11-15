@@ -1,4 +1,4 @@
-package com.personal.driverguard.views.container
+package com.personal.driverguard
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
