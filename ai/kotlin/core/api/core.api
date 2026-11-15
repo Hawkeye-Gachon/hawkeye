@@ -1,0 +1,1098 @@
+public final class hawkeye/drowsy/core/Baseline {
+	public fun <init> (DDDDLjava/util/List;DDDJLhawkeye/drowsy/core/BaselineStatus;)V
+	public final fun component1 ()D
+	public final fun component10 ()Lhawkeye/drowsy/core/BaselineStatus;
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()D
+	public final fun component7 ()D
+	public final fun component8 ()D
+	public final fun component9 ()J
+	public final fun copy (DDDDLjava/util/List;DDDJLhawkeye/drowsy/core/BaselineStatus;)Lhawkeye/drowsy/core/Baseline;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/Baseline;DDDDLjava/util/List;DDDJLhawkeye/drowsy/core/BaselineStatus;ILjava/lang/Object;)Lhawkeye/drowsy/core/Baseline;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBL ()D
+	public final fun getBR ()D
+	public final fun getEL ()D
+	public final fun getER ()D
+	public final fun getGazeH0 ()D
+	public final fun getGazeV0 ()D
+	public final fun getJaw0 ()D
+	public final fun getR0 ()Ljava/util/List;
+	public final fun getStatus ()Lhawkeye/drowsy/core/BaselineStatus;
+	public final fun getTCompleteMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/BaselineDiagnostics {
+	public fun <init> (IDLjava/util/List;Ljava/util/List;)V
+	public final fun component1 ()I
+	public final fun component2 ()D
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (IDLjava/util/List;Ljava/util/List;)Lhawkeye/drowsy/core/BaselineDiagnostics;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/BaselineDiagnostics;IDLjava/util/List;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/BaselineDiagnostics;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlinkLQuantiles ()Ljava/util/List;
+	public final fun getBlinkRQuantiles ()Ljava/util/List;
+	public final fun getFaceRatio ()D
+	public final fun getNFaceFrames ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/BaselineStatus : java/lang/Enum {
+	public static final field FALLBACK_GLOBAL Lhawkeye/drowsy/core/BaselineStatus;
+	public static final field OFF_AXIS Lhawkeye/drowsy/core/BaselineStatus;
+	public static final field OK Lhawkeye/drowsy/core/BaselineStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/BaselineStatus;
+	public static fun values ()[Lhawkeye/drowsy/core/BaselineStatus;
+}
+
+public final class hawkeye/drowsy/core/ClassProbs {
+	public fun <init> (DDD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun copy (DDD)Lhawkeye/drowsy/core/ClassProbs;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/ClassProbs;DDDILjava/lang/Object;)Lhawkeye/drowsy/core/ClassProbs;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlert ()D
+	public final fun getDrowsy ()D
+	public final fun getLowVigilant ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/ClosureRun {
+	public fun <init> (JJJDDDZZ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()D
+	public final fun component5 ()D
+	public final fun component6 ()D
+	public final fun component7 ()Z
+	public final fun component8 ()Z
+	public final fun copy (JJJDDDZZ)Lhawkeye/drowsy/core/ClosureRun;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/ClosureRun;JJJDDDZZILjava/lang/Object;)Lhawkeye/drowsy/core/ClosureRun;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmplitude ()D
+	public final fun getDurationMs ()J
+	public final fun getEndMs ()J
+	public final fun getPeakClosingVelocity ()D
+	public final fun getPeakOpeningVelocity ()D
+	public final fun getStartMs ()J
+	public final fun getTruncated ()Z
+	public final fun getVelocityValid ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/ConstantsKt {
+	public static final field CLASS_ALERT I
+	public static final field CLASS_DROWSY I
+	public static final field CLASS_LOW_VIGILANT I
+	public static final field F_BLINK_DUR_MEAN_60 I
+	public static final field F_BLINK_DUR_STD_60 I
+	public static final field F_BLINK_RATE_60 I
+	public static final field F_CLOSING_VEL_MEAN_60 I
+	public static final field F_CLOSURE_MEAN_10 I
+	public static final field F_CLOSURE_MEAN_60 I
+	public static final field F_FACE_MISSING_RATIO_10 I
+	public static final field F_FACE_MISSING_RATIO_60 I
+	public static final field F_LONG_CLOSURE_COUNT_60 I
+	public static final field F_MAX_CLOSURE_MS_10 I
+	public static final field F_MAX_CLOSURE_MS_60 I
+	public static final field F_NOD_COUNT_60 I
+	public static final field F_OPENING_VEL_MEAN_60 I
+	public static final field F_PERCLOS_10 I
+	public static final field F_PERCLOS_60 I
+	public static final field F_PITCH_STD_60 I
+	public static final field F_YAWN_COUNT_60 I
+	public static final field N_FEATURES I
+	public static final fun getCLASS_ORDER ()Ljava/util/List;
+	public static final fun getFEATURE_NAMES ()Ljava/util/List;
+}
+
+public final class hawkeye/drowsy/core/DriverStateEvent {
+	public fun <init> (Lhawkeye/drowsy/core/EventType;IJJDLhawkeye/drowsy/core/Source;Lhawkeye/drowsy/core/Phase;Z)V
+	public final fun component1 ()Lhawkeye/drowsy/core/EventType;
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()D
+	public final fun component6 ()Lhawkeye/drowsy/core/Source;
+	public final fun component7 ()Lhawkeye/drowsy/core/Phase;
+	public final fun component8 ()Z
+	public final fun copy (Lhawkeye/drowsy/core/EventType;IJJDLhawkeye/drowsy/core/Source;Lhawkeye/drowsy/core/Phase;Z)Lhawkeye/drowsy/core/DriverStateEvent;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/DriverStateEvent;Lhawkeye/drowsy/core/EventType;IJJDLhawkeye/drowsy/core/Source;Lhawkeye/drowsy/core/Phase;ZILjava/lang/Object;)Lhawkeye/drowsy/core/DriverStateEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConfidence ()D
+	public final fun getDurationMs ()J
+	public final fun getPhase ()Lhawkeye/drowsy/core/Phase;
+	public final fun getProvisional ()Z
+	public final fun getSeverity ()I
+	public final fun getSource ()Lhawkeye/drowsy/core/Source;
+	public final fun getTStartMs ()J
+	public final fun getType ()Lhawkeye/drowsy/core/EventType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface annotation class hawkeye/drowsy/core/DrowsyInternalApi : java/lang/annotation/Annotation {
+}
+
+public final class hawkeye/drowsy/core/DrowsySource : java/lang/Enum {
+	public static final field EITHER Lhawkeye/drowsy/core/DrowsySource;
+	public static final field MODEL Lhawkeye/drowsy/core/DrowsySource;
+	public static final field PERCLOS Lhawkeye/drowsy/core/DrowsySource;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/DrowsySource;
+	public static fun values ()[Lhawkeye/drowsy/core/DrowsySource;
+}
+
+public final class hawkeye/drowsy/core/EventType : java/lang/Enum {
+	public static final field CALIBRATING Lhawkeye/drowsy/core/EventType;
+	public static final field DROWSY Lhawkeye/drowsy/core/EventType;
+	public static final field GAZE_AWAY_LONG Lhawkeye/drowsy/core/EventType;
+	public static final field MICROSLEEP Lhawkeye/drowsy/core/EventType;
+	public static final field SLEEP Lhawkeye/drowsy/core/EventType;
+	public static final field UNABLE_TO_ANALYZE Lhawkeye/drowsy/core/EventType;
+	public static final field VATS Lhawkeye/drowsy/core/EventType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/EventType;
+	public static fun values ()[Lhawkeye/drowsy/core/EventType;
+}
+
+public final class hawkeye/drowsy/core/FrameState {
+	public fun <init> (JZDZZDDZDDD)V
+	public final fun component1 ()J
+	public final fun component10 ()D
+	public final fun component11 ()D
+	public final fun component2 ()Z
+	public final fun component3 ()D
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun component6 ()D
+	public final fun component7 ()D
+	public final fun component8 ()Z
+	public final fun component9 ()D
+	public final fun copy (JZDZZDDZDDD)Lhawkeye/drowsy/core/FrameState;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/FrameState;JZDZZDDZDDDILjava/lang/Object;)Lhawkeye/drowsy/core/FrameState;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClosure ()D
+	public final fun getClosureValid ()Z
+	public final fun getFace ()Z
+	public final fun getGazeHRel ()D
+	public final fun getGazeVRel ()D
+	public final fun getJawRel ()D
+	public final fun getPitchRel ()D
+	public final fun getPoseValid ()Z
+	public final fun getProvisional ()Z
+	public final fun getTMs ()J
+	public final fun getYawRel ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/GazeZone : java/lang/Enum {
+	public static final field IN Lhawkeye/drowsy/core/GazeZone;
+	public static final field OUT Lhawkeye/drowsy/core/GazeZone;
+	public static final field UNKNOWN Lhawkeye/drowsy/core/GazeZone;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/GazeZone;
+	public static fun values ()[Lhawkeye/drowsy/core/GazeZone;
+}
+
+public abstract interface class hawkeye/drowsy/core/ModelFn {
+	public abstract fun predict (Ljava/util/List;)Ljava/util/List;
+}
+
+public final class hawkeye/drowsy/core/Phase : java/lang/Enum {
+	public static final field END Lhawkeye/drowsy/core/Phase;
+	public static final field ONSET Lhawkeye/drowsy/core/Phase;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/Phase;
+	public static fun values ()[Lhawkeye/drowsy/core/Phase;
+}
+
+public final class hawkeye/drowsy/core/PipelineOutput {
+	public fun <init> (Lhawkeye/drowsy/core/FrameState;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lhawkeye/drowsy/core/ClassProbs;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Lhawkeye/drowsy/core/FrameState;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Lhawkeye/drowsy/core/ClassProbs;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun copy (Lhawkeye/drowsy/core/FrameState;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lhawkeye/drowsy/core/ClassProbs;Ljava/util/List;Ljava/util/List;)Lhawkeye/drowsy/core/PipelineOutput;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/PipelineOutput;Lhawkeye/drowsy/core/FrameState;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lhawkeye/drowsy/core/ClassProbs;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/PipelineOutput;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlerts ()Ljava/util/List;
+	public final fun getEvents ()Ljava/util/List;
+	public final fun getProbs ()Lhawkeye/drowsy/core/ClassProbs;
+	public final fun getRuns ()Ljava/util/List;
+	public final fun getState ()Lhawkeye/drowsy/core/FrameState;
+	public final fun getStepProbs ()Ljava/util/List;
+	public final fun getSteps ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/Point {
+	public fun <init> (DD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun copy (DD)Lhawkeye/drowsy/core/Point;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/Point;DDILjava/lang/Object;)Lhawkeye/drowsy/core/Point;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getX ()D
+	public final fun getY ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/RawFrame {
+	public fun <init> (JZIILjava/util/Map;Ljava/util/Map;Ljava/util/List;)V
+	public final fun component1 ()J
+	public final fun component2 ()Z
+	public final fun component3 ()I
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/util/Map;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun component7 ()Ljava/util/List;
+	public final fun copy (JZIILjava/util/Map;Ljava/util/Map;Ljava/util/List;)Lhawkeye/drowsy/core/RawFrame;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/RawFrame;JZIILjava/util/Map;Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/RawFrame;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBs ()Ljava/util/Map;
+	public final fun getFace ()Z
+	public final fun getH ()I
+	public final fun getLm ()Ljava/util/Map;
+	public final fun getM ()Ljava/util/List;
+	public final fun getTMs ()J
+	public final fun getW ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/RawFrames {
+	public static final field INSTANCE Lhawkeye/drowsy/core/RawFrames;
+	public static final fun noFace (JII)Lhawkeye/drowsy/core/RawFrame;
+	public static final fun of (JII[F[FLjava/util/List;[F[FLhawkeye/drowsy/core/spec/PipelineSpec;)Lhawkeye/drowsy/core/RawFrame;
+}
+
+public final class hawkeye/drowsy/core/Source : java/lang/Enum {
+	public static final field CLOSURE Lhawkeye/drowsy/core/Source;
+	public static final field EYE Lhawkeye/drowsy/core/Source;
+	public static final field FACE Lhawkeye/drowsy/core/Source;
+	public static final field HEAD_POSE Lhawkeye/drowsy/core/Source;
+	public static final field MODEL Lhawkeye/drowsy/core/Source;
+	public static final field PERCLOS Lhawkeye/drowsy/core/Source;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWire ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/Source;
+	public static fun values ()[Lhawkeye/drowsy/core/Source;
+}
+
+public final class hawkeye/drowsy/core/StepFeatures {
+	public fun <init> (IJZLjava/util/List;)V
+	public final fun component1 ()I
+	public final fun component2 ()J
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (IJZLjava/util/List;)Lhawkeye/drowsy/core/StepFeatures;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/StepFeatures;IJZLjava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/StepFeatures;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFullLookback ()Z
+	public final fun getK ()I
+	public final fun getTEndMs ()J
+	public final fun getValues ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/check/ModelIo {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)Lhawkeye/drowsy/core/check/ModelIo;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/check/ModelIo;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/check/ModelIo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInputName ()Ljava/lang/String;
+	public final fun getInputShape ()Ljava/util/List;
+	public final fun getOutputName ()Ljava/lang/String;
+	public final fun getOutputShape ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/check/StartupCheck : java/lang/Enum {
+	public static final field CLOCK_SPEC_VS_RULES Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field CONSTANT_BITS_VS_VERIFIED Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field FILE_MISSING Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H1_SPEC_VS_METADATA Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H1_TASK_FILE_VS_METADATA Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H2_SPEC_FILE_VS_METADATA Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H3_SPEC_VS_METADATA Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H3_SPEC_VS_VERIFIED Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H4_RULES_FILE_VS_VERIFIED Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H5_CLASS_ORDER Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H5_STANDARDIZATION Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H5_STEP_SEC Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field H5_WINDOW_STEPS Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field METADATA_KEY_MISSING Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field MODEL_FILE_VS_PIN Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field MODEL_IO_CONTRACT Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field MODEL_UNREADABLE Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field MODEL_VERSION_VS_FILE_NAME Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field RULES_INVALID Lhawkeye/drowsy/core/check/StartupCheck;
+	public static final field SPEC_INVALID Lhawkeye/drowsy/core/check/StartupCheck;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/check/StartupCheck;
+	public static fun values ()[Lhawkeye/drowsy/core/check/StartupCheck;
+}
+
+public final class hawkeye/drowsy/core/check/StartupChecks {
+	public static final field INSTANCE Lhawkeye/drowsy/core/check/StartupChecks;
+	public static final fun run (Lhawkeye/drowsy/core/check/StartupInput;)Lhawkeye/drowsy/core/check/StartupResult;
+}
+
+public final class hawkeye/drowsy/core/check/StartupChecksKt {
+	public static final fun sha256Hex ([B)Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/check/StartupInput {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lhawkeye/drowsy/core/check/ModelIo;Ljava/lang/String;[B[BLjava/lang/String;Lhawkeye/drowsy/core/check/VerifiedValues;)V
+	public final fun getModelFileName ()Ljava/lang/String;
+	public final fun getModelFileSha256 ()Ljava/lang/String;
+	public final fun getModelIo ()Lhawkeye/drowsy/core/check/ModelIo;
+	public final fun getModelMetadata ()Ljava/util/Map;
+	public final fun getModelSha256Pin ()Ljava/lang/String;
+	public final fun getRulesBytes ()[B
+	public final fun getSpecBytes ()[B
+	public final fun getSpecFileName ()Ljava/lang/String;
+	public final fun getTaskSha256 ()Ljava/lang/String;
+	public final fun getVerified ()Lhawkeye/drowsy/core/check/VerifiedValues;
+}
+
+public final class hawkeye/drowsy/core/check/StartupProblem {
+	public fun <init> (Lhawkeye/drowsy/core/check/StartupCheck;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Lhawkeye/drowsy/core/check/StartupCheck;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Lhawkeye/drowsy/core/check/StartupCheck;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lhawkeye/drowsy/core/check/StartupProblem;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/check/StartupProblem;Lhawkeye/drowsy/core/check/StartupCheck;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lhawkeye/drowsy/core/check/StartupProblem;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActual ()Ljava/lang/String;
+	public final fun getCheck ()Lhawkeye/drowsy/core/check/StartupCheck;
+	public final fun getExpected ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getSubject ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/check/StartupResult {
+	public final fun getPassed ()Z
+	public final fun getProblems ()Ljava/util/List;
+	public final fun getRules ()Lhawkeye/drowsy/core/spec/RulesConfig;
+	public final fun getSpec ()Lhawkeye/drowsy/core/spec/FeatureSpec;
+}
+
+public final class hawkeye/drowsy/core/check/VerifiedValues {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()I
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)Lhawkeye/drowsy/core/check/VerifiedValues;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/check/VerifiedValues;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;ILjava/lang/Object;)Lhawkeye/drowsy/core/check/VerifiedValues;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getConstantBits ()Ljava/lang/String;
+	public final fun getPipelineHash ()Ljava/lang/String;
+	public final fun getRulesHash ()Ljava/lang/String;
+	public final fun getVectorCount ()I
+	public final fun getVectorSet ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/session/ActiveEvent {
+	public fun <init> (Lhawkeye/drowsy/core/EventType;IJLhawkeye/drowsy/core/Source;ZJ)V
+	public final fun component1 ()Lhawkeye/drowsy/core/EventType;
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()Lhawkeye/drowsy/core/Source;
+	public final fun component5 ()Z
+	public final fun component6 ()J
+	public final fun copy (Lhawkeye/drowsy/core/EventType;IJLhawkeye/drowsy/core/Source;ZJ)Lhawkeye/drowsy/core/session/ActiveEvent;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/session/ActiveEvent;Lhawkeye/drowsy/core/EventType;IJLhawkeye/drowsy/core/Source;ZJILjava/lang/Object;)Lhawkeye/drowsy/core/session/ActiveEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnsetFrameTMs ()J
+	public final fun getProvisional ()Z
+	public final fun getSeverity ()I
+	public final fun getSource ()Lhawkeye/drowsy/core/Source;
+	public final fun getTStartMs ()J
+	public final fun getType ()Lhawkeye/drowsy/core/EventType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/session/CalibrationStatus : java/lang/Enum {
+	public static final field CALIBRATING Lhawkeye/drowsy/core/session/CalibrationStatus;
+	public static final field FALLBACK_GLOBAL Lhawkeye/drowsy/core/session/CalibrationStatus;
+	public static final field OFF_AXIS Lhawkeye/drowsy/core/session/CalibrationStatus;
+	public static final field OK Lhawkeye/drowsy/core/session/CalibrationStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lhawkeye/drowsy/core/session/CalibrationStatus;
+	public static fun values ()[Lhawkeye/drowsy/core/session/CalibrationStatus;
+}
+
+public final class hawkeye/drowsy/core/session/DriverState {
+	public final fun getActive ()Ljava/util/List;
+	public final fun getAlerts ()Ljava/util/List;
+	public final fun getBaseline ()Lhawkeye/drowsy/core/Baseline;
+	public final fun getCalibration ()Lhawkeye/drowsy/core/session/CalibrationStatus;
+	public final fun getCounters ()Lhawkeye/drowsy/core/session/PipelineCounters;
+	public final fun getEvents ()Ljava/util/List;
+	public final fun getGazeZone ()Lhawkeye/drowsy/core/GazeZone;
+	public final fun getOutput ()Lhawkeye/drowsy/core/PipelineOutput;
+	public final fun getPrimaryAlert ()Lhawkeye/drowsy/core/DriverStateEvent;
+	public final fun getSessionMs ()J
+	public final fun getSpeedKmh ()Ljava/lang/Double;
+	public final fun getTMs ()J
+	public final fun isActive (Lhawkeye/drowsy/core/EventType;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/session/PipelineCounters {
+	public fun <init> (JJJJJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()J
+	public final fun copy (JJJJJ)Lhawkeye/drowsy/core/session/PipelineCounters;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/session/PipelineCounters;JJJJJILjava/lang/Object;)Lhawkeye/drowsy/core/session/PipelineCounters;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDroppedFrames ()J
+	public final fun getFramesAccepted ()J
+	public final fun getModelCalls ()J
+	public final fun getNonfiniteWindows ()J
+	public final fun getStepsEmitted ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/BaselineSpec {
+	public fun <init> (JJJIDDDDDLjava/util/List;D)V
+	public final fun component1 ()J
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()D
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()I
+	public final fun component5 ()D
+	public final fun component6 ()D
+	public final fun component7 ()D
+	public final fun component8 ()D
+	public final fun component9 ()D
+	public final fun copy (JJJIDDDDDLjava/util/List;D)Lhawkeye/drowsy/core/spec/BaselineSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/BaselineSpec;JJJIDDDDDLjava/util/List;DILjava/lang/Object;)Lhawkeye/drowsy/core/spec/BaselineSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlinkQuantile ()D
+	public final fun getBlinkRecordQuantiles ()Ljava/util/List;
+	public final fun getDurationMs ()J
+	public final fun getEMax ()D
+	public final fun getEMin ()D
+	public final fun getEarQuantile ()D
+	public final fun getExtendStepMs ()J
+	public final fun getMaxDurationMs ()J
+	public final fun getMinFaceFrames ()I
+	public final fun getMinFaceRatio ()D
+	public final fun getOffAxisYawDeg ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/BlendshapeSpec {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)Lhawkeye/drowsy/core/spec/BlendshapeSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/BlendshapeSpec;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/BlendshapeSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEyeBlinkL ()Ljava/lang/String;
+	public final fun getEyeBlinkR ()Ljava/lang/String;
+	public final fun getEyeLook ()Ljava/util/List;
+	public final fun getJawOpen ()Ljava/lang/String;
+	public final fun getOrder ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun indexOf (Ljava/lang/String;)I
+	public final fun requiredNames ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/ClockSpec {
+	public fun <init> (JJJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun copy (JJJ)Lhawkeye/drowsy/core/spec/ClockSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/ClockSpec;JJJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/ClockSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxHoldMs ()J
+	public final fun getResetGapMs ()J
+	public final fun getStepMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/ClosureRules {
+	public fun <init> (Lhawkeye/drowsy/core/spec/RunDetectorSpec;JJ)V
+	public final fun component1 ()Lhawkeye/drowsy/core/spec/RunDetectorSpec;
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun copy (Lhawkeye/drowsy/core/spec/RunDetectorSpec;JJ)Lhawkeye/drowsy/core/spec/ClosureRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/ClosureRules;Lhawkeye/drowsy/core/spec/RunDetectorSpec;JJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/ClosureRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDetector ()Lhawkeye/drowsy/core/spec/RunDetectorSpec;
+	public final fun getMicrosleepMs ()J
+	public final fun getSleepMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/ClosureSpec {
+	public fun <init> (DDDDDDD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun component5 ()D
+	public final fun component6 ()D
+	public final fun component7 ()D
+	public final fun copy (DDDDDDD)Lhawkeye/drowsy/core/spec/ClosureSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/ClosureSpec;DDDDDDDILjava/lang/Object;)Lhawkeye/drowsy/core/spec/ClosureSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBClosed ()D
+	public final fun getBSpanMin ()D
+	public final fun getFarEyeRampDeg ()D
+	public final fun getFarEyeZeroYawDeg ()D
+	public final fun getRho ()D
+	public final fun getValidMaxAbsYawDeg ()D
+	public final fun getW ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/DrowsinessRules {
+	public fun <init> (Lhawkeye/drowsy/core/DrowsySource;Lhawkeye/drowsy/core/spec/ModelDrowsyRules;Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;)V
+	public final fun component1 ()Lhawkeye/drowsy/core/DrowsySource;
+	public final fun component2 ()Lhawkeye/drowsy/core/spec/ModelDrowsyRules;
+	public final fun component3 ()Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;
+	public final fun copy (Lhawkeye/drowsy/core/DrowsySource;Lhawkeye/drowsy/core/spec/ModelDrowsyRules;Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;)Lhawkeye/drowsy/core/spec/DrowsinessRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/DrowsinessRules;Lhawkeye/drowsy/core/DrowsySource;Lhawkeye/drowsy/core/spec/ModelDrowsyRules;Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/DrowsinessRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getModel ()Lhawkeye/drowsy/core/spec/ModelDrowsyRules;
+	public final fun getPerclos ()Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;
+	public final fun getSource ()Lhawkeye/drowsy/core/DrowsySource;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/EventPolicies {
+	public fun <init> (Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;)V
+	public final fun component1 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun component2 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun component3 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun component4 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun component5 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun component6 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun component7 ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun copy (Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;)Lhawkeye/drowsy/core/spec/EventPolicies;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/EventPolicies;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;Lhawkeye/drowsy/core/spec/EventPolicy;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/EventPolicies;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun get (Lhawkeye/drowsy/core/EventType;)Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getCalibrating ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getDrowsy ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getGazeAwayLong ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getMicrosleep ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getSleep ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getUnableToAnalyze ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public final fun getVats ()Lhawkeye/drowsy/core/spec/EventPolicy;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/EventPolicy {
+	public fun <init> (IJJD)V
+	public final fun component1 ()I
+	public final fun component2 ()J
+	public final fun component3 ()J
+	public final fun component4 ()D
+	public final fun copy (IJJD)Lhawkeye/drowsy/core/spec/EventPolicy;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/EventPolicy;IJJDILjava/lang/Object;)Lhawkeye/drowsy/core/spec/EventPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCooldownMs ()J
+	public final fun getMinSpeedKmh ()D
+	public final fun getRepeatMs ()J
+	public final fun getSeverity ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/FeatureDef {
+	public fun <init> (ILjava/lang/String;ILjava/lang/String;Ljava/lang/String;DLjava/lang/String;DD)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()D
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()D
+	public final fun component9 ()D
+	public final fun copy (ILjava/lang/String;ILjava/lang/String;Ljava/lang/String;DLjava/lang/String;DD)Lhawkeye/drowsy/core/spec/FeatureDef;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/FeatureDef;ILjava/lang/String;ILjava/lang/String;Ljava/lang/String;DLjava/lang/String;DDILjava/lang/Object;)Lhawkeye/drowsy/core/spec/FeatureDef;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFormula ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public final fun getMean ()D
+	public final fun getName ()Ljava/lang/String;
+	public final fun getStd ()D
+	public final fun getTransform ()Ljava/lang/String;
+	public final fun getUndefinedValue ()D
+	public final fun getUnit ()Ljava/lang/String;
+	public final fun getWindowSec ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/FeatureSpec {
+	public fun <init> (IIILjava/util/List;Ljava/util/List;Lhawkeye/drowsy/core/spec/Standardization;Lhawkeye/drowsy/core/spec/PipelineSpec;Ljava/lang/String;)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Lhawkeye/drowsy/core/spec/Standardization;
+	public final fun component7 ()Lhawkeye/drowsy/core/spec/PipelineSpec;
+	public final fun component8 ()Ljava/lang/String;
+	public final fun copy (IIILjava/util/List;Ljava/util/List;Lhawkeye/drowsy/core/spec/Standardization;Lhawkeye/drowsy/core/spec/PipelineSpec;Ljava/lang/String;)Lhawkeye/drowsy/core/spec/FeatureSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/FeatureSpec;IIILjava/util/List;Ljava/util/List;Lhawkeye/drowsy/core/spec/Standardization;Lhawkeye/drowsy/core/spec/PipelineSpec;Ljava/lang/String;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/FeatureSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getClassOrder ()Ljava/util/List;
+	public final fun getFeatures ()Ljava/util/List;
+	public final fun getPipeline ()Lhawkeye/drowsy/core/spec/PipelineSpec;
+	public final fun getPipelineHash ()Ljava/lang/String;
+	public final fun getSpecVersion ()I
+	public final fun getStandardization ()Lhawkeye/drowsy/core/spec/Standardization;
+	public final fun getStepSec ()I
+	public final fun getWindowSteps ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/ForwardZoneRules {
+	public fun <init> (DDDZDDJJ)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()Z
+	public final fun component5 ()D
+	public final fun component6 ()D
+	public final fun component7 ()J
+	public final fun component8 ()J
+	public final fun copy (DDDZDDJJ)Lhawkeye/drowsy/core/spec/ForwardZoneRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/ForwardZoneRules;DDDZDDJJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/ForwardZoneRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDebounceMs ()J
+	public final fun getEyeAuxEnabled ()Z
+	public final fun getFaceLossCreditMs ()J
+	public final fun getGazeHAbsMax ()D
+	public final fun getGazeVAbsMax ()D
+	public final fun getPitchDownMaxDeg ()D
+	public final fun getPitchUpMaxDeg ()D
+	public final fun getYawAbsMaxDeg ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/GazeAwayLongRules {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lhawkeye/drowsy/core/spec/GazeAwayLongRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/GazeAwayLongRules;JILjava/lang/Object;)Lhawkeye/drowsy/core/spec/GazeAwayLongRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getOnsetMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/GlobalConstants {
+	public fun <init> (DDDDDLjava/util/List;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun component5 ()D
+	public final fun component6 ()Ljava/util/List;
+	public final fun copy (DDDDDLjava/util/List;)Lhawkeye/drowsy/core/spec/GlobalConstants;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/GlobalConstants;DDDDDLjava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/GlobalConstants;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getB ()D
+	public final fun getE ()D
+	public final fun getGazeH0 ()D
+	public final fun getGazeV0 ()D
+	public final fun getJaw0 ()D
+	public final fun getR0 ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/LandmarkSpec {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;IIIILjava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()I
+	public final fun component6 ()I
+	public final fun component7 ()I
+	public final fun component8 ()I
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;IIIILjava/util/List;Ljava/util/List;Ljava/util/List;)Lhawkeye/drowsy/core/spec/LandmarkSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/LandmarkSpec;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;IIIILjava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/LandmarkSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContourL ()Ljava/util/List;
+	public final fun getContourR ()Ljava/util/List;
+	public final fun getCornerInnerL ()I
+	public final fun getCornerInnerR ()I
+	public final fun getCornerOuterL ()I
+	public final fun getCornerOuterR ()I
+	public final fun getEarL ()Ljava/util/List;
+	public final fun getEarR ()Ljava/util/List;
+	public final fun getFaceWidth ()Ljava/util/List;
+	public final fun getIrisL ()Ljava/util/List;
+	public final fun getIrisR ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun requiredIndices ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/MediaPipeSpec {
+	public fun <init> (Ljava/lang/String;I)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lhawkeye/drowsy/core/spec/MediaPipeSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/MediaPipeSpec;Ljava/lang/String;IILjava/lang/Object;)Lhawkeye/drowsy/core/spec/MediaPipeSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getModelSha256 ()Ljava/lang/String;
+	public final fun getNumFaces ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/ModelDrowsyRules {
+	public fun <init> (DIDIJ)V
+	public final fun component1 ()D
+	public final fun component2 ()I
+	public final fun component3 ()D
+	public final fun component4 ()I
+	public final fun component5 ()J
+	public final fun copy (DIDIJ)Lhawkeye/drowsy/core/spec/ModelDrowsyRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/ModelDrowsyRules;DIDIJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/ModelDrowsyRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndP ()D
+	public final fun getEndSteps ()I
+	public final fun getOnsetP ()D
+	public final fun getOnsetSteps ()I
+	public final fun getRefractoryMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/NodSpec {
+	public fun <init> (DDJJJJJ)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()J
+	public final fun component6 ()J
+	public final fun component7 ()J
+	public final fun copy (DDJJJJJ)Lhawkeye/drowsy/core/spec/NodSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/NodSpec;DDJJJJJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/NodSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCancelGapMs ()J
+	public final fun getEmaMaxDtMs ()J
+	public final fun getEmaTauMs ()J
+	public final fun getEnterDeg ()D
+	public final fun getExitDeg ()D
+	public final fun getMaxDurationMs ()J
+	public final fun getMinDurationMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/PerclosDrowsyRules {
+	public fun <init> (DIDIJ)V
+	public final fun component1 ()D
+	public final fun component2 ()I
+	public final fun component3 ()D
+	public final fun component4 ()I
+	public final fun component5 ()J
+	public final fun copy (DIDIJ)Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;DIDIJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/PerclosDrowsyRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEndRatio ()D
+	public final fun getEndSteps ()I
+	public final fun getOnsetRatio ()D
+	public final fun getOnsetSteps ()I
+	public final fun getRefractoryMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/PipelineSpec {
+	public fun <init> (Lhawkeye/drowsy/core/spec/LandmarkSpec;Lhawkeye/drowsy/core/spec/BlendshapeSpec;Lhawkeye/drowsy/core/spec/PoseSpec;Lhawkeye/drowsy/core/spec/ClockSpec;Lhawkeye/drowsy/core/spec/SignalSpec;Lhawkeye/drowsy/core/spec/BaselineSpec;Lhawkeye/drowsy/core/spec/ClosureSpec;Lhawkeye/drowsy/core/spec/RunDetectorSpec;Lhawkeye/drowsy/core/spec/StepFeatureSpec;Lhawkeye/drowsy/core/spec/YawnSpec;Lhawkeye/drowsy/core/spec/NodSpec;Lhawkeye/drowsy/core/spec/GlobalConstants;Lhawkeye/drowsy/core/spec/MediaPipeSpec;)V
+	public final fun component1 ()Lhawkeye/drowsy/core/spec/LandmarkSpec;
+	public final fun component10 ()Lhawkeye/drowsy/core/spec/YawnSpec;
+	public final fun component11 ()Lhawkeye/drowsy/core/spec/NodSpec;
+	public final fun component12 ()Lhawkeye/drowsy/core/spec/GlobalConstants;
+	public final fun component13 ()Lhawkeye/drowsy/core/spec/MediaPipeSpec;
+	public final fun component2 ()Lhawkeye/drowsy/core/spec/BlendshapeSpec;
+	public final fun component3 ()Lhawkeye/drowsy/core/spec/PoseSpec;
+	public final fun component4 ()Lhawkeye/drowsy/core/spec/ClockSpec;
+	public final fun component5 ()Lhawkeye/drowsy/core/spec/SignalSpec;
+	public final fun component6 ()Lhawkeye/drowsy/core/spec/BaselineSpec;
+	public final fun component7 ()Lhawkeye/drowsy/core/spec/ClosureSpec;
+	public final fun component8 ()Lhawkeye/drowsy/core/spec/RunDetectorSpec;
+	public final fun component9 ()Lhawkeye/drowsy/core/spec/StepFeatureSpec;
+	public final fun copy (Lhawkeye/drowsy/core/spec/LandmarkSpec;Lhawkeye/drowsy/core/spec/BlendshapeSpec;Lhawkeye/drowsy/core/spec/PoseSpec;Lhawkeye/drowsy/core/spec/ClockSpec;Lhawkeye/drowsy/core/spec/SignalSpec;Lhawkeye/drowsy/core/spec/BaselineSpec;Lhawkeye/drowsy/core/spec/ClosureSpec;Lhawkeye/drowsy/core/spec/RunDetectorSpec;Lhawkeye/drowsy/core/spec/StepFeatureSpec;Lhawkeye/drowsy/core/spec/YawnSpec;Lhawkeye/drowsy/core/spec/NodSpec;Lhawkeye/drowsy/core/spec/GlobalConstants;Lhawkeye/drowsy/core/spec/MediaPipeSpec;)Lhawkeye/drowsy/core/spec/PipelineSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/PipelineSpec;Lhawkeye/drowsy/core/spec/LandmarkSpec;Lhawkeye/drowsy/core/spec/BlendshapeSpec;Lhawkeye/drowsy/core/spec/PoseSpec;Lhawkeye/drowsy/core/spec/ClockSpec;Lhawkeye/drowsy/core/spec/SignalSpec;Lhawkeye/drowsy/core/spec/BaselineSpec;Lhawkeye/drowsy/core/spec/ClosureSpec;Lhawkeye/drowsy/core/spec/RunDetectorSpec;Lhawkeye/drowsy/core/spec/StepFeatureSpec;Lhawkeye/drowsy/core/spec/YawnSpec;Lhawkeye/drowsy/core/spec/NodSpec;Lhawkeye/drowsy/core/spec/GlobalConstants;Lhawkeye/drowsy/core/spec/MediaPipeSpec;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/PipelineSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBaseline ()Lhawkeye/drowsy/core/spec/BaselineSpec;
+	public final fun getBlendshapes ()Lhawkeye/drowsy/core/spec/BlendshapeSpec;
+	public final fun getClock ()Lhawkeye/drowsy/core/spec/ClockSpec;
+	public final fun getClosure ()Lhawkeye/drowsy/core/spec/ClosureSpec;
+	public final fun getGlobalConstants ()Lhawkeye/drowsy/core/spec/GlobalConstants;
+	public final fun getLandmarks ()Lhawkeye/drowsy/core/spec/LandmarkSpec;
+	public final fun getMediapipe ()Lhawkeye/drowsy/core/spec/MediaPipeSpec;
+	public final fun getNod ()Lhawkeye/drowsy/core/spec/NodSpec;
+	public final fun getPose ()Lhawkeye/drowsy/core/spec/PoseSpec;
+	public final fun getRunDetector ()Lhawkeye/drowsy/core/spec/RunDetectorSpec;
+	public final fun getSignals ()Lhawkeye/drowsy/core/spec/SignalSpec;
+	public final fun getStepFeatures ()Lhawkeye/drowsy/core/spec/StepFeatureSpec;
+	public final fun getYawn ()Lhawkeye/drowsy/core/spec/YawnSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/PoseSpec {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lhawkeye/drowsy/core/spec/PoseSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/PoseSpec;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/PoseSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAngleUnit ()Ljava/lang/String;
+	public final fun getMatrixLayout ()Ljava/lang/String;
+	public final fun getOrder ()Ljava/lang/String;
+	public final fun getPitchPos ()Ljava/lang/String;
+	public final fun getRollPos ()Ljava/lang/String;
+	public final fun getYawPos ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/RulesConfig {
+	public fun <init> (Lhawkeye/drowsy/core/spec/ClockSpec;Lhawkeye/drowsy/core/spec/ForwardZoneRules;Lhawkeye/drowsy/core/spec/GazeAwayLongRules;Lhawkeye/drowsy/core/spec/VatsRules;Lhawkeye/drowsy/core/spec/ClosureRules;Lhawkeye/drowsy/core/spec/DrowsinessRules;Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;Lhawkeye/drowsy/core/spec/EventPolicies;Ljava/util/List;)V
+	public final fun component1 ()Lhawkeye/drowsy/core/spec/ClockSpec;
+	public final fun component2 ()Lhawkeye/drowsy/core/spec/ForwardZoneRules;
+	public final fun component3 ()Lhawkeye/drowsy/core/spec/GazeAwayLongRules;
+	public final fun component4 ()Lhawkeye/drowsy/core/spec/VatsRules;
+	public final fun component5 ()Lhawkeye/drowsy/core/spec/ClosureRules;
+	public final fun component6 ()Lhawkeye/drowsy/core/spec/DrowsinessRules;
+	public final fun component7 ()Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;
+	public final fun component8 ()Lhawkeye/drowsy/core/spec/EventPolicies;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Lhawkeye/drowsy/core/spec/ClockSpec;Lhawkeye/drowsy/core/spec/ForwardZoneRules;Lhawkeye/drowsy/core/spec/GazeAwayLongRules;Lhawkeye/drowsy/core/spec/VatsRules;Lhawkeye/drowsy/core/spec/ClosureRules;Lhawkeye/drowsy/core/spec/DrowsinessRules;Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;Lhawkeye/drowsy/core/spec/EventPolicies;Ljava/util/List;)Lhawkeye/drowsy/core/spec/RulesConfig;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/RulesConfig;Lhawkeye/drowsy/core/spec/ClockSpec;Lhawkeye/drowsy/core/spec/ForwardZoneRules;Lhawkeye/drowsy/core/spec/GazeAwayLongRules;Lhawkeye/drowsy/core/spec/VatsRules;Lhawkeye/drowsy/core/spec/ClosureRules;Lhawkeye/drowsy/core/spec/DrowsinessRules;Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;Lhawkeye/drowsy/core/spec/EventPolicies;Ljava/util/List;ILjava/lang/Object;)Lhawkeye/drowsy/core/spec/RulesConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlertPriority ()Ljava/util/List;
+	public final fun getClock ()Lhawkeye/drowsy/core/spec/ClockSpec;
+	public final fun getClosure ()Lhawkeye/drowsy/core/spec/ClosureRules;
+	public final fun getDrowsiness ()Lhawkeye/drowsy/core/spec/DrowsinessRules;
+	public final fun getEvents ()Lhawkeye/drowsy/core/spec/EventPolicies;
+	public final fun getForwardZone ()Lhawkeye/drowsy/core/spec/ForwardZoneRules;
+	public final fun getGazeAwayLong ()Lhawkeye/drowsy/core/spec/GazeAwayLongRules;
+	public final fun getUnableToAnalyze ()Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;
+	public final fun getVats ()Lhawkeye/drowsy/core/spec/VatsRules;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/RunDetectorSpec {
+	public fun <init> (DDJJJI)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()J
+	public final fun component6 ()I
+	public final fun copy (DDJJJI)Lhawkeye/drowsy/core/spec/RunDetectorSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/RunDetectorSpec;DDJJJIILjava/lang/Object;)Lhawkeye/drowsy/core/spec/RunDetectorSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnterThr ()D
+	public final fun getExitThr ()D
+	public final fun getHoldMs ()J
+	public final fun getMaxDtMs ()J
+	public final fun getMinDurationMs ()J
+	public final fun getVelocityLookbackSamples ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/SignalSpec {
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lhawkeye/drowsy/core/spec/SignalSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/SignalSpec;DILjava/lang/Object;)Lhawkeye/drowsy/core/spec/SignalSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMinEyeWidthPx ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/SpecException : java/lang/IllegalArgumentException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class hawkeye/drowsy/core/spec/SpecLoader {
+	public static final field INSTANCE Lhawkeye/drowsy/core/spec/SpecLoader;
+	public static final fun parseFeatureSpec ([B)Lhawkeye/drowsy/core/spec/FeatureSpec;
+	public static final fun parseRules ([B)Lhawkeye/drowsy/core/spec/RulesConfig;
+}
+
+public final class hawkeye/drowsy/core/spec/Standardization {
+	public fun <init> (Ljava/lang/String;DDD)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun copy (Ljava/lang/String;DDD)Lhawkeye/drowsy/core/spec/Standardization;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/Standardization;Ljava/lang/String;DDDILjava/lang/Object;)Lhawkeye/drowsy/core/spec/Standardization;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocation ()Ljava/lang/String;
+	public final fun getStdFloor ()D
+	public final fun getTemperature ()D
+	public final fun getZClip ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/StepFeatureSpec {
+	public fun <init> (Ljava/util/List;IJJDJJJJJJJ)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component10 ()J
+	public final fun component11 ()J
+	public final fun component12 ()J
+	public final fun component2 ()I
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()D
+	public final fun component6 ()J
+	public final fun component7 ()J
+	public final fun component8 ()J
+	public final fun component9 ()J
+	public final fun copy (Ljava/util/List;IJJDJJJJJJJ)Lhawkeye/drowsy/core/spec/StepFeatureSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/StepFeatureSpec;Ljava/util/List;IJJDJJJJJJJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/StepFeatureSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBlinkDurationCapMs ()J
+	public final fun getBlinkRateMinValidMs ()J
+	public final fun getLongClosureMinMs ()J
+	public final fun getLookbackLongMs ()J
+	public final fun getLookbackShortMs ()J
+	public final fun getMaxClosureCapMs ()J
+	public final fun getNames ()Ljava/util/List;
+	public final fun getPerclosMinValidMs10 ()J
+	public final fun getPerclosMinValidMs60 ()J
+	public final fun getPerclosThr ()D
+	public final fun getPitchStdMinFaceMs ()J
+	public final fun getWindowSteps ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/UnableToAnalyzeRules {
+	public fun <init> (JD)V
+	public final fun component1 ()J
+	public final fun component2 ()D
+	public final fun copy (JD)Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;JDILjava/lang/Object;)Lhawkeye/drowsy/core/spec/UnableToAnalyzeRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMinFaceRatio ()D
+	public final fun getWindowMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/VatsRules {
+	public fun <init> (JJZJ)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()Z
+	public final fun component4 ()J
+	public final fun copy (JJZJ)Lhawkeye/drowsy/core/spec/VatsRules;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/VatsRules;JJZJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/VatsRules;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCumulativeMs ()J
+	public final fun getResetEnabled ()Z
+	public final fun getResetForwardMs ()J
+	public final fun getWindowMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/core/spec/YawnSpec {
+	public fun <init> (DDJJ)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun copy (DDJJ)Lhawkeye/drowsy/core/spec/YawnSpec;
+	public static synthetic fun copy$default (Lhawkeye/drowsy/core/spec/YawnSpec;DDJJILjava/lang/Object;)Lhawkeye/drowsy/core/spec/YawnSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCancelGapMs ()J
+	public final fun getCountAtMs ()J
+	public final fun getEnterThr ()D
+	public final fun getExitThr ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

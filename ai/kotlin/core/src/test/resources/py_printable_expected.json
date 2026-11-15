@@ -1,0 +1,28 @@
+{
+  "python": "3.11.16",
+  "unidata_version": "14.0.0",
+  "code_points": 1114112,
+  "non_printable": 969596,
+  "ranges": 701,
+  "repr_sha256_all": "a4d1e1421d120f3bace5c9dc41fa23419fe651620e739f9a9c6f3dfcc2e450c8",
+  "repr_sha256_per_plane": [
+    "06333c8155c717ee8d5ceab8e34cca07bbdf46f62ec03db073b27ac39cb544a2",
+    "8797a5549724cdaedb9bd3abfaece50f9ecec78df19b54e9f77001a0a4da58ef",
+    "cae94e65d0e549958fabb0d5c18aba0a41b03614eb27f5f3b6d33c3af9c45368",
+    "6103df0d68145c4da6b379a77ae908e975f4205f8c61b8d4a27233b5f126eedb",
+    "88c9ab383bab343aa08d51cb5830611a2f0daf2ede32f81662ec39fb3fc3151c",
+    "46feb606c2771a0516c93ab0b72b4ae8b6f84538b7b7ee2ad565d5993d579e23",
+    "ee01eacdddded8128b0daee92601de046be8f8f1162a7093b4f7f5793e8be253",
+    "c56b6d698937ca7aa2bfb5e6fb344bc725df983f9c9753b3dc18cda461535506",
+    "e3097f7330d39e8338303cc47cbff501df504370cf7c2d86c9b8012ea29c3b5d",
+    "f296032313c4dd4740068a37c939696fedd09edb6fb3ef4205fe078662e595ef",
+    "a5fda256d511d8d1388e9cf4a3ae113aa82c5be29546fe00765e85e6c067313c",
+    "1606116d3bc154a525b2f3e28a6efa5dbc8cd64418f599fa8683cb24eb609f6d",
+    "ba651e0dadea2f2aba4d758011c0e8a6a8cf94867ba298d976ebbc1a78147ee1",
+    "b86cf881a0d5f5b676540b5c9ff0ed79534b1fbecb04ffadf1c65f23ebd7dda6",
+    "e692e2e206572a63220646bf72f3dec1f0cf5682f6d41c430be4e2caba81dddd",
+    "710f5829fe76726a39fec5e1c2988d4ceb9ee5c2e64b50d6fb5743b48a8db764",
+    "da58e7feecd7bddd23ed2fd89474cef5679a1f85c6167763f6c45df60c2ac874"
+  ],
+  "note": "sha256 of '\\n'.join(repr(chr(cp)) for cp in range(...)) encoded as UTF-8; per plane: range(p*0x10000, (p+1)*0x10000)"
+}

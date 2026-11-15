@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# model file and data are never committed
+models/
+data/
+# local configs hold private data paths; the pattern is wide on purpose (also covers backups such as local.yaml.bak)
+config/local*
+# face videos are never committed, wherever they are put and however the extension is written
+# (README examples use videos/ and path.mp4); a folder named videos/ is ignored at any depth on purpose
+videos/
+*.[mM][pP]4
+*.[mM][oO][vV]
+*.[mM]4[vV]
+*.[aA][vV][iI]
+*.[mM][kK][vV]
+# generated outputs (export/ and reports/ keep their README only)
+out/
+reports/*
+!reports/.gitkeep
+export/*.onnx.data
+# Kotlin library (kotlin/): Gradle outputs, local SDK path, differential data (kotlin/.gitignore holds the same entries)
+kotlin/**/build/
+kotlin/.gradle/
+kotlin/.kotlin/
+kotlin/local.properties
+kotlin/.diffdata/
+# vendored generator copies of the differential-data exporter hold local paths; they stay on the generating PC
+kotlin/difftools/vendor/

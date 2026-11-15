@@ -1,0 +1,8 @@
+# Files whose bytes are hashed (feature_spec_hash, rules_hash, test vectors) must not have line endings converted.
+config/feature_spec.json -text
+export/*.json -text
+tests/vectors/*.json -text
+# Model files are binary: no line-ending conversion, no text diff or merge. The sha256 of export/drowsiness_v0.onnx
+# is pinned in tests/vectors and in the documents.
+*.onnx binary
+*.task binary

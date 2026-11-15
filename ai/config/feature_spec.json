@@ -1,0 +1,471 @@
+{
+  "spec_version": 0,
+  "step_sec": 1,
+  "window_steps": 120,
+  "class_order": [
+    "alert",
+    "low_vigilant",
+    "drowsy"
+  ],
+  "features": [
+    {
+      "index": 0,
+      "name": "perclos_60",
+      "window_sec": 60,
+      "unit": "ratio",
+      "formula": "time(closure_valid and closure >= perclos_thr) / valid_time over the last 60 s; undefined if valid_time < perclos_min_valid_ms_60",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 1,
+      "name": "perclos_10",
+      "window_sec": 10,
+      "unit": "ratio",
+      "formula": "time(closure_valid and closure >= perclos_thr) / valid_time over the last 10 s; undefined if valid_time < perclos_min_valid_ms_10",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 2,
+      "name": "closure_mean_60",
+      "window_sec": 60,
+      "unit": "0-1",
+      "formula": "time-weighted mean of closure over valid time in the last 60 s; undefined if valid_time = 0",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 3,
+      "name": "closure_mean_10",
+      "window_sec": 10,
+      "unit": "0-1",
+      "formula": "time-weighted mean of closure over valid time in the last 10 s; undefined if valid_time = 0",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 4,
+      "name": "blink_rate_60",
+      "window_sec": 60,
+      "unit": "1/min",
+      "formula": "n_events * 60000 / valid_time_ms, events = non-truncated feature runs attributed to steps in the last 60 s; undefined if valid_time < blink_rate_min_valid_ms",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 5,
+      "name": "blink_dur_mean_60",
+      "window_sec": 60,
+      "unit": "ms",
+      "formula": "mean of min(duration_ms, blink_duration_cap_ms) over events; undefined if there are no events",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 6,
+      "name": "blink_dur_std_60",
+      "window_sec": 60,
+      "unit": "ms",
+      "formula": "population standard deviation of min(duration_ms, blink_duration_cap_ms) over events; undefined if fewer than 2 events",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 7,
+      "name": "closing_vel_mean_60",
+      "window_sec": 60,
+      "unit": "1/s",
+      "formula": "mean of peak_closing_velocity over events with velocity_valid; undefined if there are none",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 8,
+      "name": "opening_vel_mean_60",
+      "window_sec": 60,
+      "unit": "1/s",
+      "formula": "mean of peak_opening_velocity over events with velocity_valid; undefined if there are none",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 9,
+      "name": "long_closure_count_60",
+      "window_sec": 60,
+      "unit": "count",
+      "formula": "number of closures with length >= long_closure_min_ms in the last 60 s, including truncated and ongoing ones",
+      "undefined_value": 0.0,
+      "transform": "log1p",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 10,
+      "name": "max_closure_ms_60",
+      "window_sec": 60,
+      "unit": "ms",
+      "formula": "full length of the longest closure attributed to the last 60 s or still ongoing, capped at max_closure_cap_ms",
+      "undefined_value": 0.0,
+      "transform": "log1p",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 11,
+      "name": "max_closure_ms_10",
+      "window_sec": 10,
+      "unit": "ms",
+      "formula": "full length of the longest closure attributed to the last 10 s or still ongoing, capped at max_closure_cap_ms",
+      "undefined_value": 0.0,
+      "transform": "log1p",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 12,
+      "name": "yawn_count_60",
+      "window_sec": 60,
+      "unit": "count",
+      "formula": "number of yawn events in the last 60 s",
+      "undefined_value": 0.0,
+      "transform": "log1p",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 13,
+      "name": "pitch_std_60",
+      "window_sec": 60,
+      "unit": "deg",
+      "formula": "time-weighted standard deviation of pitch_rel over face frames in the last 60 s; undefined if face time < pitch_std_min_face_ms",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 14,
+      "name": "nod_count_60",
+      "window_sec": 60,
+      "unit": "count",
+      "formula": "number of nod events in the last 60 s",
+      "undefined_value": 0.0,
+      "transform": "log1p",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 15,
+      "name": "face_missing_ratio_60",
+      "window_sec": 60,
+      "unit": "ratio",
+      "formula": "(no-face time + no-data time) / 60000 ms",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    },
+    {
+      "index": 16,
+      "name": "face_missing_ratio_10",
+      "window_sec": 10,
+      "unit": "ratio",
+      "formula": "(no-face time + no-data time) / 10000 ms",
+      "undefined_value": 0.0,
+      "transform": "none",
+      "mean": 0.0,
+      "std": 1.0
+    }
+  ],
+  "standardization": {
+    "location": "in_graph",
+    "z_clip": 5.0,
+    "std_floor": 0.001,
+    "temperature": 1.0
+  },
+  "pipeline": {
+    "landmarks": {
+      "ear_r": [
+        33,
+        160,
+        158,
+        133,
+        153,
+        144
+      ],
+      "ear_l": [
+        362,
+        385,
+        387,
+        263,
+        373,
+        380
+      ],
+      "iris_r": [
+        468,
+        469,
+        470,
+        471,
+        472
+      ],
+      "iris_l": [
+        473,
+        474,
+        475,
+        476,
+        477
+      ],
+      "corner_outer_r": 33,
+      "corner_inner_r": 133,
+      "corner_outer_l": 263,
+      "corner_inner_l": 362,
+      "contour_r": [
+        33,
+        246,
+        161,
+        160,
+        159,
+        158,
+        157,
+        173,
+        133,
+        155,
+        154,
+        153,
+        145,
+        144,
+        163,
+        7
+      ],
+      "contour_l": [
+        263,
+        466,
+        388,
+        387,
+        386,
+        385,
+        384,
+        398,
+        362,
+        382,
+        381,
+        380,
+        374,
+        373,
+        390,
+        249
+      ],
+      "face_width": [
+        234,
+        454
+      ]
+    },
+    "blendshapes": {
+      "eye_blink_l": "eyeBlinkLeft",
+      "eye_blink_r": "eyeBlinkRight",
+      "eye_look": [
+        "eyeLookInLeft",
+        "eyeLookOutLeft",
+        "eyeLookUpLeft",
+        "eyeLookDownLeft",
+        "eyeLookInRight",
+        "eyeLookOutRight",
+        "eyeLookUpRight",
+        "eyeLookDownRight"
+      ],
+      "jaw_open": "jawOpen",
+      "order": [
+        "_neutral",
+        "browDownLeft",
+        "browDownRight",
+        "browInnerUp",
+        "browOuterUpLeft",
+        "browOuterUpRight",
+        "cheekPuff",
+        "cheekSquintLeft",
+        "cheekSquintRight",
+        "eyeBlinkLeft",
+        "eyeBlinkRight",
+        "eyeLookDownLeft",
+        "eyeLookDownRight",
+        "eyeLookInLeft",
+        "eyeLookInRight",
+        "eyeLookOutLeft",
+        "eyeLookOutRight",
+        "eyeLookUpLeft",
+        "eyeLookUpRight",
+        "eyeSquintLeft",
+        "eyeSquintRight",
+        "eyeWideLeft",
+        "eyeWideRight",
+        "jawForward",
+        "jawLeft",
+        "jawOpen",
+        "jawRight",
+        "mouthClose",
+        "mouthDimpleLeft",
+        "mouthDimpleRight",
+        "mouthFrownLeft",
+        "mouthFrownRight",
+        "mouthFunnel",
+        "mouthLeft",
+        "mouthLowerDownLeft",
+        "mouthLowerDownRight",
+        "mouthPressLeft",
+        "mouthPressRight",
+        "mouthPucker",
+        "mouthRight",
+        "mouthRollLower",
+        "mouthRollUpper",
+        "mouthShrugLower",
+        "mouthShrugUpper",
+        "mouthSmileLeft",
+        "mouthSmileRight",
+        "mouthStretchLeft",
+        "mouthStretchRight",
+        "mouthUpperUpLeft",
+        "mouthUpperUpRight",
+        "noseSneerLeft",
+        "noseSneerRight"
+      ]
+    },
+    "pose": {
+      "order": "Ry*Rx*Rz",
+      "yaw_pos": "subject_left",
+      "pitch_pos": "chin_down",
+      "roll_pos": "ccw_in_image",
+      "matrix_layout": "column_major",
+      "angle_unit": "deg"
+    },
+    "clock": {
+      "step_ms": 1000,
+      "max_hold_ms": 200,
+      "reset_gap_ms": 10000
+    },
+    "signals": {
+      "min_eye_width_px": 6.0
+    },
+    "baseline": {
+      "duration_ms": 60000,
+      "extend_step_ms": 30000,
+      "max_duration_ms": 180000,
+      "min_face_frames": 300,
+      "min_face_ratio": 0.5,
+      "e_min": 0.12,
+      "e_max": 0.45,
+      "ear_quantile": 0.9,
+      "blink_quantile": 0.1,
+      "blink_record_quantiles": [
+        0.5,
+        0.9
+      ],
+      "off_axis_yaw_deg": 15.0
+    },
+    "closure": {
+      "rho": 0.35,
+      "b_closed": 0.6,
+      "b_span_min": 0.2,
+      "w": 0.5,
+      "far_eye_zero_yaw_deg": 25.0,
+      "far_eye_ramp_deg": 10.0,
+      "valid_max_abs_yaw_deg": 40.0
+    },
+    "run_detector": {
+      "enter_thr": 0.5,
+      "exit_thr": 0.3,
+      "min_duration_ms": 50,
+      "max_dt_ms": 200,
+      "hold_ms": 500,
+      "velocity_lookback_samples": 2
+    },
+    "step_features": {
+      "names": [
+        "perclos_60",
+        "perclos_10",
+        "closure_mean_60",
+        "closure_mean_10",
+        "blink_rate_60",
+        "blink_dur_mean_60",
+        "blink_dur_std_60",
+        "closing_vel_mean_60",
+        "opening_vel_mean_60",
+        "long_closure_count_60",
+        "max_closure_ms_60",
+        "max_closure_ms_10",
+        "yawn_count_60",
+        "pitch_std_60",
+        "nod_count_60",
+        "face_missing_ratio_60",
+        "face_missing_ratio_10"
+      ],
+      "window_steps": 120,
+      "lookback_long_ms": 60000,
+      "lookback_short_ms": 10000,
+      "perclos_thr": 0.8,
+      "perclos_min_valid_ms_60": 5000,
+      "perclos_min_valid_ms_10": 2000,
+      "blink_rate_min_valid_ms": 5000,
+      "blink_duration_cap_ms": 2000,
+      "long_closure_min_ms": 500,
+      "max_closure_cap_ms": 10000,
+      "pitch_std_min_face_ms": 5000
+    },
+    "yawn": {
+      "enter_thr": 0.4,
+      "exit_thr": 0.25,
+      "count_at_ms": 2000,
+      "cancel_gap_ms": 500
+    },
+    "nod": {
+      "enter_deg": 10.0,
+      "exit_deg": 5.0,
+      "min_duration_ms": 200,
+      "max_duration_ms": 3000,
+      "ema_tau_ms": 10000,
+      "ema_max_dt_ms": 200,
+      "cancel_gap_ms": 500
+    },
+    "global_constants": {
+      "e": 0.27,
+      "b": 0.22,
+      "jaw0": 0.08,
+      "gaze_h0": 0.0,
+      "gaze_v0": 0.0,
+      "r0": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "mediapipe": {
+      "model_sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+      "num_faces": 1
+    }
+  },
+  "pipeline_hash": "650495e5c8a158db9a071457713f852af846e54e32d80352376592768f9c31a6"
+}

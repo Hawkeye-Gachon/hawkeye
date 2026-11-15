@@ -1,0 +1,37 @@
+[project]
+name = "drowsy"
+version = "0.1.0"
+description = "Driver drowsiness model: streaming reference pipeline, training and ONNX export"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "mediapipe==0.10.32",
+    "numpy==2.4.6",
+    "opencv-python-headless==5.0.0.93",
+    "av==18.1.0",
+    "torch==2.15.0",
+    "onnx==1.23.2",
+    "onnxruntime==1.31.1",
+    "onnxscript==0.7.2",
+    "lightgbm==4.7.0",
+    "scikit-learn==1.9.1",
+    "pandas==3.1.1",
+    "pyarrow==26.0.1",
+    "matplotlib==3.11.2",
+    "pyyaml==6.0.3",
+]
+
+[dependency-groups]
+dev = ["pytest==9.2.0"]
+
+[tool.uv]
+package = false
+# mediapipe pulls opencv-contrib-python, which overwrites the headless cv2 build.
+exclude-dependencies = ["opencv-contrib-python"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "mediapipe: needs the MediaPipe runtime and the face_landmarker.task model file",
+]

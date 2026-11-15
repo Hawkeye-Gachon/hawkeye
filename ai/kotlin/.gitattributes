@@ -1,0 +1,4 @@
+# 줄바꿈: gradlew는 LF, 배치 파일은 CRLF, JAR는 바이너리
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary

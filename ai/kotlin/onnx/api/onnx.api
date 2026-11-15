@@ -1,0 +1,41 @@
+public final class hawkeye/drowsy/DrowsinessMonitor : java/io/Closeable {
+	public static final field Companion Lhawkeye/drowsy/DrowsinessMonitor$Companion;
+	public synthetic fun <init> (Lhawkeye/drowsy/DrowsinessMonitor$Parts;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public final fun getCounters ()Lhawkeye/drowsy/core/session/PipelineCounters;
+	public final fun getLastState ()Lhawkeye/drowsy/core/session/DriverState;
+	public static final fun open (Ljava/lang/String;)Lhawkeye/drowsy/DrowsinessMonitor;
+	public static final fun open (Ljava/lang/String;[B[B[BLjava/lang/String;)Lhawkeye/drowsy/DrowsinessMonitor;
+	public final fun update (JII[F[FLjava/util/List;[F[FLjava/lang/Double;)Lhawkeye/drowsy/core/session/DriverState;
+	public final fun updateNoFace (JIILjava/lang/Double;)Lhawkeye/drowsy/core/session/DriverState;
+}
+
+public final class hawkeye/drowsy/DrowsinessMonitor$Companion {
+	public final fun open (Ljava/lang/String;)Lhawkeye/drowsy/DrowsinessMonitor;
+	public final fun open (Ljava/lang/String;[B[B[BLjava/lang/String;)Lhawkeye/drowsy/DrowsinessMonitor;
+}
+
+public final class hawkeye/drowsy/onnx/OnnxDrowsinessModel : hawkeye/drowsy/core/ModelFn, java/lang/AutoCloseable {
+	public static final field Companion Lhawkeye/drowsy/onnx/OnnxDrowsinessModel$Companion;
+	public synthetic fun <init> (Lhawkeye/drowsy/onnx/OnnxDrowsinessModel$Ort;Ljava/util/Map;Lhawkeye/drowsy/core/check/ModelIo;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public final fun getIo ()Lhawkeye/drowsy/core/check/ModelIo;
+	public final fun getMetadata ()Ljava/util/Map;
+	public static final fun inspect ([B)Lhawkeye/drowsy/onnx/OnnxModelInfo;
+	public static final fun open ([BII)Lhawkeye/drowsy/onnx/OnnxDrowsinessModel;
+	public fun predict (Ljava/util/List;)Ljava/util/List;
+	public static final fun runtimeVersion ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/onnx/OnnxDrowsinessModel$Companion {
+	public final fun inspect ([B)Lhawkeye/drowsy/onnx/OnnxModelInfo;
+	public final fun open ([BII)Lhawkeye/drowsy/onnx/OnnxDrowsinessModel;
+	public final fun runtimeVersion ()Ljava/lang/String;
+}
+
+public final class hawkeye/drowsy/onnx/OnnxModelInfo {
+	public fun <init> (Ljava/util/Map;Lhawkeye/drowsy/core/check/ModelIo;)V
+	public final fun getIo ()Lhawkeye/drowsy/core/check/ModelIo;
+	public final fun getMetadata ()Ljava/util/Map;
+}
+

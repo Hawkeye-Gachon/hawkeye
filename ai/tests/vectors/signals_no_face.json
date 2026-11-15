@@ -1,0 +1,20 @@
+{
+  "name": "signals_no_face",
+  "bundle": "signals",
+  "description": "얼굴이 검출되지 않은 프레임. 모든 실수 신호는 0.0, eyeLook은 0.0 여덟 개, 홍채 비율은 null이다.",
+  "pipeline_hash": "650495e5c8a158db9a071457713f852af846e54e32d80352376592768f9c31a6",
+  "rules_hash": "9c2d05f29c4c4339d4759425f996c38137677d7216ad73c27091e75fb6cec7b4",
+  "tolerances": {"signals":{"abs":1e-06,"angle_abs_deg":0.001}},
+  "baseline": null,
+  "config_overrides": {},
+  "model": null,
+  "frames": [
+    {"t_ms":1,"face":false,"w":640,"h":480,"lm":{},"bs":{},"m":[]}
+  ],
+  "speed": [],
+  "expected": {
+    "signals": [
+      {"t_ms":1,"face":false,"ear_l":0.0,"ear_r":0.0,"eye_w_l":0.0,"eye_w_r":0.0,"blink_l":0.0,"blink_r":0.0,"eye_look":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0],"jaw_open":0.0,"yaw":0.0,"pitch":0.0,"roll":0.0,"iris_h_l":null,"iris_h_r":null,"iris_v_l":null,"iris_v_r":null}
+    ]
+  }
+}
